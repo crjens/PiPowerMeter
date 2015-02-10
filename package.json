@@ -13,7 +13,6 @@
         "method-override": ">=2.2.0",
         "on-finished": ">=2.1.0",
         "basic-auth": ">=1.0.0",
-        "powermeter": "crjens/powermeter",
         "cs5463": "crjens/cs5463"
     },
     "engines": { "node": ">=0.10.28" }   
