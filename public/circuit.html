@@ -1,0 +1,209 @@
+﻿
+<!DOCTYPE html> 
+<html lang="en"> 
+    <head> 
+        <meta charset="utf-8" /> 
+        <title>Power Meter</title> 
+        <link rel="stylesheet" href="powermeter.css">
+        
+        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.css">
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-sliderAccess.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.selection.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.time.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.resize.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.crosshair.min.js"></script>
+        
+        <script src="circuit.js"></script>
+
+        <script type="text/javascript">
+            var GetTimespanDate = function (timespan) {
+
+                var start, end = new Date();
+                if (timespan == 'Hour')
+                    start = new Date(end.getTime() - 1000 * 60 * 60);
+                else if (timespan == 'Day')
+                    start = new Date(end.getTime() - 1000 * 60 * 60 * 24);
+                else if (timespan == 'Week')
+                    start = new Date(end.getTime() - 1000 * 60 * 60 * 24 * 7);
+                else if (timespan == 'Month') {
+                    if (end.getMonth() == 0)
+                        start = new Date(end.getFullYear() - 1, 11, end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
+                    else
+                        start = new Date(end.getFullYear(), end.getMonth() - 1, end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
+                }
+                else if (timespan == 'Year') {
+                    start = new Date(end.getFullYear() - 1, end.getMonth(), end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
+                }
+                else if (timespan == 'Custom') {
+                    // custom
+                    start = $("#start").datetimepicker('getDate');
+                    end = $("#end").datetimepicker('getDate');
+                }
+		else {
+		    start = end = null;
+                }
+
+                if (timespan != 'Custom') {
+                    if (start != null)
+                        $("#start").addClass('dontSelectCustom').datetimepicker('setDate', start).removeClass('dontSelectCustom');
+                    else
+                        $("#start").val('');
+
+                    if (end != null)
+                        $("#end").addClass('dontSelectCustom').datetimepicker('setDate', end).removeClass('dontSelectCustom');
+                    else
+                        $("#end").val('');
+                }
+
+                return { Start: start, End: end };
+            }
+
+            function getParameterByName(name) {
+                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+                var regex = new RegExp("[\\?&#]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search == "" ? location.hash : location.search);
+                return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            }
+
+            var ResizeContent = function (redraw) {
+                var windowHeight = $(window).height();
+                var headerHeight = $('.header').outerHeight(true);
+                var footerHeight = $('.footer').outerHeight(true);
+
+                $(".content").css({ maxHeight: (windowHeight - (headerHeight + footerHeight)) + 'px' });
+
+                if (redraw)
+                    ResizeGraphs();
+            }
+
+            var refresh = function (callback) {
+                var timespan = $('#Timespan option:selected').val();
+                var timespanDate = GetTimespanDate(timespan);
+                var circuit = $('#circuits option:selected').val();
+                var circuitName = $('#circuits option:selected').text();
+                timespanDate.timespan = timespan;
+
+                var hash = "channel=" + circuitName + "&timespan=" + timespan;
+                if (timespan == "Custom") {
+                    hash += "&start=" + timespanDate.Start.toISOString() + "&end=" + timespanDate.End.toISOString();
+                }
+
+                location.hash = hash;
+
+                RefreshGraph(circuit, timespanDate, callback);
+            }
+
+            $(function () {
+
+                //alert('ready');
+                $('#refresh1').click(function () {
+                    refresh();
+                });
+
+                $('#reset').click(function () {
+                    ResetGraph();
+                });
+
+                $('.header').click(function () {
+                    window.location.href = "/usage.html";
+                });
+
+                $(window).resize(function () {
+                    ResizeContent(true);
+                });
+
+		var startDateTextBox = $('#start');
+		var endDateTextBox = $('#end');
+
+		$.timepicker.datetimeRange(
+			startDateTextBox,
+			endDateTextBox,
+			{
+				minInterval: (1000*60*60), // 1hr
+				dateFormat: 'm/d/yy', 
+				timeFormat: 'h:mm tt',
+				start: {}, // start picker options
+				end: {} // end picker options					
+			}
+		);
+
+                $("#start").change(function () {
+		    if ($(this).hasClass('dontSelectCustom') == false)
+                       selectTimespanOption("Custom");
+                });
+
+                $("#end").change(function () {
+		    if ($(this).hasClass('dontSelectCustom') == false)
+                       selectTimespanOption("Custom");
+                });
+
+                // load intial config
+                ResizeContent(false);
+
+                var channel = getParameterByName('channel');
+                var timespan = getParameterByName('timespan');
+                var start = getParameterByName('start');
+                var end = getParameterByName('end');
+
+                InitializeGraph(channel, timespan, start, end, function () {
+                    refresh(function () {
+                        ResizeContent(false);
+                    });
+                });
+            });
+
+            var circuitChanged = function () {
+                $('#refresh1').click();
+            }
+
+            var timespanChanged = function () {
+                var timespan = $('#Timespan option:selected').val();
+                if (timespan != 'Custom') {
+
+                    setTimeout(function () {
+                        $('#refresh1').click();
+                    }, 100);
+                }
+            }
+
+	</script>
+
+    </head> 
+    <body> 
+        <div class='header'></div>
+		<div class="demo-container content">
+			<div id="placeholder" class="placeholder100"></div>
+            <!--<p id="choices"></p>-->
+		</div>
+        <div class="footer">
+            <div id="table" class='demo-table'></div>
+            <div id='buttons'>
+                <button id='refresh1'>Refresh</button>
+                <select id="Timespan" onchange='timespanChanged()'>
+                    <option value='Instant'>Instant</option>
+                    <option value='Hour'>Hour</option>
+                    <option value='Day'>Day</option>
+                    <option value='Week'>Week</option>
+                    <option value='Month'>Month</option>
+                    <option value='Year'>Year</option>
+                    <option value='Custom'>Custom</option>
+                </select>
+                <select id="circuits" onchange='circuitChanged()'></select>
+                <div id='customtimespan'>
+                    Start:<input type="text" name="start" id='start' size="25" value="" />
+                    End:<input type="text" name="end" id='end' size="25" value="" />
+                </div>
+            </div>
+        </div>
+
+    	
+    </body> 
+  
+</html>

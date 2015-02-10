@@ -1,0 +1,144 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Power Meter</title> 
+    <link rel="stylesheet" href="powermeter.css">
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+    
+    <script type="text/javascript">
+
+        var templates = {}, Configuration = {};
+        var latestTimestamp = "";
+
+        var load = function () {
+            
+            $.ajax({
+                url: '/instant',
+                type: 'get',
+                dataType: 'json',
+                cache: false,
+                success: function (result) {
+
+                    var lastTimestamp = latestTimestamp;
+                    $.each(result.Readings, function (index, value) {
+                        if (lastTimestamp != "" && value.timestamp > lastTimestamp)
+                            value.display = 'updatedreading';
+
+                        if (value.timestamp > latestTimestamp)
+                            latestTimestamp = value.timestamp;
+                    });
+
+                    $('.header').text(result.DeviceName + " Power Meter Readings");
+                    $('#content').empty();
+                    $(templates.configtable({ Result: result.Readings })).appendTo($('#content'));
+
+                    $(":checkbox").change(function () {
+
+                        var url = '/enabled';
+                        $.post(url, { config: { circuit: this.id, enabled: this.checked ? 1 : 0 } }, function (result) {
+                            //alert('enabled changed');
+                        });
+                    });
+
+                    setTimeout(function () {
+                        load();
+                    }, 2000);
+
+                }
+            });
+        }
+
+        $(function () {
+
+            $('.header').click(function () {
+                    window.location.href = "/usage.html";
+                });
+
+            // compile handlebar templates
+            $('script[type="text/x-handlebars-template"]').each(function () {
+                templates[this.id.replace('-template', '')] = Handlebars.compile($(this).html());
+            });
+
+            Handlebars.registerPartial("circuit", $('#circuit-partial').html());
+
+            Handlebars.registerHelper("prettifyDate", function (timestamp) {
+                return new Date(timestamp).toLocaleString()
+            });
+
+
+            load();
+            
+            
+	$("#reset")
+                  .button()
+                  .click(function () {
+                      $.post('/enabled', { config: { circuit: 'all', enabled: 1 } }, function (result) {});
+                  });
+
+        $("#clear")
+                  .button()
+                  .click(function () {
+                      $.post('/enabled', { config: { circuit: 'all', enabled: 0 } }, function (result) {});
+                  });
+        });
+
+        
+
+    </script>
+
+</head>
+<body>
+
+    <div class='header'></div> 
+    <div id='content' class="config-table">
+    </div>   
+    <div class='buttons'>
+        <button id='reset'>Reset</button>
+        <button id='clear'>Clear All</button>
+    </div>
+    
+    <script id="configtable-template" type="text/x-handlebars-template">
+        <div id="config" border=1>
+        <table id='circuitsTable'>
+            <tr>
+                <th>Circuit</th>
+                <th>Name</th>
+                <th>Enabled</th>
+                <th>Volts</th>
+                <th>Amps</th>
+                <th>Watts</th>
+                <th>Vars</th>
+                <th>PF</th>
+                <th>Timestamp</th>
+            </tr>
+            {{#each Result}}
+                {{> circuit}}
+            {{/each}}
+        </table>
+        </div>
+    </script>
+
+    <script id="circuit-partial" type="text/x-handlebars-template">
+        <tr class='sensordata {{display}}'>
+            <td><div id='circuitid'>{{id}}</div></td>
+            <td><div id='name'>{{name}}</div></td>
+            <td><input id="{{id}}" type="checkbox" name="enabled" value="enabled" {{#if enabled}}checked{{/if}} ></td>
+            <td><div id='volts'>{{volts}}</div></td>
+            <td><div id='amps'>{{amps}}</div></td>
+            <td><div id='watts'>{{watts}}</div></td>
+            <td><div id='q'>{{q}}</div></td>
+            <td><div id='pf'>{{pf}}</div></td>
+            <td><div id='timestamp'>{{#if timestamp}}{{prettifyDate timestamp}}{{/if}}</div></td>
+        </tr>
+
+    </script>
+  
+
+</body>
+</html>

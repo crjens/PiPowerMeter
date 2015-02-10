@@ -1,0 +1,462 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Power Meter</title> 
+    <link rel="stylesheet" href="powermeter.css">
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+    
+    <script type="text/javascript">
+
+        var templates = {}, Configuration = {};
+
+        var load = function () {
+            $('#content').empty();
+            $('#probedefs').empty();
+
+            $.ajax({
+                url: '/config',
+                type: 'get',
+                dataType: 'json',
+                cache: false,
+                success: function (result) {
+
+                    Configuration.DefinedProbes = result.Probes;
+                    Configuration.HardwareVersion = result.HardwareVersion;
+
+		    $('.header').text(result.DeviceName + " Power Meter Configuration");
+
+                    for (var i = 0; i < result.Circuits.length; i++) {
+                        for (var j = 0; j < result.Circuits[i].Probes.length; j++) {
+                            result.Circuits[i].Probes[j].DefinedProbes = result.Probes;
+                        }
+                    }
+
+                    $(templates.configtable({ Result: result })).appendTo($('#content'));
+
+                    // hide delete button for any circuits with only one probe
+                    $("table#probetable").filter(function () {
+                        var len = $("tr", this).length;
+                        return len == 1;
+                    }).find('img').addClass('hidden');
+
+                    $(templates.probedeftable(result)).appendTo($('#probedefs'));
+                }
+            });
+        }
+
+        $(function () {
+
+            $('.header').click(function () {
+                    window.location.href = "/usage.html";
+                });
+
+            window.Handlebars.registerHelper('select', function (value, options) {
+                var $el = $('<select />').html(options.fn(this));
+                $el.find('[value=' + value + ']').attr({ 'selected': 'selected' });
+                return $el.html();
+            });
+
+            // compile handlebar templates
+            $('script[type="text/x-handlebars-template"]').each(function () {
+                templates[this.id.replace('-template', '')] = Handlebars.compile($(this).html());
+            });
+
+            Handlebars.registerPartial("circuit", $('#circuit-partial').html());
+            Handlebars.registerPartial("probe", $('#probe-partial').html());
+            Handlebars.registerPartial("probedef", $('#probedef-partial').html());
+
+            $("#save")
+                  .button()
+                  .click(function () {
+                      var config = readConfig();
+
+                      var url = '/config';
+                      $.post(url, { config: config }, function (result) {
+                          load();
+                          //alert('configuration update succeded');
+                      });
+                  });
+
+            $("#refresh")
+                  .button()
+                  .click(function () {
+                      load();
+                  });
+
+            $("#saveProbeDefs")
+                  .button()
+                  .click(function () {
+                      var config = readProbeConfig();
+
+                      var url = '/probeDef';
+                      $.post(url, { config: config }, function (result) {
+                          load();
+                          //alert('configuration update succeded');
+                      });
+                  });
+
+	    var updating = false;
+	    $( document ).on( "click", "#updateSource", function() {
+		if (updating == false) {
+  		   updating = true;
+  		   var url = '/update';
+                   $.post(url, {}, function (result) {
+                      alert("Source updated.  Wait a few seconds and refresh browser");
+		      updating = false;
+                   });
+		}
+	    });
+
+            load();
+	   
+            $("#accordion").accordion({ heightStyle: "fill", collapsible: true });
+
+        });
+
+
+        var addCircuit = function () {
+            var circuit = $(templates.addCircuit({}));
+
+            circuit.appendTo($('#circuitsTable'));
+
+            var probeTable = circuit.find('#probetable');
+            var probe = $(templates.addProbe({ DefinedProbes: Configuration.DefinedProbes }));
+            probe.appendTo(probeTable);
+
+            probe.find('img').addClass('hidden');
+        }
+
+        var deleteCircuit = function (obj) {
+            var circuitId = obj.parents("tr").find('#circuitid').html();
+
+            if (circuitId == '' || isNaN(circuitId)) {
+                load();
+            } else {
+                if (confirm("All data for this circuit will be deleted.  Are you sure you want to do this?")) {
+                    var url = '/deleteCircuit';
+                    $.post(url, { circuitId: circuitId }, function (result) {
+                        load();
+                        //alert('configuration update succeded');
+                    });
+                }
+            }
+        }
+
+        var addProbe = function (obj) {
+            var probeTable = obj.parent().parent().find('#probetable');
+
+            if (probeTable == null) {
+                load();
+            } else {
+                $(templates.addProbe({ DefinedProbes: Configuration.DefinedProbes })).appendTo($(probeTable));
+            }
+        }
+
+        var deleteProbe = function (obj) {
+            //var probeId = obj.parents("tr").find('#id').html();
+            var probeId = obj.parent().parent().find('#id').html();
+            //alert(probeId);
+            if (probeId == '' || isNaN(probeId)) {
+                load();
+            } else {
+
+                var url = '/deleteProbe';
+                $.post(url, { probeId: probeId }, function (result) {
+                    load();
+                    //alert('configuration update succeded');
+                });
+            }
+        }
+
+        var addProbeDef = function (obj) {
+            var probeDef = $(templates.addProbeDef({}));
+
+            probeDef.appendTo($('#probeDefTable'));
+        }
+
+        var deleteProbeDef = function (obj) {
+            var probeDef = obj.parent().parent();
+            //alert(probeId);
+            if (probeDef == null || probeDef == '') {
+                load();
+            } else {
+
+                probeDef.remove();
+
+            }
+        }
+
+        var readConfig = function () {
+            var config = [];
+
+            $('#circuitsTable tr.sensordata').each(function (index, row) {
+
+                var sensor = {};
+                sensor.id = $(row).find('#circuitid').html();
+                sensor.Name = $(row).find('#name').val();
+                sensor.Description = $(row).find('#description').val();
+                sensor.IsMain = $(row).find('input[name=main]').prop('checked') ? 1 : 0;
+                sensor.Enabled = $(row).find('input[name=enabled]').prop('checked') ? 1 : 0;
+                sensor.Probes = [];
+
+                $(row).find('#probetable tr').each(function (index2, row2) {
+                    var probe = {};
+                    probe.id = $(row2).find('#id').html();
+                    probe.Type = $(row2).find('#type option:selected').val();
+                    probe.Board = $(row2).find('#board option:selected').val();
+                    probe.CurrentChannel = $(row2).find('#currentchannel option:selected').val();
+                    probe.VoltageChannel = $(row2).find('#voltagechannel option:selected').val();
+                    probe.Breaker = $(row2).find('#breaker option:selected').val();
+                    sensor.Probes.push(probe);
+                });
+
+
+                config.push(sensor);
+            });
+
+            return config;
+
+        }
+
+
+        var readProbeConfig = function () {
+            var config = {};
+
+            $('#configTable input[type="text"]').each(function (index, row) {
+                var name = $(row).attr('name');
+                var value = $(row).val();
+
+                config[name] = value;
+            });
+
+            var probes = [];
+            $('#probeDefTable tr.probedefdata').each(function (index, row) {
+
+                var probe = {};
+
+                probe.Name = $(row).find('#name').val();
+                probe.Factor = $(row).find('#scale').val();
+
+                probes.push(probe);
+            });
+
+            config.Probes = JSON.stringify(probes);
+
+            return config;
+        }
+    </script>
+
+</head>
+<body>
+
+    <div class='header'></div>
+    <div id='accordion'>
+        <h3>Circuits</h3>
+        <div>
+            <div id='content' class="config-table">
+            </div>
+            <div class='buttons'>
+                <button id='save'>Save</button>
+                <button id='refresh'>Refresh</button>
+            </div>
+        </div>
+        <h3>Configuration</h3>
+        <div>
+            <div id='probedefs'></div>
+            <div class='buttons2'>
+                <button id='saveProbeDefs'>Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script id="probedeftable-template" type="text/x-handlebars-template">
+        <table id='configTable'>
+            <tr><th>Name</th><th>Value</th></tr>
+
+        <tr><td>Mode:</td><td><input type="text" name="Mode" id="Mode" value="{{Mode}}" class="text ui-widget-content ui-corner-all"></td></tr>
+        <tr><td>Config:</td><td><input type="text" name="Config" id="Config" value="{{Config}}" class="text ui-widget-content ui-corner-all"></td></tr>
+        <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
+
+            <tr><td>Cost per KWh:</td><td><input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Voltage Scale:</td><td><input type="text" name="VoltageScale" id="VoltageScale" value="{{VoltageScale}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>User Name:</td><td><input type="text" name="UserName" id="UserName" value="{{UserName}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Password:</td><td><input type="text" name="Password" id="Password" value="{{Password}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <!--<tr><td>Hardware Version:</td><td><input type="text" name="HardwareVersion" id="HardwareVersion" value="{{HardwareVersion}}" class="text ui-widget-content ui-corner-all"></td></tr>-->
+            <tr><td>Text Number:</td><td><input type="text" name="Text" id="Text" value="{{Text}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Twilio Number:</td><td><input type="text" name="Twilio" id="Twilio" value="{{Twilio}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Twilio SID:</td><td><input type="text" name="TwilioSID" id="TwilioSID" value="{{TwilioSID}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Twilio Auth Token:</td><td><input type="text" name="TwilioAuthToken" id="TwilioAuthToken" value="{{TwilioAuthToken}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Backup Database:</td><td><input type="text" name="BackupDB" id="BackupDB" value="{{BackupDB}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Database size:</td><td>{{DatabaseSize}}</td></tr>
+            <tr><td>Database rows:</td><td>{{DatabaseRows}}</td></tr>
+            <tr><td>Software timestamp:</td><td>{{SoftwareVersion.Installed.Timestamp}}</td></tr>
+            {{#if SoftwareVersion.UpdateRequired}}
+  		<tr><td>Latest software:</td><td>{{SoftwareVersion.Latest.Timestamp}} <button id='updateSource'>Update Now</button></td></tr>
+            {{/if}}
+        </table>
+
+        
+        <table id='probeDefTable'>
+            <tr>
+                <th>Probe</th>
+                <th>Scale</th>
+                <th><img src='images/add.jpg' class='size18x18' onClick='addProbeDef()'></th>
+            </tr>
+            {{#each Probes}}
+                {{> probedef}}
+            {{/each}}
+        </table>
+    </script>
+
+    <script id="addProbeDef-template" type="text/x-handlebars-template">
+       {{> probedef}}
+    </script>
+
+    <script id="probedef-partial" type="text/x-handlebars-template">
+        <tr class='probedefdata'>
+            <td><input type="text" name="name" id="name" value="{{Name}}" class="text ui-widget-content ui-corner-all"></td>
+            <td><input type="text" name="scale" id="scale" value="{{Factor}}" class="text ui-widget-content ui-corner-all"></td>
+            <td>
+                <img src='images/delete.jpg' class='size18x18' onClick='deleteProbeDef($(this))'><br/>
+            </td>
+        </tr>
+          
+    </script>
+    
+    
+    
+    <script id="configtable-template" type="text/x-handlebars-template">
+        <div id="config" border=1>
+        <table id='circuitsTable'>
+            <tr>
+                <th>Circuit</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Main</th>
+                <th>Enabled</th>
+                <th>Probe, Board, Channel, Phase, Breaker</th>
+                <th><img src='images/add.jpg' class='size18x18' onClick='addCircuit()'></th>
+            </tr>
+            {{#each Result.Circuits}}
+                {{> circuit}}
+            {{/each}}
+        </table>
+        </div>
+    </script>
+
+    <script id="addCircuit-template" type="text/x-handlebars-template">
+       {{> circuit}}
+    </script>
+
+    <script id="addProbe-template" type="text/x-handlebars-template">
+       {{> probe}}
+    </script>
+
+    <script id="circuit-partial" type="text/x-handlebars-template">
+        <tr class='sensordata'>
+            <td><div id='circuitid'>{{id}}</div></td>
+            <td><input type="text" name="name" id="name" value="{{Name}}" class="text ui-widget-content ui-corner-all"></td>
+            <td><input type="text" name="description" id="description" value="{{Description}}" class="text ui-widget-content ui-corner-all"></td>
+            <td><input type="checkbox" name="main" value="main" {{#if IsMain}}checked{{/if}}></td>
+            <td><input type="checkbox" name="enabled" value="enabled" {{#if Enabled}}checked{{/if}}></td>
+            <td>
+                <table id='probetable'>
+                    {{#each Probes}}
+                        {{> probe }}
+                    {{/each}}
+                </table>
+            </td>
+            <td>
+                <img src='images/delete.jpg' class='size18x18' onClick='deleteCircuit($(this))'><br/>
+                <img src='images/add.jpg' class='size18x18' onClick='addProbe($(this))'>
+            </td>
+        </tr>
+          
+    </script>
+
+
+    <script id="probe-partial" type="text/x-handlebars-template">
+        <tr class='probedata'>
+            <td><div id='id'>{{id}}</div></td>
+            <td>
+                <select id="type">
+                    {{#select Type}}     
+                        {{#each DefinedProbes}} }}
+                            <option value='{{Name}}'>{{Name}}</option>
+                        {{/each}}
+                    {{/select}}
+                </select>
+            </td>
+            <td>
+                <select id="board" >
+                    {{#select Board}}
+                        <option value='0'>0</option>
+                        <option value='1'>1</option>
+                        <option value='2'>2</option>
+                        <option value='3'>3</option>
+                        <option value='4'>4</option>
+                        <option value='5'>5</option>
+                        <option value='6'>6</option>
+                        <option value='7'>7</option>
+                    {{/select}}
+                </select>
+            </td>
+            <td>
+                <select id="currentchannel" >
+                    {{#select CurrentChannel}}            
+                        <option value='0'>0</option>
+                        <option value='1'>1</option>
+                        <option value='2'>2</option>
+                        <option value='3'>3</option>
+                        <option value='4'>4</option>
+                        <option value='5'>5</option>
+                        <option value='6'>6</option>
+                        <option value='7'>7</option>
+                        <option value='8'>8</option>
+                        <option value='9'>9</option>
+                        <option value='10'>10</option>
+                        <option value='11'>11</option>
+                        <option value='12'>12</option>
+                        <option value='13'>13</option>
+                        <option value='14'>14</option>
+                        <option value='15'>15</option>
+                    {{/select}}
+                </select>
+            </td>
+            <td>
+                <select id="voltagechannel" >
+                    {{#select VoltageChannel}}
+                        <option value='0'>Phase A</option>
+                        <option value='1'>Phase B</option>
+                    {{/select}}
+                </select>
+            </td>
+            <td>
+                <select id="breaker" >
+                    {{#select Breaker}}
+                        <option value='15'>15 Amp</option>
+                        <option value='20'>20 Amp</option>
+                        <option value='30'>30 Amp</option>
+                        <option value='40'>40 Amp</option>
+                        <option value='50'>50 Amp</option>
+                        <option value='60'>60 Amp</option>
+                        <option value='100'>100 Amp</option>
+                        <option value='200'>200 Amp</option>
+                    {{/select}}
+                </select>
+            </td>
+            <td><img src='images/delete.jpg' class='size18x18' onClick='deleteProbe($(this))'></td>
+        </tr>
+          
+    </script>
+
+  
+
+</body>
+</html>

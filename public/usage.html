@@ -1,0 +1,192 @@
+﻿
+<!DOCTYPE html> 
+<html lang="en"> 
+    <head> 
+        <meta charset="utf-8" /> 
+        <title>Power Meter</title>
+        <link rel="stylesheet" href="powermeter.css">
+        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.css">
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+        
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.js"></script> 
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-sliderAccess.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.pie.min.js"></script>
+        
+        <script src="//cdn.jsdelivr.net/raphael/2.1.2/raphael-min.js"></script>
+        <script src="//cdn.jsdelivr.net/justgage/1.0.1/justgage.min.js"></script>
+        <script src="usage.js"></script>
+
+        <script type="text/javascript"> 
+
+            var selectTimespanOption = function (timespan) {
+                if (timespan != null) {
+                    $('#Timespan option')
+                        .filter(function (index) { return $(this).text() === timespan; })
+                        .prop('selected', true);
+                }
+            }
+
+            function getParameterByName(name) {
+                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+                var regex = new RegExp("[\\?&#]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search == "" ? location.hash : location.search);
+                return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+            }
+
+            var ResizeContent = function () {
+                var windowHeight = $(window).height();
+                var headerHeight = $('.header').outerHeight(true);
+                var footerHeight = $('.footer').outerHeight(true);
+
+                $(".content").css({ maxHeight: (windowHeight - (headerHeight + footerHeight)) + 'px' });
+                //                $('.header').text(windowHeight + " : " + headerHeight + " : " + footerHeight + " :: " + (windowHeight - (headerHeight + footerHeight)));
+                RedrawComparisonGraph();
+            }
+
+            $(function () {
+
+                $('.settingsiconright').click(function () {
+                    window.location.href = "/configure.html";
+                });
+
+                $('.settingsiconleft').click(function () {
+                    window.location.href = "/realtime.html";
+                });
+
+                var startDateTextBox = $('#start');
+		var endDateTextBox = $('#end');
+
+		$.timepicker.datetimeRange(
+			startDateTextBox,
+			endDateTextBox,
+			{
+				minInterval: (1000*60*60), // 1hr
+				dateFormat: 'm/d/yy', 
+				timeFormat: 'h:mm tt',
+				start: {}, // start picker options
+				end: {} // end picker options					
+			}
+		);
+
+                $("#start").change(function () {
+		    if ($(this).hasClass('dontSelectCustom') == false)
+                       selectTimespanOption("Custom");
+                });
+
+                $("#end").change(function () {
+		    if ($(this).hasClass('dontSelectCustom') == false)
+                       selectTimespanOption("Custom");
+                });
+
+                //alert('ready');
+                $('#refresh1').click(function () {
+
+                    var timespan = $('#Timespan option:selected').val();
+                    var timespanDate = GetTimespanDate(timespan);
+                    var order = $('input[name=order]:checked').val();
+
+                    var hash = "timespan=" + timespan + "&order=" + order;
+                    if (timespan == "Custom")
+                        hash += "&start=" + timespanDate.Start.toISOString() + "&end=" + timespanDate.End.toISOString();
+
+                    location.hash = hash;
+
+                    RefreshComparisonGraph(timespanDate.Start, timespanDate.End);
+                });
+
+                $(window).resize(function () {
+                    ResizeContent();
+                });
+
+
+                var order = getParameterByName('order');
+                var timespan = getParameterByName('timespan');
+                var timespanDate = GetTimespanDate(timespan);
+                var start = getParameterByName('start');
+                var end = getParameterByName('end');
+
+                selectTimespanOption(timespan);
+
+                if (order != null) {
+                    $('input[name=order]')
+                        .filter(function (index) { return $(this).val() === order; })
+                        .prop('checked', true);
+                }
+
+                if (timespan == "Custom") {
+                    if (start != null && end != null && start != "" && end != "") {
+                        
+
+                        // set start and end time
+                        $("#start").addClass('dontSelectCustom').datetimepicker('setDate', new Date(start)).removeClass('dontSelectCustom');
+                        $("#end").addClass('dontSelectCustom').datetimepicker('setDate', new Date(end)).removeClass('dontSelectCustom');
+                    } else {
+                        $('#Timespan option')
+                            .filter(function (index) { return $(this).text() === "Hour"; })
+                            .prop('selected', true);
+                    }
+                }
+
+                timespan = $('#Timespan option:selected').val();
+                timespanDate = GetTimespanDate(timespan);
+
+                RefreshComparisonGraph(timespanDate.Start, timespanDate.End, function () {
+                    ResizeContent();
+                });
+                
+                timespanChanged(false);
+                
+            });
+
+            var timespanChanged = function (redraw) {
+                var timespan = $('select option:selected').val();
+                if (redraw && timespan != 'Custom') {
+                     setTimeout(function () {
+                         $('#refresh1').click();
+                     }, 100);
+                } 
+            }
+
+	</script>
+
+    </head> 
+    <body> 
+        
+        
+            <div class='header'></div>
+            <div id="image">
+                <img src='images/settings.png' class='settingsiconright' alt='1'/>
+                <img src='images/table.png' class='settingsiconleft' alt='1' />
+            </div>
+		    <div class="demo-container content">
+			    <div id="placeholder3" class="placeholder100"></div>
+		    </div>
+            <div class="footer">
+                <div id="table" ></div>
+                <div id='buttons'>
+                    <button id='refresh1'>Refresh</button>
+                    <select id="Timespan" onchange='timespanChanged(true)'>
+                        <option value='Instant'>Instant</option>
+                        <option value='Hour'>Hour</option>
+                        <option value='Day'>Day</option>
+                        <option value='Week'>Week</option>
+                        <option value='Month'>Month</option>
+                        <option value='Year'>Year</option>
+                        <option value='Custom'>Custom</option>
+                    </select>
+                    <input type="radio" name="order" value="Min">Leeches
+                    <input type="radio" name="order" value="Watts" checked>Usage
+                    <input type="radio" name="order" value="Max">Hogs
+                    <div id='customtimespan'>
+                        Start:<input type="text" name="start" id='start' size="25" value="" />
+                        End:<input type="text" name="end" id='end' size="25" value=""/>
+                    </div>
+                </div>
+            </div>
+    	
+    </body> 
+</html>

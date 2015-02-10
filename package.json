@@ -1,0 +1,20 @@
+{
+    "name": "powermeter-all",
+    "version": "1.0.0",
+    "description": "raspberry pi power meter using CS5463 chip dependencies",
+    "author": "Craig Jensen",
+    "license": "BSD",
+    "dependencies": {
+        "sqlite3": ">=3.0.2",
+        "twilio": ">=1.7.0",
+        "express": ">=4.9.7",
+        "body-parser": ">=1.9.0",
+        "serve-favicon": ">=2.1.5",
+        "method-override": ">=2.2.0",
+        "on-finished": ">=2.1.0",
+        "basic-auth": ">=1.0.0",
+        "powermeter": "crjens/powermeter",
+        "cs5463": "crjens/cs5463"
+    },
+    "engines": { "node": ">=0.10.28" }   
+}
