@@ -1,6 +1,6 @@
 {
     "name": "PiPowerMeter",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "raspberry pi power meter using CS5463 chip dependencies",
     "author": "Craig Jensen",
     "license": "BSD",
