@@ -36,7 +36,7 @@ var exec = require('child_process').exec, softwareVersion = null;
         if (error)
             console.error('unable to fetch installed software version: ' + error);
         else {
-            console.log('software version: ' + stdout.trim());
+            console.log('current software version: ' + stdout.trim());
 
             var obj = { Installed: { Sha: stdout.trim(), Timestamp: '' } };
 
@@ -46,7 +46,9 @@ var exec = require('child_process').exec, softwareVersion = null;
                 else {
                     //console.log('commits: ' + stdout);
 
-                    var json = JSON.parse(stdout);
+                    var json = JSON.parse(stdout.trim());
+
+                    console.log('latest software version: ' + json[0].sha);
 
                     obj.Latest = { Sha: json[0].sha, Timestamp: json[0].commit.author.date };
                     obj.UpdateRequired = (obj.Installed.Sha != obj.Latest.Sha);
