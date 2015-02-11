@@ -39,7 +39,7 @@ var exec = require('child_process').exec, softwareVersion = null;
 
             var pos = stdout.trim().indexOf(" ");
             var currentSha = stdout.trim().substring(0, pos);
-            var currentDate = stdout.trim().substring(pos);
+            var currentDate = (new Date(stdout.trim().substring(pos))).toISOString();
 
             console.log('currentSha: ' + currentSha);
             console.log('currentDate: ' + currentDate);
