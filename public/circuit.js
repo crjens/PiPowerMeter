@@ -452,12 +452,12 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                         return result;
                     }
 
-                    var html = "<table><td><table><tr><td>Rms Voltage</td><td>" + getProbeValues(result.Samples, "vRms", false, 1) + " volts" +
-                                "</td></tr><tr><td>Rms Current</td><td>" + getProbeValues(result.Samples, "iRms", false, 1) + " amps" +
-                                "</td></tr><tr><td>Peak Voltage</td><td>" + getProbeValues(result.Samples, "vPeak", false, 1) + " volts" +
-                                "</td></tr><tr><td>Peak Current</td><td>" + getProbeValues(result.Samples, "iPeak", false, 1) + " amps" +
-                                "</td></tr></table></td><td><table><tr><td>Average real power</td><td>" + getProbeValues(result.Samples, "pAve", true, 1) + " watts" +
-                                "</td></tr><tr><td>Average reactive power</td><td>" + getProbeValues(result.Samples, "qAve", true, 1) + " vars" +
+                    var html = "<table><td><table><tr><td>Rms Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vRms", false, 1) +
+                                "</td></tr><tr><td>Rms Current (amps)</td><td>" + getProbeValues(result.Samples, "iRms", false, 1) +
+                                "</td></tr><tr><td>Peak Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vPeak", false, 1) +
+                                "</td></tr><tr><td>Peak Current (amps)</td><td>" + getProbeValues(result.Samples, "iPeak", false, 1) +
+                                "</td></tr></table></td><td><table><tr><td>Average real power (watts) </td><td>" + getProbeValues(result.Samples, "pAve", true, 1) +
+                                "</td></tr><tr><td>Average reactive power (vars)</td><td>" + getProbeValues(result.Samples, "qAve", true, 1) +
                                 "</td></tr><tr><td>Power factor</td><td>" + getProbeValues(result.Samples, "pf", false, 6) +
                                 "</td></tr><tr><td>Timestamp</td><td>" + (new Date(result.Samples[0].ts)).toLocaleString() +
                                 "</td></tr></table></td></table>";
