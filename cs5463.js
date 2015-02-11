@@ -32,23 +32,24 @@ var cs5463 = require( "cs5463" );
 // load currently installed software version and check for updates every hour
 var exec = require('child_process').exec, softwareVersion = null;
 (function checkForUpdates(){
-    exec("npm -j list powermeter", function (error, stdout, stderr) {
+    exec("git rev-parse HEAD", function (error, stdout, stderr) {
         if (error)
             console.error('unable to fetch installed software version: ' + error);
         else {
-            console.log('software version: ' + stdout);
+            console.log('software version: ' + stdout.trim());
 
-            var json = JSON.parse(stdout);
+            //var json = JSON.parse(stdout);
 
-            var obj = { Installed: { Sha: json.dependencies.powermeter.resolved.split('#')[1].replace(')', ''), Timestamp: '' } };
+            var obj = { Installed: { Sha: stdout.trim(), Timestamp: '' } };
+            console.log('obj: ' + obj);
 
-            exec("curl https://api.github.com/repos/crjens/powermeter/commits", function (error, stdout, stderr) {
+            exec("curl https://api.github.com/repos/crjens/pipowermeter/commits", function (error, stdout, stderr) {
                 if (error)
                     console.error('unable to fetch commits from github: ' + error);
                 else {
                     console.log('commits: ' + stdout);
 
-                    json = JSON.parse(stdout);
+                    var json = JSON.parse(stdout);
 
                     obj.Latest = { Sha: json[0].sha, Timestamp: json[0].commit.author.date };
                     obj.UpdateRequired = (obj.Installed.Sha != obj.Latest.Sha);

@@ -360,7 +360,7 @@ app.post('/deleteProbe', function (req, res, next) {
 app.post('/update', function (req, res, next) {
     console.log('Updating source...');
     var exec = require('child_process').exec;
-    exec('npm update powermeter', function (error, stdout, stderr) {
+    exec('git pull', function (error, stdout, stderr) {
         if (error)
             next(error);
         else {
