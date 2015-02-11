@@ -38,16 +38,13 @@ var exec = require('child_process').exec, softwareVersion = null;
         else {
             console.log('software version: ' + stdout.trim());
 
-            //var json = JSON.parse(stdout);
-
             var obj = { Installed: { Sha: stdout.trim(), Timestamp: '' } };
-            console.log('obj: ' + obj);
 
             exec("curl https://api.github.com/repos/crjens/pipowermeter/commits", function (error, stdout, stderr) {
                 if (error)
                     console.error('unable to fetch commits from github: ' + error);
                 else {
-                    console.log('commits: ' + stdout);
+                    //console.log('commits: ' + stdout);
 
                     var json = JSON.parse(stdout);
 
@@ -60,6 +57,8 @@ var exec = require('child_process').exec, softwareVersion = null;
                             break;
                         }
                     }
+
+                    console.log("version: " + JSON.stringify(obj));
 
                     softwareVersion = obj;
                 }
