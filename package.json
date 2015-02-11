@@ -15,5 +15,8 @@
         "basic-auth": ">=1.0.0",
         "cs5463": "crjens/cs5463"
     },
+    "scripts": {
+        "preinstall": "/bin/bash ./install.sh"
+    },
     "engines": { "node": ">=0.10.28" }   
 }
