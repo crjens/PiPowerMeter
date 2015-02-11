@@ -82,31 +82,31 @@ var exec = require('child_process').exec, softwareVersion = null;
             });
             
 
-            exec("curl https://api.github.com/repos/crjens/pipowermeter/commits", function (error, stdout, stderr) {
-                if (error)
-                    console.error('unable to fetch commits from github: ' + error);
-                else {
-                    //console.log('commits: ' + stdout);
+            //exec("curl https://api.github.com/repos/crjens/pipowermeter/commits", function (error, stdout, stderr) {
+            //    if (error)
+            //        console.error('unable to fetch commits from github: ' + error);
+            //    else {
+            //        //console.log('commits: ' + stdout);
 
-                    var json = JSON.parse(stdout.trim());
+            //        var json = JSON.parse(stdout.trim());
 
-                    console.log('latest software version: ' + json[0].sha);
+            //        console.log('latest software version: ' + json[0].sha);
 
-                    obj.Latest = { Sha: json[0].sha, Timestamp: json[0].commit.author.date };
-                    obj.UpdateRequired = (obj.Installed.Sha != obj.Latest.Sha);
+            //        obj.Latest = { Sha: json[0].sha, Timestamp: json[0].commit.author.date };
+            //        obj.UpdateRequired = (obj.Installed.Sha != obj.Latest.Sha);
 
-                    for (var i = 0; i < json.length; i++) {
-                        if (json[i].sha == obj.Installed.Sha) {
-                            obj.Installed.Timestamp = json[i].commit.author.date;
-                            break;
-                        }
-                    }
+            //        for (var i = 0; i < json.length; i++) {
+            //            if (json[i].sha == obj.Installed.Sha) {
+            //                obj.Installed.Timestamp = json[i].commit.author.date;
+            //                break;
+            //            }
+            //        }
 
-                    console.log("version: " + JSON.stringify(obj));
+            //        console.log("version: " + JSON.stringify(obj));
 
-                    softwareVersion = obj;
-                }
-            });
+            //        softwareVersion = obj;
+            //    }
+            //});
         }
     });
 
