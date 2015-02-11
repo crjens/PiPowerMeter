@@ -49,32 +49,33 @@ var exec = require('child_process').exec, softwareVersion = null;
             // get latest commit from github
             exec("curl https://api.github.com/repos/crjens/pipowermeter/git/refs/heads/master", function (error, stdout, stderr) {
                 if (error)
-                    console.error('unable to fetch commits from github: ' + error);
+                    console.error('unable to fetch latest commit from github: ' + error);
                 else {
-                    //console.log('commits: ' + stdout);
-
                     var json = JSON.parse(stdout.trim());
                     var latestSha = json.object.sha;
+                    console.log('latest software version: ' + latestSha);
+
 
                     if (currentSha == latestSha) {
+                        console.log('software is up to date - will periodically check for updates');
                         obj.Latest = { Sha: currentSha, Timestamp: currentDate };
                         obj.UpdateRequired = false;
+                        softwareVersion = obj;
                     } else {
 
                         // load actual commit to get date
                         exec("curl " + json.object.url, function (error, stdout, stderr) {
                             if (error)
-                                console.error('unable to fetch commits from github: ' + error);
+                                console.error('unable to fetch commit ' + latestSha + ' from github: ' + error);
                             else {
-                                //console.log('commits: ' + stdout);
-
                                 var json = JSON.parse(stdout.trim());
 
-                                console.log('latest software version: ' + json.sha);
+                                console.log('latest software date: ' + json.author.date);
 
                                 obj.Latest = { Sha: json.sha, Timestamp: json.author.date };
                                 obj.UpdateRequired = true;
                             }
+                            softwareVersion = obj;
                         });
                     }
 
