@@ -55,7 +55,6 @@ var exec = require('child_process').exec, softwareVersion = null;
                     var latestSha = json.object.sha;
                     console.log('latest software version: ' + latestSha);
 
-
                     if (currentSha == latestSha) {
                         console.log('software is up to date - will periodically check for updates');
                         obj.Latest = { Sha: currentSha, Timestamp: currentDate };
