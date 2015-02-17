@@ -21,5 +21,5 @@ Install Instructions
 	4. (both node -v and npm -v should now show current version)
 6. Clone PiPowerMeter into app directory
 	1. git clone https://github.com/crjens/PiPowerMeter.git app
-7. cd into the 'app' directory and type 'sudo npm install'
+7. cd into the 'app' directory and type 'npm install'
 
