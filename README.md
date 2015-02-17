@@ -1,4 +1,4 @@
-BBQPi
+PiPowerMeter
 =====
 
 Raspberry Pi Power meter
