@@ -15,6 +15,9 @@
         "basic-auth": ">=1.0.0",
         "cs5463": "crjens/cs5463"
     },
+    "config":{
+        "unsafe-perm":true
+    },
     "scripts": {
         "postinstall": "/bin/bash ./install.sh"
     },
