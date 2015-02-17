@@ -16,7 +16,7 @@
         "cs5463": "crjens/cs5463"
     },
     "scripts": {
-        "preinstall": "/bin/bash ./install.sh"
+        "postinstall": "/bin/bash ./install.sh"
     },
     "engines": { "node": ">=0.10.28" }   
 }
