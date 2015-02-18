@@ -426,15 +426,66 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                 plotAccordingToChoices();
 
             } else {
-
+                data = [];
                 if (result != null && result.Samples != null && result.Samples.length > 0) {
-                    for (var i = 0; i < result.Samples[0].tsInst.length; i++) {
-                        var now = result.Samples[0].tsInst[i];
-                        if (result.Samples[0].vInst.length >= i)
-                            v.push([now, result.Samples[0].vInst[i]]);
-                        if (result.Samples[0].iInst.length >= i)
-                            c.push([now, result.Samples[0].iInst[i]]);
-                    }
+                    //for (var i = 0; i < result.Samples[0].tsInst.length; i++) {
+                    //    var now = result.Samples[0].tsInst[i];
+                    //    if (result.Samples[0].vInst.length >= i)
+                    //        v.push([now, result.Samples[0].vInst[i]]);
+                    //    if (result.Samples[0].iInst.length >= i)
+                    //        c.push([now, result.Samples[0].iInst[i]]);
+                    //}
+
+                    var minTs = 0;
+                    $.each(result.Probes, function (index) {
+                        var obj = result.Probes[index];
+                        //choiceContainer.append("<br/><input type='checkbox' name='" + obj.id + "' checked='checked' id='id" + obj.id + "'></input>" + "<label for='id" + obj.id + "'>" + obj.id + "</label>");
+
+                        var v = [], c = [], vref = [];
+                        var sample = result.Samples[index];
+
+                        var start = 0;
+                        // channel 0 rises at t=0 so find first (-) -> (+) zero crossing
+                        for (var i = 1; i < sample.tsInst.length; i++) {
+                            if ((obj.VoltageChannel == 0 && sample.vInst[i - 1] < 0 && sample.vInst[i] > 0) ||
+                                (obj.VoltageChannel == 1 && sample.vInst[i - 1] > 0 && sample.vInst[i] < 0)) {
+                                start = i;
+                                break;
+                            }
+                        }
+                        
+                        for (var i = start; i < sample.tsInst.length; i++) {
+                            var now = sample.tsInst[i] - sample.tsInst[start];
+                            if (sample.vInst.length >= i)
+                                v.push([now, sample.vInst[i]]);
+                            if (sample.iInst.length >= i)
+                                c.push([now, sample.iInst[i]]);
+
+                            if (i == sample.tsInst.length - 1 && (index == 0 || now < minTs))
+                                minTs = now;
+                        }
+
+                        //var channel = { v: v, c: c };
+                        //datasets[obj.id] = channel;
+
+                        data.push({ data: v, label: "Probe" + obj.id + " Volts = -000.00", points: { show: true, radius: 2 } });
+                        data.push({ data: c, label: "Probe" + obj.id + " Amps = -000.00", yaxis: 2, points: { show: true, radius: 2 } });
+                    });
+
+
+                    // find min length and truncate everything to match that                    
+                    $.each(data, function (index) {
+
+                        var i = data[index].data.length - 1;
+
+                        while (i >= 0 && data[index].data[i][0] > minTs) {
+                            i--;
+                        }
+
+                        data[index].data = data[index].data.slice(0, i);
+                        
+                    });
+
 
                     function getProbeValues(samples, property, includeTotal, digits) {
                         var result = "";
@@ -490,11 +541,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
 
 
 
-                data = [{ data: v, label: "Volts = -000.00", points: { show: true, radius: 2} },
-                    { data: c, label: "Amps = -000.00", yaxis: 2, points: { show: true, radius: 2} },
-                //                    { data: vref, label: "ref voltage = -000.00", lines: { show: true } }
-            ];
-
+               
 
 
                 placeholder.bind("plothover", function (event, pos, item) {
