@@ -71,7 +71,6 @@
                 return new Date(timestamp).toLocaleString()
             });
 
-
             load();
             
             
@@ -107,14 +106,17 @@
         <div id="config" border=1>
         <table id='circuitsTable'>
             <tr>
-                <th>Circuit</th>
                 <th>Name</th>
+                <th>Circuit</th>
                 <th>Enabled</th>
+                <th>Probe</th>
                 <th>Volts</th>
-                <th>Amps</th>
                 <th>Watts</th>
                 <th>Vars</th>
                 <th>PF</th>
+                <th>Amps</th>
+                <th>Breaker</th>
+                <th>Load</th>
                 <th>Timestamp</th>
             </tr>
             {{#each Result}}
@@ -126,15 +128,18 @@
 
     <script id="circuit-partial" type="text/x-handlebars-template">
         <tr class='sensordata {{display}}'>
-            <td><div id='circuitid'>{{id}}</div></td>
             <td><div id='name'>{{name}}</div></td>
-            <td><input id="{{id}}" type="checkbox" name="enabled" value="enabled" {{#if enabled}}checked{{/if}} ></td>
-            <td><div id='volts'>{{volts}}</div></td>
-            <td><div id='amps'>{{amps}}</div></td>
-            <td><div id='watts'>{{watts}}</div></td>
-            <td><div id='q'>{{q}}</div></td>
-            <td><div id='pf'>{{pf}}</div></td>
-            <td><div id='timestamp'>{{#if timestamp}}{{prettifyDate timestamp}}{{/if}}</div></td>
+            <td><div id='circuitid'>{{id}}</div></td>
+            <td><input id="{{id}}" type="checkbox" name="enabled" value="enabled" {{#if enabled}} checked{{/if}}></td>
+            <td><div id='probe'>{{#each probe}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='volts'>{{#each volts}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='watts'>{{#each watts}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='q'>{{#each q}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='pf'>{{#each pf}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='amps'>{{#each amps}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='breaker'>{{#each breaker}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='load'>{{#each load}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='timestamp'>{{#each timestamp}}{{#if @index}}<br />{{/if}}{{prettifyDate this}}{{/each}}</div></td>
         </tr>
 
     </script>

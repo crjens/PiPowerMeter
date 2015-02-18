@@ -223,3 +223,7 @@ text-align:left;
 .updatedreading{
     color: red;
 }
+
+#circuitsTable td {
+    text-align: center;
+}

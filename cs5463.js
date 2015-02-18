@@ -802,17 +802,42 @@ var exports = {
         for (var i = 0; i < configuration.Circuits.length; i++) {
             var ckt = configuration.Circuits[i];
 
-            result.push({
-                id: ckt.id,
-                name: ckt.Name,
-                enabled: ckt.InstantEnabled,
-                watts: ckt.pAve != null ? ckt.pAve.toFixed(0) : "",
-                amps: ckt.Samples != null && ckt.Samples[0] != null && ckt.Samples[0].iRms != null ? ckt.Samples[0].iRms.toFixed(1) : "",
-                volts: ckt.Samples != null && ckt.Samples[0] != null && ckt.Samples[0].vRms != null ? ckt.Samples[0].vRms.toFixed(1) : "",
-                q: ckt.qAve != null ? ckt.qAve.toFixed(0) : "",
-                pf: ckt.pf,
-                timestamp: ckt.Samples != null && ckt.Samples[0] != null ? ckt.Samples[0].ts : ""
-            });
+            if (ckt.Samples != null && ckt.Samples.length > 0) {
+
+                var w = [], a = [], v = [], q = [], pf = [], l = [], ts = [], probe = [], breaker=[];
+                for (var p = 0; p < ckt.Probes.length; p++) {
+                    w.push(ckt.Samples[p].pAve.toFixed(0));
+                    a.push(ckt.Samples[p].iRms.toFixed(1));
+                    probe.push(ckt.Probes[p].id);
+                    breaker.push(ckt.Probes[p].Breaker + " Amp");
+                    v.push(ckt.Samples[p].vRms.toFixed(1));
+                    q.push(ckt.Samples[p].qAve.toFixed(0));
+                    pf.push(ckt.Samples[p].pf.toFixed(5));
+                    l.push(Math.round(ckt.Samples[p].iRms * 100.0 / ckt.Probes[p].Breaker) + " %");
+                    ts.push(ckt.Samples[p].ts);
+                }
+
+                if (ckt.Probes.length > 1) {
+                    w.push(ckt.pAve.toFixed(0));
+                    q.push(ckt.qAve.toFixed(0));
+                    probe.push("All");
+                }
+
+                result.push({
+                    id: ckt.id,
+                    name: ckt.Name,
+                    breaker: breaker,
+                    enabled: ckt.InstantEnabled,
+                    watts: w,
+                    amps: a,
+                    probe: probe,
+                    volts: v,
+                    q: q,
+                    pf: pf,
+                    timestamp: ts,
+                    load: l
+                });
+            }
         }
         return { Readings: result, DeviceName: deviceName } ;
     },
