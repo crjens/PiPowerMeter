@@ -360,7 +360,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
         //zoom: { interactive: true }
     }
 
-    var datasets = {}, PLOTALL = false, v = [], c = [];
+    var datasets = {}, v = [], c = [];
     html = "";
     $.ajax({
         url: '/waveform?circuitId=' + circuitId,
@@ -374,265 +374,214 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
             else
                 $('.header').text("Power Meter");
 
-            if (PLOTALL) {
-                var choiceContainer = $("#choices");
-                choiceContainer.empty();
-                if (result != null) {
+          
+            data = [];
+            if (result != null && result.Samples != null && result.Samples.length > 0) {
+                //for (var i = 0; i < result.Samples[0].tsInst.length; i++) {
+                //    var now = result.Samples[0].tsInst[i];
+                //    if (result.Samples[0].vInst.length >= i)
+                //        v.push([now, result.Samples[0].vInst[i]]);
+                //    if (result.Samples[0].iInst.length >= i)
+                //        c.push([now, result.Samples[0].iInst[i]]);
+                //}
 
-                    $.each(result.Probes, function (index) {
-                        var obj = result.Probes[index];
-                        choiceContainer.append("<br/><input type='checkbox' name='" + obj.id + "' checked='checked' id='id" + obj.id + "'></input>" + "<label for='id" + obj.id + "'>" + obj.id + "</label>");
+                var minTs = 0;
+                $.each(result.Probes, function (index) {
+                    var obj = result.Probes[index];
+                    //choiceContainer.append("<br/><input type='checkbox' name='" + obj.id + "' checked='checked' id='id" + obj.id + "'></input>" + "<label for='id" + obj.id + "'>" + obj.id + "</label>");
 
-                        var v = [], c = [], vref = [];
-                        var sample = result.Samples[index];
-                        for (var i = 0; i < sample.tsInst.length; i++) {
-                            var now = sample.tsInst[i];
-                            if (sample.vInst.length >= i)
-                                v.push([now, sample.vInst[i]]);
-                            if (sample.iInst.length >= i)
-                                c.push([now, sample.iInst[i]]);
+                    var v = [], c = [], vref = [];
+                    var sample = result.Samples[index];
+
+                    var start = 0;
+                    // channel 0 rises at t=0 so find first (-) -> (+) zero crossing
+                    for (var i = 1; i < sample.tsInst.length; i++) {
+                        if ((obj.VoltageChannel == 0 && sample.vInst[i - 1] < 0 && sample.vInst[i] > 0) ||
+                            (obj.VoltageChannel == 1 && sample.vInst[i - 1] > 0 && sample.vInst[i] < 0)) {
+                            start = i;
+                            break;
                         }
-
-                        var channel = { v: v, c: c };
-                        datasets[obj.id] = channel;
-                    });
-
-                    if (lastTimespan != "Instant") {
-                        console.log('resize');
-                        $(window).trigger('resize');
                     }
-                }
-
-                function plotAccordingToChoices() {
-
-                    var data = [];
-
-                    choiceContainer.find("input:checked").each(function () {
-                        var key = $(this).attr("name");
-                        if (key && datasets[key]) {
-                            //data.push(datasets[key]);
-                            data.push({ data: datasets[key].v, label: "Volts = -000.00", points: { show: true, radius: 2} });
-                            data.push({ data: datasets[key].c, label: "Amps = -000.00", yaxis: 2, points: { show: true, radius: 2} });
-                        }
-                    });
-
-                    if (data.length > 0) {
-                        var plot = $.plot(placeholder, data, options);
-                    }
-                }
-
-
-                choiceContainer.find("input").click(plotAccordingToChoices);
-                plotAccordingToChoices();
-
-            } else {
-                data = [];
-                if (result != null && result.Samples != null && result.Samples.length > 0) {
-                    //for (var i = 0; i < result.Samples[0].tsInst.length; i++) {
-                    //    var now = result.Samples[0].tsInst[i];
-                    //    if (result.Samples[0].vInst.length >= i)
-                    //        v.push([now, result.Samples[0].vInst[i]]);
-                    //    if (result.Samples[0].iInst.length >= i)
-                    //        c.push([now, result.Samples[0].iInst[i]]);
-                    //}
-
-                    var minTs = 0;
-                    $.each(result.Probes, function (index) {
-                        var obj = result.Probes[index];
-                        //choiceContainer.append("<br/><input type='checkbox' name='" + obj.id + "' checked='checked' id='id" + obj.id + "'></input>" + "<label for='id" + obj.id + "'>" + obj.id + "</label>");
-
-                        var v = [], c = [], vref = [];
-                        var sample = result.Samples[index];
-
-                        var start = 0;
-                        // channel 0 rises at t=0 so find first (-) -> (+) zero crossing
-                        for (var i = 1; i < sample.tsInst.length; i++) {
-                            if ((obj.VoltageChannel == 0 && sample.vInst[i - 1] < 0 && sample.vInst[i] > 0) ||
-                                (obj.VoltageChannel == 1 && sample.vInst[i - 1] > 0 && sample.vInst[i] < 0)) {
-                                start = i;
-                                break;
-                            }
-                        }
                         
-                        for (var i = start; i < sample.tsInst.length; i++) {
-                            var now = sample.tsInst[i] - sample.tsInst[start];
-                            if (sample.vInst.length >= i)
-                                v.push([now, sample.vInst[i]]);
-                            if (sample.iInst.length >= i)
-                                c.push([now, sample.iInst[i]]);
+                    for (var i = start; i < sample.tsInst.length; i++) {
+                        var now = sample.tsInst[i] - sample.tsInst[start];
+                        if (sample.vInst.length >= i)
+                            v.push([now, sample.vInst[i]]);
+                        if (sample.iInst.length >= i)
+                            c.push([now, sample.iInst[i]]);
 
-                            if (i == sample.tsInst.length - 1 && (index == 0 || now < minTs))
-                                minTs = now;
-                        }
+                        if (i == sample.tsInst.length - 1 && (index == 0 || now < minTs))
+                            minTs = now;
+                    }
 
-                        //var channel = { v: v, c: c };
-                        //datasets[obj.id] = channel;
+                    //var channel = { v: v, c: c };
+                    //datasets[obj.id] = channel;
 
-                        data.push({ data: v, label: "Probe" + obj.id + " Volts = -000.00", points: { show: true, radius: 2 } });
-                        data.push({ data: c, label: "Probe" + obj.id + " Amps = -000.00", yaxis: 2, points: { show: true, radius: 2 } });
-                    });
+                    data.push({ data: v, label: "Probe" + obj.id + " Volts = -000.00", points: { show: true, radius: 2 } });
+                    data.push({ data: c, label: "Probe" + obj.id + " Amps = -000.00", yaxis: 2, points: { show: true, radius: 2 } });
+                });
 
 
-                    // find min length and truncate everything to match that                    
-                    $.each(data, function (index) {
+                // find min length and truncate everything to match that                    
+                $.each(data, function (index) {
 
-                        var i = data[index].data.length - 1;
+                    var i = data[index].data.length - 1;
 
-                        while (i >= 0 && data[index].data[i][0] > minTs) {
-                            i--;
-                        }
+                    while (i >= 0 && data[index].data[i][0] > minTs) {
+                        i--;
+                    }
 
-                        data[index].data = data[index].data.slice(0, i);
+                    data[index].data = data[index].data.slice(0, i);
                         
-                    });
+                });
 
 
-                    function getProbeValues(samples, property, includeTotal, digits) {
-                        var result = "";
-                        var total = 0;
-                        for (var i = 0; i < samples.length; i++) {
-                            if (i > 0)
-                                result += ", ";
-                            result += samples[i][property].toFixed(digits);
-                            total += samples[i][property];
-                        }
-
-                        if (includeTotal) {
-                            result += " (" + total.toFixed(digits) + ")";
-                        }
-                        return result;
+                function getProbeValues(samples, property, includeTotal, digits) {
+                    var result = "";
+                    var total = 0;
+                    for (var i = 0; i < samples.length; i++) {
+                        if (i > 0)
+                            result += ", ";
+                        result += samples[i][property].toFixed(digits);
+                        total += samples[i][property];
                     }
 
-                    var html = "<table><td><table><tr><td>Rms Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vRms", false, 1) +
-                                "</td></tr><tr><td>Rms Current (amps)</td><td>" + getProbeValues(result.Samples, "iRms", false, 1) +
-                                "</td></tr><tr><td>Peak Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vPeak", false, 1) +
-                                "</td></tr><tr><td>Peak Current (amps)</td><td>" + getProbeValues(result.Samples, "iPeak", false, 1) +
-                                "</td></tr></table></td><td><table><tr><td>Average real power (watts) </td><td>" + getProbeValues(result.Samples, "pAve", true, 1) +
-                                "</td></tr><tr><td>Average reactive power (vars)</td><td>" + getProbeValues(result.Samples, "qAve", true, 1) +
-                                "</td></tr><tr><td>Power factor</td><td>" + getProbeValues(result.Samples, "pf", false, 6) +
-                                "</td></tr><tr><td>Timestamp</td><td>" + (new Date(result.Samples[0].ts)).toLocaleString() +
-                                "</td></tr></table></td></table>";
-
-                    //var html =  "<table><td><table><tr><td>Rms Voltage</td><td>" + result.Samples[0].vRms.toFixed(1) + " volts" +
-                    //            "</td></tr><tr><td>Rms Current</td><td>" + result.Samples[0].iRms.toFixed(1) + " amps" +
-                    //            "</td></tr><tr><td>Peak Voltage</td><td>" + result.Samples[0].vPeak.toFixed(1) + " volts" +
-                    //            "</td></tr><tr><td>Peak Current</td><td>" + result.Samples[0].iPeak.toFixed(1) + " amps" +
-                    //            "</td></tr></table></td><td><table><tr><td>Average real power</td><td>" + result.pAve.toFixed(1) + " watts" +
-                    //            "</td></tr><tr><td>Average reactive power</td><td>" + result.qAve.toFixed(1) + " vars" +
-                    //            "</td></tr><tr><td>Power factor</td><td>" + result.pf.toFixed(6) +
-                    //            "</td></tr><tr><td>Timestamp</td><td>" + (new Date(result.Samples[0].ts)).toLocaleString() +
-                    //            "</td></tr></table></td></table>";
-
-                    /*$("#tooltip").html(html)
-						//.css({ top: item.pageY + 5, left: item.pageX + 5 })
-                        .css({ top: 200, left: 200 })
-						.fadeIn(200);*/
-
-                    $("#table").html(html);
-
-                    if (lastTimespan != "Instant") {
-                        console.log('resize');
-                        $(window).trigger('resize');
+                    if (includeTotal) {
+                        result += " (" + total.toFixed(digits) + ")";
                     }
-
+                    return result;
                 }
 
-                lastTimespan = "Instant";
+                var html = "<table><td><table><tr><td>Rms Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vRms", false, 1) +
+                            "</td></tr><tr><td>Rms Current (amps)</td><td>" + getProbeValues(result.Samples, "iRms", false, 1) +
+                            "</td></tr><tr><td>Peak Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vPeak", false, 1) +
+                            "</td></tr><tr><td>Peak Current (amps)</td><td>" + getProbeValues(result.Samples, "iPeak", false, 1) +
+                            "</td></tr></table></td><td><table><tr><td>Average real power (watts) </td><td>" + getProbeValues(result.Samples, "pAve", true, 1) +
+                            "</td></tr><tr><td>Average reactive power (vars)</td><td>" + getProbeValues(result.Samples, "qAve", true, 1) +
+                            "</td></tr><tr><td>Power factor</td><td>" + getProbeValues(result.Samples, "pf", false, 6) +
+                            "</td></tr><tr><td>Timestamp</td><td>" + (new Date(result.Samples[0].ts)).toLocaleString() +
+                            "</td></tr></table></td></table>";
+
+                //var html =  "<table><td><table><tr><td>Rms Voltage</td><td>" + result.Samples[0].vRms.toFixed(1) + " volts" +
+                //            "</td></tr><tr><td>Rms Current</td><td>" + result.Samples[0].iRms.toFixed(1) + " amps" +
+                //            "</td></tr><tr><td>Peak Voltage</td><td>" + result.Samples[0].vPeak.toFixed(1) + " volts" +
+                //            "</td></tr><tr><td>Peak Current</td><td>" + result.Samples[0].iPeak.toFixed(1) + " amps" +
+                //            "</td></tr></table></td><td><table><tr><td>Average real power</td><td>" + result.pAve.toFixed(1) + " watts" +
+                //            "</td></tr><tr><td>Average reactive power</td><td>" + result.qAve.toFixed(1) + " vars" +
+                //            "</td></tr><tr><td>Power factor</td><td>" + result.pf.toFixed(6) +
+                //            "</td></tr><tr><td>Timestamp</td><td>" + (new Date(result.Samples[0].ts)).toLocaleString() +
+                //            "</td></tr></table></td></table>";
+
+                /*$("#tooltip").html(html)
+					//.css({ top: item.pageY + 5, left: item.pageX + 5 })
+                    .css({ top: 200, left: 200 })
+					.fadeIn(200);*/
+
+                $("#table").html(html);
+
+                if (lastTimespan != "Instant") {
+                    console.log('resize');
+                    $(window).trigger('resize');
+                }
+
+            }
+
+            lastTimespan = "Instant";
 
 
 
                
 
 
-                placeholder.bind("plothover", function (event, pos, item) {
-                    latestPosition = pos;
-                    if (!updateLegendTimeout) {
-                        updateLegendTimeout = setTimeout(updateLegend, 50);
-                    }
-                });
+            placeholder.bind("plothover", function (event, pos, item) {
+                latestPosition = pos;
+                if (!updateLegendTimeout) {
+                    updateLegendTimeout = setTimeout(updateLegend, 50);
+                }
+            });
 
-                placeholder.dblclick(function () {
-                    options.xaxis.min = null;
-                    options.xaxis.max = null;
-                    plot = $.plot(placeholder, data, options);
+            placeholder.dblclick(function () {
+                options.xaxis.min = null;
+                options.xaxis.max = null;
+                plot = $.plot(placeholder, data, options);
 		    
-                });
+            });
 
-                placeholder.bind("plotselected", function (event, ranges) {
+            placeholder.bind("plotselected", function (event, ranges) {
 
-                    $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+                $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
 
-                    plot = $.plot(placeholder, data, $.extend(true, {}, options, {
-                        xaxis: {
-                            min: ranges.xaxis.from,
-                            max: ranges.xaxis.to
-                        }
-                    }));
+                plot = $.plot(placeholder, data, $.extend(true, {}, options, {
+                    xaxis: {
+                        min: ranges.xaxis.from,
+                        max: ranges.xaxis.to
+                    }
+                }));
 		    
-                });
+            });
 
-                placeholder.bind("plotunselected", function (event) {
-                    $("#selection").text("");
-                });
+            placeholder.bind("plotunselected", function (event) {
+                $("#selection").text("");
+            });
 
-                var plot = $.plot(placeholder, data, options);
+            var plot = $.plot(placeholder, data, options);
 
-                if ($.isFunction(callback))
-                    callback();
+            if ($.isFunction(callback))
+                callback();
 
 
-                var legends = placeholder.find(".legendLabel");
+            var legends = placeholder.find(".legendLabel");
 
-                legends.each(function () {
-                    // fix the widths so they don't jump around
-                    $(this).css('width', $(this).width());
-                });
+            legends.each(function () {
+                // fix the widths so they don't jump around
+                $(this).css('width', $(this).width());
+            });
 
-                var updateLegendTimeout = null;
-                var latestPosition = null;
+            var updateLegendTimeout = null;
+            var latestPosition = null;
 
-                function updateLegend() {
+            function updateLegend() {
 
-                    updateLegendTimeout = null;
+                updateLegendTimeout = null;
 
-                    var pos = latestPosition;
+                var pos = latestPosition;
 
-                    var axes = plot.getAxes();
-                    if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max || pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
-                        return;
+                var axes = plot.getAxes();
+                if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max || pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
+                    return;
+                }
+
+                var i, j, dataset = plot.getData();
+                for (i = 0; i < dataset.length; ++i) {
+
+                    var series = dataset[i];
+
+                    // Find the nearest points, x-wise
+
+                    for (j = 0; j < series.data.length; ++j) {
+                        if (series.data[j][0] > pos.x) {
+                            break;
+                        }
                     }
 
-                    var i, j, dataset = plot.getData();
-                    for (i = 0; i < dataset.length; ++i) {
+                    if (series.data.length > 0) {
+                        // Now Interpolate
+                        var y, p1 = series.data[j - 1], p2 = series.data[j];
 
-                        var series = dataset[i];
-
-                        // Find the nearest points, x-wise
-
-                        for (j = 0; j < series.data.length; ++j) {
-                            if (series.data[j][0] > pos.x) {
-                                break;
-                            }
+                        if (p1 == null) {
+                            y = p2[1];
+                        } else if (p2 == null) {
+                            y = p1[1];
+                        } else {
+                            y = p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]);
                         }
 
-                        if (series.data.length > 0) {
-                            // Now Interpolate
-                            var y, p1 = series.data[j - 1], p2 = series.data[j];
+                        legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(2)));
 
-                            if (p1 == null) {
-                                y = p2[1];
-                            } else if (p2 == null) {
-                                y = p1[1];
-                            } else {
-                                y = p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]);
-                            }
-
-                            legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(2)));
-
-                        }
                     }
                 }
             }
+            
         }
     });
 }

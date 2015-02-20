@@ -419,6 +419,7 @@ app.get('*', function(req, res){
 
 
 server = app.listen(app.get('port'), function() {
+    power.Start();
     console.log('App Server running at port ' + app.get('port'));
 });
 
