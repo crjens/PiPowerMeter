@@ -446,7 +446,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                         total += samples[i][property];
                     }
 
-                    if (includeTotal) {
+                    if (includeTotal && samples.length > 1) {
                         result += " (" + total.toFixed(digits) + ")";
                     }
                     return result;
