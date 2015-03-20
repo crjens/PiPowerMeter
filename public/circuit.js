@@ -16,6 +16,8 @@ var selectTimespanOption = function (timespan) {
             .filter(function (index) { return $(this).text() === timespan; })
             .prop('selected', true);
     }
+
+    updateGroupBy();
 }
 
 var InitializeGraph = function (channel, timespan, start, end, callback) {
@@ -69,7 +71,7 @@ var InitializeGraph = function (channel, timespan, start, end, callback) {
 
 var data, options, placeholder, lastTimespan="";
 
-var RefreshGraph = function (circuitId, timespanDate, callback) {
+var RefreshGraph = function (circuitId, timespanDate, groupBy, callback) {
     //CurrentScale = currentScale;
     placeholder = $("#placeholder");
     placeholder.empty();
@@ -87,17 +89,17 @@ var RefreshGraph = function (circuitId, timespanDate, callback) {
         }
         lastTimespan = timespanDate.timespan;
 
-        var groupBy;
-        if (elapsed <= 1000*60*60*24)  // one day
-            groupBy = null;
-        else if (elapsed <= 1000*60*60*24*7)  // one week
-            groupBy = 'hour';
-        else if (elapsed <= 1000*60*60*24*31)  // one month
-            groupBy = 'day';
-        else
+        //var groupBy;
+        //if (elapsed <= 1000*60*60*24)  // one day
+        //    groupBy = null;
+        //else if (elapsed <= 1000*60*60*24*7)  // one week
+        //    groupBy = 'hour';
+        //else if (elapsed <= 1000*60*60*24*31)  // one month
+        //    groupBy = 'day';
+        //else
             //groupBy = 'day';
-            groupBy = 'month';
-
+        //    groupBy = 'month';
+        
         RefreshPowerGraph(circuitId, timespanDate.Start, timespanDate.End, groupBy, callback);
     } 
 }

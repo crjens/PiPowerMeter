@@ -268,7 +268,7 @@ var Reset = function () {
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
 
     sleep(500);
-
+    
     write('FFFFFFFE', 'init serial port');
     command('80', 'reset');
     var s;

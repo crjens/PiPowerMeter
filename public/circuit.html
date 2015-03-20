@@ -84,6 +84,7 @@
             }
 
             var refresh = function (callback) {
+                var groupby = $('#groupby option:selected').val();
                 var timespan = $('#Timespan option:selected').val();
                 var timespanDate = GetTimespanDate(timespan);
                 var circuit = $('#circuits option:selected').val();
@@ -97,7 +98,7 @@
 
                 location.hash = hash;
 
-                RefreshGraph(circuit, timespanDate, callback);
+                RefreshGraph(circuit, timespanDate, groupby, callback);
             }
 
             $(function () {
@@ -151,6 +152,7 @@
                 var timespan = getParameterByName('timespan');
                 var start = getParameterByName('start');
                 var end = getParameterByName('end');
+		updateGroupBy();
 
                 InitializeGraph(channel, timespan, start, end, function () {
                     refresh(function () {
@@ -164,13 +166,59 @@
             }
 
             var timespanChanged = function () {
+
+      		updateGroupBy();
                 var timespan = $('#Timespan option:selected').val();
+
                 if (timespan != 'Custom') {
 
                     setTimeout(function () {
                         $('#refresh1').click();
                     }, 100);
                 }
+            }
+
+	    var groupbyChanged = function () {
+                setTimeout(function () {
+                    $('#refresh1').click();
+                }, 100);
+            }
+
+            var updateGroupBy = function () {
+                var timespan = $('#Timespan option:selected').val();
+		
+		$('#groupby').empty();
+
+		if (timespan == 'Instant' || timespan == 'Hour') 
+			$('#groupby').hide();
+		else if (timespan == 'Day') 
+			$('#groupby')
+				.show()
+				.append('<option selected="selected" value="None">None</option>')
+				.append('<option value="Hour">Hour</option>');
+		else if (timespan == 'Week') 
+			$('#groupby')
+				.show()
+				.append('<option value="None">None</option>')
+				.append('<option selected="selected" value="Hour">Hour</option>')
+				.append('<option value="Day">Day</option>');
+		else if (timespan == 'Month') 
+			$('#groupby')
+				.show()
+				.append('<option selected="selected" value="Hour">Hour</option>')
+				.append('<option value="Day">Day</option>');
+		else
+			$('#groupby')
+				.show()
+				.append('<option selected="selected" value="Hour">Hour</option>')
+				.append('<option value="Day">Day</option>')
+				.append('<option value="Month">Month</option>');
+            }
+
+	    var groupbyChanged = function () {
+                setTimeout(function () {
+                    $('#refresh1').click();
+                }, 100);
             }
 
 	</script>
@@ -195,6 +243,7 @@
                     <option value='Custom'>Custom</option>
                 </select>
                 <select id="circuits" onchange='circuitChanged()'></select>
+		<select id="groupby" onchange='groupbyChanged()'></select>
                 <div id='customtimespan'>
                     Start:<input type="text" name="start" id='start' size="25" value="" />
                     End:<input type="text" name="end" id='end' size="25" value="" />
