@@ -208,6 +208,11 @@ app.get('/config', function (req, res, next) {
         }
     }, true);
 });
+app.get('/restart', function (req, res, next) {
+    gracefulShutdown();
+    res.send("shutting down");
+});
+
 app.get('/compact', function (req, res, next) {
 
     if (compactRunning)
