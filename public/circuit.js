@@ -180,15 +180,15 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
     var p = [];
 
     var timeFormat;
-    if (groupBy == 'hour') {
+    if (groupBy.toLowerCase() == 'hour') {
         timeFormat = '%b %e<br>%I:%M %p';
         //options = GetLineGraphOptions(timeFormat);
         options = GetBarGraphOptions(timeFormat, 1000 * 60 * 60);  // barwidth= 1 hour
-    } else if (groupBy == 'day') {
+    } else if (groupBy.toLowerCase() == 'day') {
         timeFormat = '%b %e';
         //options = GetLineGraphOptions(timeFormat);
         options = GetBarGraphOptions(timeFormat, 1000 * 60 * 60 * 24);  // barwidth= 1 day
-    } else if (groupBy == 'month') {
+    } else if (groupBy.toLowerCase() == 'month') {
         timeFormat = '%b';
         //options = GetLineGraphOptions(timeFormat);
         options = GetBarGraphOptions(timeFormat, 1000 * 60 * 60 * 24 * 30, [1, "month"]);  // barwidth= 1 month
