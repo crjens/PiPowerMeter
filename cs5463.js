@@ -237,6 +237,25 @@ var FindProbeOffset = function (circuit, probeId) {
     return null;
 }
 
+var GetProbeAlertTime = function (probe) {
+    if (probe == null || probe.Alert == null || probe.Alert.indexOf(",") == -1)
+        return -1;
+
+    var index = probe.Alert.indexOf(",");
+
+    // min alert time is 30 minutes
+    return Math.max(30, Number(probe.Alert.substring(0, index)));
+}
+
+var GetProbeAlertThreshold = function (probe) {
+    if (probe == null || probe.Alert == null || probe.Alert.indexOf(",") == -1)
+        return 0;
+
+    var index = probe.Alert.indexOf(",");
+
+    return Number(probe.Alert.substring(index+1));
+}
+
 // create reader process
 var reader = require('child_process').fork(__dirname + '/reader.js');
 
@@ -269,6 +288,23 @@ reader.on('message', function (data) {
                     if (overloadMsg == null) overloadMsg = "";
                     overloadMsg += " [Probe: " + i + ": iRms = " + probe.Result.iRms.toFixed(1) + " amps / breaker = " + probe.Breaker + " amps]";
                 }
+
+                // check for alert
+                var alertTime = GetProbeAlertTime(probe);
+                if (alertTime >= 0) {
+                    if (circuit.AlertLevelExceeded == null)
+                        circuit.AlertLevelExceeded = new Date();
+
+                    if (probe.Result.pAve < GetProbeAlertThreshold(probe)) {
+                        circuit.AlertLevelExceeded = new Date();
+                    } else if ((circuit.AlertWarningSent == null || ((new Date()) - circuit.AlertWarningSent) > 1000 * 60 * alertTime)){// && ((new Date()) - circuit.AlertLevelExceeded) > 1000 * 60 * alertTime) {
+                        var elapsed = ((new Date()) - circuit.AlertLevelExceeded) / (1000 * 60);
+                        var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.toFixed(0) + " minutes";
+                        console.log(msg);
+                        netUtils.sendText(msg);
+                        circuit.AlertWarningSent = new Date();
+                    }
+                }
             }
         }
 
@@ -282,6 +318,7 @@ reader.on('message', function (data) {
             console.log(msg);
             netUtils.sendText(msg);
         }
+        
         //console.log(JSON.stringify(circuit.Samples[0]));
         db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts));
         console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.toFixed(1) + '  I= ' + circuit.Samples[0].iRms.toFixed(1) + '  P= ' + pTotal.toFixed(1) + '  Q= ' + qTotal.toFixed(1) + '  PF= ' + circuit.Samples[0].pf.toFixed(4));

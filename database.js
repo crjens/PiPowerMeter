@@ -47,37 +47,40 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
 
         powerDb.run('PRAGMA foreign_keys=on');
 
-        powerDb.run("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=1), Breaker int);", function (err) {
+        powerDb.run("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=1), Breaker int, Alert Text);", function (err) {
             if (err) {
                 console.log("Error creating Probes table: " + err);
                 TableStates.Probes = "Error";
             } else {
 
                 
-                // add Breaker column if doesn't exist
+                // add Alert column if doesn't exist
                 powerDb.all("pragma table_info(Probes);", function(err, results) {
                    if(err) {
-		       console.log("Error selecting from Probes table: " + err);
-                       TableStates.Probes = "Error";
-                   } else if (results.length == 5) {
-                       console.log("Adding breaker column to Probes table");
-                       powerDb.run("Alter table Probes add column Breaker int;", function(err) {
+		                console.log("Error selecting from Probes table: " + err);
+                        TableStates.Probes = "Error";
+                   } else if (results.length == 6) {
+                       console.log("Adding Alert column to Probes table");
+                       powerDb.run("Alter table Probes add column Alert int;", function(err) {
                            if(err) {
-                              console.log("Error adding breaker column to Probes table: " + err);
+                              console.log("Error adding Alert column to Probes table: " + err);
                               TableStates.Probes = "Error";
                            } else {
 
                               // insert first probe if none exist
-                powerDb.run("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker) select 1,'30A',0,0,0,20 where (select count(*) from Probes) = 0;");
+                              powerDb.run("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;");
 
                               console.log('Probes table ready');
                               TableStates.Probes = true;
                            }
                        });
                    } else {
-// insert first probe if none exist
-                powerDb.run("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker) select 1,'30A',0,0,0,20 where (select count(*) from Probes) = 0;");
-}
+                        // insert first probe if none exist
+                       powerDb.run("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;");
+
+                       console.log('Probes table ready');
+                       TableStates.Probes = true;
+                   }
                 });
 
             }
@@ -577,14 +580,14 @@ var db =
             }
         });
     },
-    updateProbe: function (id, type, board, currentChannel, voltageChannel, breaker, callback) {
+    updateProbe: function (id, type, board, currentChannel, voltageChannel, breaker, alert, callback) {
 
         var sql = '';
 
         if (id == null || id === undefined || id.toString() == '') {
-            sql = "Insert into Probes Values(null,'" + type.escape() + "'," + board + ',' + currentChannel + ',' + voltageChannel + ',' + breaker + "); ";
+            sql = "Insert into Probes Values(null,'" + type.escape() + "'," + board + ',' + currentChannel + ',' + voltageChannel + ',' + breaker + ",'" + alert + "'); ";
         } else {
-            sql = "Insert or replace into Probes Values(" + id + ",'" + type.escape() + "'," + board + ',' + currentChannel + ',' + voltageChannel + ',' + breaker + "); ";
+            sql = "Insert or replace into Probes Values(" + id + ",'" + type.escape() + "'," + board + ',' + currentChannel + ',' + voltageChannel + ',' + breaker + ",'" + alert + "'); ";
         }
         console.log(sql);
         db.runSql(sql, callback);
@@ -612,7 +615,7 @@ var db =
         var probeIds = [];
         var f = function (index) {
             if (index < probes.length) {
-                db.updateProbe(probes[index].id, probes[index].Type, probes[index].Board, probes[index].CurrentChannel, probes[index].VoltageChannel, probes[index].Breaker, function (err, lastID) {
+                db.updateProbe(probes[index].id, probes[index].Type, probes[index].Board, probes[index].CurrentChannel, probes[index].VoltageChannel, probes[index].Breaker, probes[index].Alert, function (err, lastID) {
                     if (err) {
                         if (callback != null)
                             callback(err);
@@ -660,7 +663,7 @@ var db =
             if (index < circuits.length) {
                 db.updateCircuit(circuits[index].id, circuits[index].Name, circuits[index].Description, circuits[index].Enabled, circuits[index].IsMain, circuits[index].Probes, function (err) {
                     if (err) {
-                        console.log('UpdateCircuits.f failed: ' + err);
+                        console.log('UpdateCircuits failed: ' + err);
                         if (callback != null)
                             callback(err);
                     } else {

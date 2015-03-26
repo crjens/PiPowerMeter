@@ -213,6 +213,7 @@
                     probe.CurrentChannel = $(row2).find('#currentchannel option:selected').val();
                     probe.VoltageChannel = $(row2).find('#voltagechannel option:selected').val();
                     probe.Breaker = $(row2).find('#breaker option:selected').val();
+                    probe.Alert = $(row2).find('#alert').val();
                     sensor.Probes.push(probe);
                 });
 
@@ -340,7 +341,7 @@
                 <th>Description</th>
                 <th>Main</th>
                 <th>Enabled</th>
-                <th>Probe, Board, Channel, Phase, Breaker</th>
+                <th>Probe, Board, Channel, Phase, Breaker, Alert (mins, watts)</th>
                 <th><img src='images/add.jpg' class='size18x18' onClick='addCircuit()'></th>
             </tr>
             {{#each Result.Circuits}}
@@ -450,6 +451,9 @@
                         <option value='200'>200 Amp</option>
                     {{/select}}
                 </select>
+            </td>
+	    <td>
+                <input type="text" name="alert" id="alert" value="{{Alert}}" class="text ui-widget-content ui-corner-all">
             </td>
             <td><img src='images/delete.jpg' class='size18x18' onClick='deleteProbe($(this))'></td>
         </tr>

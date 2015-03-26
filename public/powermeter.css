@@ -227,3 +227,7 @@ text-align:left;
 #circuitsTable td {
     text-align: center;
 }
+
+#alert {
+    width: 100px;
+}
