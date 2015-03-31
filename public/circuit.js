@@ -179,6 +179,10 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
     //var v = [], c = [];
     var p = [];
 
+
+    if (groupBy == null)
+        groupBy = "";
+
     var timeFormat;
     if (groupBy.toLowerCase() == 'hour') {
         timeFormat = '%b %e<br>%I:%M %p';
