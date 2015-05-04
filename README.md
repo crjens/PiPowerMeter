@@ -13,19 +13,19 @@ Features
  - Uses simple off the shelf clamp-on current sensors
  - Highly accurate measurement of voltage, current, power usage and power factor based on CS5463 energy IC
  - Raspberry Pi based control system
- -- All data stored locally in sqlite database
- -- Web based monitoring portal for viewing energy usage and configuration
- -- Ability to recieve text alerts for overloads or other events.
+   * All data stored locally in sqlite database
+   * Web based monitoring portal for viewing energy usage and configuration
+   * Ability to recieve text alerts for overloads or other events.
  
 
 
 Screenshots
 -----------
-![Main](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/main.png)
-![Daily](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/graph.png)
-![Instantaneous](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/instant.png)
-![Readings](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/readings.png)
-![Configuration](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/config.png)
+[Main](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/main.png)
+[Daily](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/graph.png)
+[Instantaneous](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/instant.png)
+[Readings](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/readings.png)
+[Configuration](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/config.png)
 
 
 
