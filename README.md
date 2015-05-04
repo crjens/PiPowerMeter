@@ -21,11 +21,11 @@ Features
 
 Screenshots
 -----------
-[Main](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/main.png)
-[Daily](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/graph.png)
-[Instantaneous](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/instant.png)
-[Readings](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/readings.png)
-[Configuration](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/config.png)
+- [Main](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/main.png)
+- [Daily](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/graph.png)
+- [Instantaneous](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/instant.png)
+- [Readings](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/readings.png)
+- [Configuration](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/config.png)
 
 
 
