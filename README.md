@@ -1,7 +1,18 @@
 PiPowerMeter
 =====
 
-Raspberry Pi Power meter
+PiPowerMeter is an energy usage monitor based on the Cirrus Logic CS5463 energy IC and a Raspberry Pi.  It consists of two custom designed stacking pcb's.  The main board houses the power supply, CS5643 IC, voltage sensors and supporting electronics.  The current sensor board includes 16 multiplexed current input channels that allow monitoring up to 16 different circuits via standard clamp-on ct's.  A single main board supports up to 8 stacked current sensor boards for a total monitoring capacity of up to 128 circuits.
+The system is controlled by a nodejs based program running on the Raspberry Pi and includes a web based monitoring portal.  Energy data are stored locally on the Raspberry Pi in a Sqlite database making the system 100% stand-alone with no requirement for additional hardware or external servers.
+
+
+Screenshots
+-----------
+
+![Main](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/main.png)
+![Daily](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/graph.png)
+![Instantaneous](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/instant.png)
+![Readings](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/readings.png)
+![Configuration](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/config.png)
 
 
 Install Instructions
