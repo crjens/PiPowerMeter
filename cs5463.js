@@ -533,6 +533,7 @@ var exports = {
                 if (softwareVersion != null)
                     _config.SoftwareVersion = softwareVersion;
 
+                _config.Uptime = timeSince(bootTime);
                 _config.DatabaseSize = numberWithCommas(getFilesizeInBytes('powermeter.db'));
                 callback(err, _config);
 
@@ -585,8 +586,6 @@ var exports = {
                     config[index].HardwareVersion = HardwareVersion;
                     config[index].Probes = probes;
                 }
-
-                config.Uptime = timeSince(bootTime);
 
                 callback(err, config);
             } else {
