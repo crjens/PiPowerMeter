@@ -313,6 +313,35 @@ app.post('/config', function (req, res, next) {
         }, config);
     }
 });
+app.post('/restoreconfig', function (req, res, next) {
+    var config = req.body;
+
+    if (config == null || config.Circuits == null) {
+        console.log("invalid post config value= " + config);
+        next("Invalid configuration");
+        res.send('error');
+    } else {
+        power.ReplaceConfiguration(function (err) {
+            if (err)
+                res.send('error');
+            else {
+                // remove the Circuits property
+                delete config.Circuits;
+
+                power.ReplaceProbeDefConfiguration(function (err) {
+                    if (err)
+                        next(err);
+                    else
+                        res.send('success');
+
+                    // reload config in case username/password changed
+                    readConfig();
+
+                }, config);
+            }
+        }, config.Circuits);
+    }
+});
 app.post('/probeDef', function (req, res, next) {
     var config = req.body.config;
 
