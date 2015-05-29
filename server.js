@@ -325,8 +325,13 @@ app.post('/restoreconfig', function (req, res, next) {
             if (err)
                 res.send('error');
             else {
-                // remove the Circuits property
+                // remove non config properties
                 delete config.Circuits;
+                delete config.DatabaseRows;
+                delete config.DatabaseSize;
+                delete config.SoftwareVersion;
+                delete config.Uptime;
+                delete config.VoltageFactor;
 
                 power.ReplaceProbeDefConfiguration(function (err) {
                     if (err)
