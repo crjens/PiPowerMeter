@@ -46,6 +46,7 @@
                     }).find('img').addClass('hidden');
 
                     $(templates.probedeftable(result)).appendTo($('#probedefs'));
+		    
                 }
             });
         }
@@ -101,9 +102,7 @@
                       });
                   });
 
-
-
-            $("#backupProbeDefs")
+            $("#backupConfig")
                   .button()
                   .click(function () {
                       $.ajax({
@@ -111,16 +110,32 @@
 	                type: 'get',
         	        dataType: 'json',
                 	cache: false,
-	                success: function (jsonText) {
-	                    window.prompt("Copy to clipboard: Ctrl+C, Enter", jsonText);
+	                success: function (json) {
+			    var config = { PiPowerMeterConfig: { Date: (new Date()).toString(), Configuration: json}}; 
+
+			    $("#configJson").val(JSON.stringify(config)).select();
+//	                    window.prompt("Copy to clipboard: Ctrl+C, Enter", JSON.stringify(json));
         	        }
 	            });
                   });
 
-	    $("#restoreProbeDefs")
+	    $("#restoreConfig")
                   .button()
                   .click(function () {
-                      var config = "";
+                      var configText = $('#configJson').val();
+
+                      // validate
+                      if (configText == null || configText.length == 0) {
+		           alert("Please paste the configuration you want to restore into the text area and try again.");
+		           return;
+		      }
+
+		      var config = JSON.parse(configText);
+		      if (config.PiPowerMeterConfig == null || config.PiPowerMeterConfig.Configuration == null || config.PiPowerMeterConfig.Configuration.Probes == null || config.PiPowerMeterConfig.Configuration.Circuits == null) {
+		           alert("Invalid configuration.");
+		           return;
+		      }
+		         
 
                       var url = '/restoreconfig';
                       $.post(url, config, function (result) {
@@ -305,8 +320,9 @@
         <h3>Backup/Restore</h3>
         <div>
             <div id='jsonConfig'>
-		<label for="json">Configuration</label>
-      		<input type="text" name="json" id="json" value="" class="text ui-widget-content ui-corner-all">
+		<div>To backup, click the Backup button and then use CTRL+C to copy the configuration to the clipboard.</div>
+		<div>To restore copy the new configuration into the text area and click the Restore button.</div>
+      		<textarea name="json" id="configJson" value="" cols="50" rows="20"></textarea>
 	    </div>
             <div class='buttons2'>
                 <button id='backupConfig'>Backup</button>

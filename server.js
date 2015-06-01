@@ -316,11 +316,12 @@ app.post('/config', function (req, res, next) {
 app.post('/restoreconfig', function (req, res, next) {
     var config = req.body;
 
-    if (config == null || config.Circuits == null) {
+    if (config == null || config.PiPowerMeterConfig == null || config.PiPowerMeterConfig.Configuration == null || config.PiPowerMeterConfig.Configuration.Circuits == null) {
         console.log("invalid post config value= " + config);
         next("Invalid configuration");
         res.send('error');
     } else {
+        config = config.PiPowerMeterConfig.Configuration;
         power.ReplaceConfiguration(function (err) {
             if (err)
                 res.send('error');

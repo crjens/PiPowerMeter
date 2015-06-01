@@ -267,7 +267,7 @@ var db =
 
             if (err)
                 return callback(err);
-
+            console.log('updating config: ' + name + " = " + value);
             sql = "Insert or Replace into Config Values('" + name.escape() + "', '" + value.escape() + "');";
 
             console.log(sql);

@@ -626,6 +626,10 @@ var exports = {
                 var name = array[index].name;
                 var value = array[index].value;
 
+                if (Object.prototype.toString.call(value) === '[object Array]') {
+                    value = JSON.stringify(value);
+                }
+
                 db.setConfig(name, value, function (err) {
                     if (!err)
                         setVal(index + 1);  // next
