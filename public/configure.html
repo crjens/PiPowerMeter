@@ -101,6 +101,34 @@
                       });
                   });
 
+
+
+            $("#backupProbeDefs")
+                  .button()
+                  .click(function () {
+                      $.ajax({
+                	url: '/config',
+	                type: 'get',
+        	        dataType: 'json',
+                	cache: false,
+	                success: function (jsonText) {
+	                    window.prompt("Copy to clipboard: Ctrl+C, Enter", jsonText);
+        	        }
+	            });
+                  });
+
+	    $("#restoreProbeDefs")
+                  .button()
+                  .click(function () {
+                      var config = "";
+
+                      var url = '/restoreconfig';
+                      $.post(url, config, function (result) {
+                          load();
+                          //alert('configuration update succeded');
+                      });
+                  });
+
 	    var updating = false;
 	    $( document ).on( "click", "#updateSource", function() {
 		if (updating == false) {
@@ -272,6 +300,17 @@
             <div id='probedefs'></div>
             <div class='buttons2'>
                 <button id='saveProbeDefs'>Save</button>
+            </div>
+        </div>
+        <h3>Backup/Restore</h3>
+        <div>
+            <div id='jsonConfig'>
+		<label for="json">Configuration</label>
+      		<input type="text" name="json" id="json" value="" class="text ui-widget-content ui-corner-all">
+	    </div>
+            <div class='buttons2'>
+                <button id='backupConfig'>Backup</button>
+                <button id='restoreConfig'>Restore</button>
             </div>
         </div>
     </div>
