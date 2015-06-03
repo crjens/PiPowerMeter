@@ -8069,7 +8069,7 @@ W = angled&lt;p&gt;
 <part name="VDD3" library="supply1" deviceset="VDD" device=""/>
 <part name="GND" library="supply2" deviceset="GND" device=""/>
 <part name="IC2" library="45xx" deviceset="4514" device="D">
-<attribute name="PARTNO" value="74HC154D,652"/>
+<attribute name="PARTNO" value="74HC4514D,652"/>
 </part>
 <part name="LED1" library="eagle-ltspice" deviceset="LED_E" device="" value="green">
 <attribute name="PARTNO" value="LTST-C150GKT"/>
