@@ -37,6 +37,7 @@ Install Instructions
 3. run 'sudo raspi-config' 
 	1. set locale and timezone under internationalisation options
 	2. enable SPI under Advanced Options
+	3. expand filesystem
 4. Install nodejs:
 	1.	wget http://nodejs.org/dist/v0.10.28/node-v0.10.28-linux-arm-pi.tar.gz
 	2.	tar -xvzf node-v0.10.28-linux-arm-pi.tar.gz
