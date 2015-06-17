@@ -47,7 +47,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
 
         powerDb.run('PRAGMA foreign_keys=on');
 
-        powerDb.run("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=1), Breaker int, Alert Text);", function (err) {
+        powerDb.run("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=3), Breaker int, Alert Text);", function (err) {
             if (err) {
                 console.log("Error creating Probes table: " + err);
                 TableStates.Probes = "Error";

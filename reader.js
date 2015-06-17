@@ -122,7 +122,7 @@ var convert = function (buffer, binPt, neg) {
 
 // board should be 0-7
 // currentchannel should be 0-15
-// voltagechannel should be 0-1
+// voltagechannel should be 0-3
 var SetCircuit = function (board, currentChannel, voltageChannel) {
 
     //console.log('set: ' + board + ', ' + currentChannel + ', ' + voltageChannel);
@@ -136,7 +136,7 @@ var SetCircuit = function (board, currentChannel, voltageChannel) {
         return;
     }
 
-    if (voltageChannel < 0 || voltageChannel > 1) {
+    if (voltageChannel < 0 || voltageChannel > 3) {
         console.log('Invalid voltage channel: ' + voltageChannel);
         return;
     }
@@ -412,7 +412,7 @@ process.on('message', function (data) {
             SetCircuit(probe.Board, probe.CurrentChannel, probe.VoltageChannel);
 
             var result = ReadPower(probe.iFactor, probe.vFactor);
-            if (result == null || result.freq > 70 || result.freq < 50)
+            if (result == null || result.freq > 70 || result.freq < 40)
                 result = null;
 
             probe.Result = result;
