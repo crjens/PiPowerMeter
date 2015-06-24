@@ -405,6 +405,7 @@ var db =
         else
             sql = "Select round(P,0) as P, Timestamp from Readings where CircuitId = " + circuitId + " and Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + ';';
 
+        var startTime = new Date();
         db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
@@ -416,6 +417,7 @@ var db =
                     ts[i] = results[i].Timestamp;
                     P[i] = results[i].P;
                 }
+                var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
                 telemetry.push("read (" + elapsed + " ms) : " + sql);
                 callback(null, { ts: ts, P: P });
             }
@@ -431,7 +433,7 @@ var db =
             sql = "select round(min(P),0) as min, round(max(P),0) as max, round(avg(P),0) as avg from readings where CircuitId = " + circuit + " and Timestamp > " + (new Date().getTime() - 60*60*24*1000) / 1000 + ";";
         }
 
-        console.log(sql);
+        var startTime = new Date();
 
         db.all(sql, function (err, results) {
             if (err) {
@@ -439,6 +441,7 @@ var db =
                 console.log("select err: " + err);
                 callback(err);
             } else {
+                var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
                 telemetry.push("minmaxavg (" + elapsed + " ms) : " + sql);
                 callback(null, results);
             }
@@ -459,12 +462,14 @@ var db =
             sql = 'select (select Name from Circuits where id = CircuitId) as CircuitId, P as Watts, P as Min, P as Max from (select * from readings order by timestamp desc limit (select count(*) from Circuits where Enabled=1))  where (select IsMain from Circuits where id=CircuitId) = 0 order by ' + orderBy + ' desc;';
         }
 
+        var startTime = new Date();
         db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
                 callback(err);
             } else {
+                var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
                 telemetry.push("cumulative (" + elapsed + " ms) : " + sql);
                 callback(null, results);
             }
