@@ -5,8 +5,9 @@ var fs = require('fs');
 var readingsTableColumnsSQL = "id INTEGER primary key, CircuitId int, I real, V real, P real, Q real, PF real, Timestamp int, Compacted int";
 
 var dbLocked = false;
-
+var cachedConfig = null, strippedConfig = null;
 var backupTimer = null;
+
 var scheduleBackup = function(backupPath) {
     if (backupTimer != null)
         clearTimeout(backupTimer);
@@ -45,9 +46,11 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
 
         console.log('opened database: ' + databaseFile);
 
-        powerDb.run('PRAGMA foreign_keys=on');
+        
+        //db.run('PRAGMA temp_store=memory', null, true);
+        db.runSql('PRAGMA foreign_keys=on', null, true);
 
-        powerDb.run("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=3), Breaker int, Alert Text);", function (err) {
+        db.runSql("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=3), Breaker int, Alert Text);", function (err) {
             if (err) {
                 console.log("Error creating Probes table: " + err);
                 TableStates.Probes = "Error";
@@ -55,92 +58,93 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
 
                 
                 // add Alert column if doesn't exist
-                powerDb.all("pragma table_info(Probes);", function(err, results) {
+                db.all("pragma table_info(Probes);", function(err, results) {
                    if(err) {
 		                console.log("Error selecting from Probes table: " + err);
                         TableStates.Probes = "Error";
                    } else if (results.length == 6) {
-                       console.log("Adding Alert column to Probes table");
-                       powerDb.run("Alter table Probes add column Alert int;", function(err) {
+                       //console.log("Adding Alert column to Probes table");
+                       db.runSql("Alter table Probes add column Alert int;", function (err) {
                            if(err) {
                               console.log("Error adding Alert column to Probes table: " + err);
                               TableStates.Probes = "Error";
                            } else {
 
                               // insert first probe if none exist
-                              powerDb.run("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;");
+                               db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;", null, true);
 
                               console.log('Probes table ready');
                               TableStates.Probes = true;
                            }
-                       });
+                       }, true);
                    } else {
                         // insert first probe if none exist
-                       powerDb.run("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;");
+                       db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;", null, true);
 
                        console.log('Probes table ready');
                        TableStates.Probes = true;
                    }
-                });
+                }, true);
 
             }
-        });
+        }, true);
 
 
-        powerDb.run("create table if not exists Config ( Name text primary key, Value Text);", function (err) {
+        db.runSql("create table if not exists Config ( Name text primary key, Value Text);", function (err) {
             if (err) {
                 console.log("Error creating Config table: " + err);
                 TableStates.Config = "Error";
             } else {
 
-                powerDb.run("Insert or ignore into Config Values('Mode', '0000e0');");
-                powerDb.run("Insert or ignore into Config Values('Config', '801001');");
-                powerDb.run("Insert or ignore into Config Values('DeviceName', '');");
-                powerDb.run("Insert or ignore into Config Values('Price', '0.1');");
-                powerDb.run("Insert or ignore into Config Values('VoltageScale', '372');");
+                db.runSql("Insert or ignore into Config Values('Mode', '0000e0');", null, true);
+                db.runSql("Insert or ignore into Config Values('Config', '801001');", null, true);
+                db.runSql("Insert or ignore into Config Values('DeviceName', '');", null, true);
+                db.runSql("Insert or ignore into Config Values('Price', '0.1');", null, true);
+                db.runSql("Insert or ignore into Config Values('VoltageScale', '372');", null, true);
 
-                powerDb.run("Insert or ignore into Config Values('Probes', '[{''Name'':''30A'',''Factor'':''28''},{''Name'':''100A'',''Factor'':''69.5''},{''Name'':''200A'',''Factor'':''208''}]');");
+                db.runSql("Insert or ignore into Config Values('Probes', '[{''Name'':''30A'',''Factor'':''28''},{''Name'':''100A'',''Factor'':''69.5''},{''Name'':''200A'',''Factor'':''208''}]');", null, true);
 
                 console.log('Config table ready');
                 TableStates.Config = true;
 
-                powerDb.all("Select * from Config where Name = 'BackupDB';", function (err, results) {
+                db.all("Select * from Config where Name = 'BackupDB';", function (err, results) {
                     if (!err && results.length == 1)  {
                         scheduleBackup(results[0].Value);
                     }
-                });
+                }, true);
             }
-        });
+        }, true);
 
 
-        powerDb.run("create table if not exists Circuits ( id INTEGER primary key, Name Text, Description Text, Enabled int, IsMain int, Probes text);", function (err) {
+        db.runSql("create table if not exists Circuits ( id INTEGER primary key, Name Text, Description Text, Enabled int, IsMain int, Probes text);", function (err) {
             if (err) {
                 console.log("Error creating Circuits table: " + err);
                 TableStates.Circuits = "Error";
             } else {
 
                 // insert first circuit if none exist
-                powerDb.run("Insert into Circuits (id, Name, Description, Enabled, IsMain, Probes) select null,'Circuit 1','',1,0,'1' where (select count(*) from Circuits) = 0;");
+                db.runSql("Insert into Circuits (id, Name, Description, Enabled, IsMain, Probes) select null,'Circuit 1','',1,0,'1' where (select count(*) from Circuits) = 0;", null, true);
 
                 console.log('Circuits table ready');
                 TableStates.Circuits = true;
 
-                powerDb.run("create table if not exists Readings (" + readingsTableColumnsSQL + ", foreign key(CircuitId) references Circuits(id));", function (err) {
+                db.runSql("create table if not exists Readings (" + readingsTableColumnsSQL + ", foreign key(CircuitId) references Circuits(id));", function (err) {
                     if (err) {
                         console.log("Error creating Readings table: " + err);
                         TableStates.Readings = "Error";
                     } else {
-                        updateTotalRowCount();
+                        // schedule for later to improve perf
+                        setTimeout(updateTotalRowCount, 5000);
 
                         console.log('Readings table ready');
                         TableStates.Readings = true;
-                        //powerDb.run("create index if not exists Readings_CircuitId_idx on Readings(CircuitId);");
-                        powerDb.run("create index if not exists Readings_Timestamp_CircuitId_P_idx on Readings(Timestamp, CircuitId, P);");
-                        powerDb.run("create index if not exists Readings_CircuitId_Timestamp_P_idx on Readings(CircuitId, Timestamp, P);");
+                        //db.runSql("create index if not exists Readings_CircuitId_idx on Readings(CircuitId);", null, true);
+                        db.runSql("create index if not exists Readings_Timestamp_CircuitId_P_idx on Readings(Timestamp, CircuitId, P);", null, true);
+                        db.runSql("create index if not exists Readings_CircuitId_Timestamp_P_idx on Readings(CircuitId, Timestamp, P);", null, true);
                     }
-                });
+                }, true);
             }
-        });
+        }, true);
     }
 
 });
@@ -187,16 +191,13 @@ var _runSqlCommands = function(sql, index, callback) {
 
 var updateTotalRowCount = function (callback) {
     sql = 'select count(*) as Rows from Readings;';
-    startTime = new Date();
-    powerDb.all(sql, function (err, rows) {
-        elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
+    
+    db.all(sql, function (err, rows) {
         totalRowCount = rows[0].Rows;
-
-        console.log("updateTotalRowCount(" + elapsed + ") : " + totalRowCount);
 
         if (callback != null)
             callback(err, result);
-    });
+    }, true);
 }
 
 function numberWithCommas(x) {
@@ -205,25 +206,6 @@ function numberWithCommas(x) {
     return parts.join(".");
 }
 
-var cachedConfig = null, strippedConfig = null;
-var run = function (sql, callback)
-{
-    var startTime = new Date();
-    powerDb.run(sql, function (err) {
-        var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-        //console.log("(" + elapsed + " s): " + sql);
-
-        if (err)
-            console.log("(" + elapsed + " s): error running statement: " + sql + " err: " + err);
-        else
-            console.log("(" + elapsed + " s): succeeded running statement: " + sql);
-
-        if (callback != null)
-            callback(err, this.lastID);
-
-    });
-    
-}
 
 String.prototype.escape = function (str) { return (this.replace(/'/g, "''")) }
 
@@ -243,7 +225,7 @@ var db =
 
             //console.log(sql);
 
-            powerDb.all(sql, function (err, results) {
+            db.all(sql, function (err, results) {
                 if (err) {
                     console.log(sql);
                     console.log("select err: " + err);
@@ -258,7 +240,7 @@ var db =
 
                     callback(null, ret);
                 }
-            });
+            }, true);
         });
     },
     setConfig: function (name, value, callback) {
@@ -267,12 +249,9 @@ var db =
 
             if (err)
                 return callback(err);
-            console.log('updating config: ' + name + " = " + value);
+
             sql = "Insert or Replace into Config Values('" + name.escape() + "', '" + value.escape() + "');";
-
-            console.log(sql);
-
-            powerDb.all(sql, function (err, results) {
+            db.all(sql, function (err, results) {
                 if (err) {
                     console.log(sql);
                     console.log("select err: " + err);
@@ -280,7 +259,7 @@ var db =
 
                 if (callback != null)
                     callback(err);
-            });
+            }, true);
         });
     },
     insert: function (circuitId, i, v, p, q, pf, ts, callback) {
@@ -293,7 +272,7 @@ var db =
 
                 var sql = "Insert into Readings Values(null," + circuitId + ',' + i + ',' + v + ',' + p + "," + q + ',' + pf + ",'" + ts.getTime() / 1000 + "',null);"
 
-                powerDb.exec(sql, function (err) {
+                db.execSql(sql, function (err) {
                     if (err)
                         console.log("Sql error executing statement: " + sql + " err: " + err);
                     else
@@ -309,7 +288,7 @@ var db =
 
         var sql = "select count(*) as count from readings where Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + " and Compacted is not null;";
 
-        powerDb.all(sql, function (err, results) {
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
@@ -321,7 +300,7 @@ var db =
                 ret.Compacted = results[0].count;
                 sql = "select count(*) as count from readings where Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + " and Compacted is null;";
 
-                powerDb.all(sql, function (err, results) {
+                db.all(sql, function (err, results) {
                     if (err) {
                         console.log(sql);
                         console.log("select err: " + err);
@@ -331,9 +310,9 @@ var db =
                         ret.NotCompacted = results[0].count;
                         callback(null, ret);
                     }
-                });
+                }, true);
             }
-        });
+        }, true);
         
     },
     // compact the database
@@ -426,12 +405,7 @@ var db =
         else
             sql = "Select round(P,0) as P, Timestamp from Readings where CircuitId = " + circuitId + " and Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + ';';
 
-        console.log(sql);
-
-        var startTime = new Date();
-        powerDb.all(sql, function (err, results) {
-            var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-            console.log("(" + elapsed +")");
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
@@ -445,7 +419,7 @@ var db =
                 telemetry.push("read (" + elapsed + " ms) : " + sql);
                 callback(null, { ts: ts, P: P });
             }
-        });
+        }, true);
     },
     minmaxavg: function (circuit, start, end, telemetry, callback) {
         var sql;
@@ -459,10 +433,7 @@ var db =
 
         console.log(sql);
 
-        var startTime = new Date();
-        powerDb.all(sql, function (err, results) {
-            var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-            console.log("minmaxavg(" + elapsed + ")");
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
@@ -471,7 +442,7 @@ var db =
                 telemetry.push("minmaxavg (" + elapsed + " ms) : " + sql);
                 callback(null, results);
             }
-        });
+        }, true);
     },
     // return cumulative power for a given time range
     cumulative: function (start, end, orderBy, telemetry, callback) {
@@ -488,11 +459,7 @@ var db =
             sql = 'select (select Name from Circuits where id = CircuitId) as CircuitId, P as Watts, P as Min, P as Max from (select * from readings order by timestamp desc limit (select count(*) from Circuits where Enabled=1))  where (select IsMain from Circuits where id=CircuitId) = 0 order by ' + orderBy + ' desc;';
         }
 
-        console.log(sql);
-        var startTime = new Date();
-        powerDb.all(sql, function (err, results) {
-            var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-            console.log("cumulative(" + elapsed + ")");
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
@@ -501,7 +468,7 @@ var db =
                 telemetry.push("cumulative (" + elapsed + " ms) : " + sql);
                 callback(null, results);
             }
-        });
+        }, true);
     },
     rollup: function (callback, includeMains) {
 
@@ -516,11 +483,7 @@ var db =
 
         // get top three circuits using the most energy over the last day
         var sql = "Select C.Name as CircuitId, round(avg(P),1) as Watts from Readings R inner join Circuits C on R.CircuitId=C.id where " + exclude + " Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + " group by CircuitId order by Watts desc limit 3; ";
-        console.log(sql);
-        var startTime = new Date();
-        powerDb.all(sql, function (err, results) {
-            var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-            console.log("rollup1(" + elapsed + ")");
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
@@ -537,11 +500,7 @@ var db =
 
                 // total energy consumed on Mains over last day
                 sql = "Select round(avg(P),1) as Watts from Readings where CircuitId=(select id from Circuits where IsMain=1) and Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + ";";
-                console.log(sql);
-                startTime = new Date();
-                powerDb.all(sql, function (err, results) {
-                    elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-                    console.log("rollup2(" + elapsed + ")");
+                db.all(sql, function (err, results) {
                     if (err) {
                         console.log(sql);
                         console.log("select err: " + err);
@@ -554,11 +513,7 @@ var db =
                         // total energy consumed on Mains over last 30 days
                         start = new Date(end - (msPerDay * 30));
                         sql = "Select round(avg(P),1) as Watts from Readings where CircuitId=(select id from Circuits where IsMain=1) and Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + ";";
-                        console.log(sql);
-                        startTime = new Date();
-                        powerDb.all(sql, function (err, results) {
-                            elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-                            console.log("rollup3(" + elapsed + ")");
+                        db.all(sql, function (err, results) {
                             if (err) {
                                 console.log(sql);
                                 console.log("select err: " + err);
@@ -571,14 +526,11 @@ var db =
                                 //console.log(JSON.stringify(result));
                                 callback(null, result);
                             }
-                        });
-
-
+                        }, true);
                     }
-                });
-
+                }, true);
             }
-        });
+        }, true);
     },
     updateProbe: function (id, type, board, currentChannel, voltageChannel, breaker, alert, callback) {
 
@@ -589,11 +541,39 @@ var db =
         } else {
             sql = "Insert or replace into Probes Values(" + id + ",'" + type.escape() + "'," + board + ',' + currentChannel + ',' + voltageChannel + ',' + breaker + ",'" + alert + "'); ";
         }
-        console.log(sql);
-        db.runSql(sql, callback);
+        
+        db.runSql(sql, callback, true);
     },
-    execSql: function (sql, callback) {
+    all: function (sql, callback, log) {
+        var startTime = null;
+        if (arguments.length == 3)
+            startTime = new Date();
+
+        powerDb.all(sql, function (err, results) {
+
+            if (startTime != null) {
+                var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
+                console.log("elapsed " + elapsed + " (" + sql + ")");
+            }
+
+            if (err)
+                console.log("Sql error running statement: " + sql + " err: " + err);
+
+            if (callback != null)
+                callback(err, results);
+        });
+    },
+    execSql: function (sql, callback, log) {
+        var startTime = null;
+        if (arguments.length == 3)
+            startTime = new Date();
+
         powerDb.exec(sql, function (err) {
+            if (startTime != null) {
+                var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
+                console.log("elapsed " + elapsed + " (" + sql + ")");
+            }
+
             if (err)
                 console.log("Sql error executing statement: " + sql + " err: " + err);
 
@@ -601,13 +581,22 @@ var db =
                 callback(err);
         });
     },
-    runSql: function (sql, callback) {
+    runSql: function (sql, callback, log) {
+        var startTime = null;
+        if (arguments.length == 3)
+            startTime = new Date();
         powerDb.run(sql, function (err) {
+
+            if (startTime != null) {
+                var elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
+                console.log("elapsed " + elapsed + " (" + sql + ")");
+            }
+
             if (err)
                 console.log("Sql error running statement: " + sql + " err: " + err);
 
             if (callback != null)
-                callback(err, this.lastID);
+                callback(err, this.lastID, this.changes);
         });
     },
     updateProbes: function (probes, callback) {
@@ -640,20 +629,25 @@ var db =
     updateCircuit: function (circuitId, name, description, enabled, isMain, probes, callback) {
         cachedConfig = null;
         db.updateProbes(probes, function (err, probeIds) {
-
             if (err) {
                 if (callback != null)
                     callback(err);
             } else {
-                var sql = '';
+                var sql = "into Circuits Values(null,'" + name.escape() + "', '" + description.escape() + "'," + enabled + "," + isMain + ",'" + probeIds.join() + "');";
                 if (circuitId == null || circuitId === undefined || circuitId.toString() == '') {
-                    sql = "Insert into Circuits Values(null,'" + name.escape() + "', '" + description.escape() + "'," + enabled + "," + isMain + ",'" + probeIds.join() + "');";
+                    db.runSql("insert " + sql, callback, true);
                 } else {
-                    sql = "Insert or replace into Circuits Values(" + circuitId + ",'" + name.escape() + "', '" + description.escape() + "'," + enabled + "," + isMain + ",'" + probeIds.join() + "');";
-                }
+                    // to improve perf try update first then insert
+                    var updatesql = "update Circuits set Name='"+ name.escape() + "', Description='"+ description.escape() + "', Enabled="+ enabled + ", IsMain=" + isMain + ", Probes='" + probeIds.join() + "' where id =" + circuitId + ";"; //Values(" + circuitId + ",'" + name.escape() + "', '" + description.escape() + "'," + enabled + "," + isMain + ",'" + probeIds.join() + "');";
+                    db.runSql(updatesql, function (err, lastID, changes) {
 
-                console.log(sql);
-                db.runSql(sql, callback);
+                        if (err == null && changes == 0) {
+                            db.runSql('insert or replace ' + sql, callback, true);
+                        } else {
+                            callback(err, lastID);
+                        }
+                    }, true);
+                }
             }
         });
     },
@@ -700,10 +694,7 @@ var db =
 
             var sql = "select * from Circuits;";
 
-            var startTime = new Date();
-            powerDb.all(sql, function (err, circuits) {
-                elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-                console.log("getCircuits1(" + elapsed + ")");
+            db.all(sql, function (err, circuits) {
                 if (err) {
                     console.log(sql);
                     console.log("select err: " + err);
@@ -713,10 +704,7 @@ var db =
                     // fetch probes
                     sql = "Select * from Probes;";
                     //console.log(sql);
-                    startTime = new Date();
-                    powerDb.all(sql, function (err, probes) {
-                        elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-                        console.log("getCircuits2(" + elapsed + ")");
+                    db.all(sql, function (err, probes) {
                         if (err) {
                             console.log(sql);
                             console.log("select err: " + err);
@@ -746,10 +734,7 @@ var db =
 
                             sql = "Select * from Config;";
                             //console.log(sql);
-                            startTime = new Date();
-                            powerDb.all(sql, function (err, configs) {
-                                elapsed = (new Date().getTime() - startTime.getTime()) / 1000;
-                                console.log("getCircuits3(" + elapsed + ")");
+                            db.all(sql, function (err, configs) {
                                 //console.log('config: ' + JSON.stringify(config));
                                 result = {};
 
@@ -790,15 +775,15 @@ var db =
                                     callback(null, strippedConfig);
                                 else
                                     callback(null, result);
-                            });
+                            }, true);
                         }
-                    });
+                    }, true);
                 }
-            });
+            }, true);
         });
     },
     select: function (callback, sql) {
-        powerDb.all(sql, function (err, results) {
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
@@ -828,12 +813,12 @@ var db =
             };
 
             //console.log(sql);
-            powerDb.exec(sql, function (err) {
+            db.execSql(sql, function (err) {
                 if (err) {
                     console.log("Sql error executing statement: " + sql + " err: " + err);
                 }
                 callback(err);
-            });
+            }, true);
         } else {
             console.log('bad');
         }
@@ -842,16 +827,16 @@ var db =
         // WARNING - deletes all data !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         cachedConfig = null;
         var sql = "Select Probes from Circuits where id=" + circuitId + ";"
-        console.log(sql);
-        powerDb.all(sql, function (err, results) {
+        
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
                 callback(err);
             } else {
                 sql = "Delete from Readings where CircuitId=" + circuitId + "; Delete from Probes where id in(" + results[0].Probes + "); Delete from Circuits where id=" + circuitId + ";";
-                console.log(sql);
-                powerDb.exec(sql, function (err) {
+                
+                db.execSql(sql, function (err) {
                     if (err) {
                         console.log(sql);
                         console.log("delete err: " + err);
@@ -859,15 +844,15 @@ var db =
                     } else {
                         callback(null);
                     }
-                });
+                }, true);
             }
-        });
+        }, true);
     },
     deleteProbe: function (callback, probeId) {
         cachedConfig = null;
         var sql = "Select * from Circuits where Probes like '%" + probeId + "%';"
-        console.log(sql);
-        powerDb.all(sql, function (err, results) {
+        
+        db.all(sql, function (err, results) {
             if (err) {
                 console.log(sql);
                 console.log("select err: " + err);
@@ -893,8 +878,8 @@ var db =
                 }
                 // delete from probes table
                 sql = "Delete from Probes where id=" + probeId + ";";
-                console.log(sql);
-                powerDb.exec(sql, function (err) {
+                
+                db.execSql(sql, function (err) {
                     if (err) {
                         console.log(sql);
                         console.log("delete err: " + err);
@@ -902,21 +887,9 @@ var db =
                     } else {
                         callback(null);
                     }
-                });
+                }, true);
             }
-        });
-
-        var sql = "Delete from Probes where id=" + probeId + ";";
-        console.log(sql);
-        powerDb.exec(sql, function (err) {
-            if (err) {
-                console.log(sql);
-                console.log("delete err: " + err);
-                callback(err);
-            } else {
-                callback(null);
-            }
-        });
+        }, true);
     }
 };
 

@@ -213,44 +213,44 @@ app.get('/restart', function (req, res, next) {
     res.send("shutting down");
 });
 
-app.get('/compact', function (req, res, next) {
+//app.get('/compact', function (req, res, next) {
 
-    if (compactRunning)
-        return res.send('Compact already running');
+//    if (compactRunning)
+//        return res.send('Compact already running');
 
-    var start = req.query.start;
-    var end = req.query.end;
+//    var start = req.query.start;
+//    var end = req.query.end;
 
-    if (start == null || end == null)
-        return res.send("invalid start or end date");
+//    if (start == null || end == null)
+//        return res.send("invalid start or end date");
 
-    compactRunning = true;
+//    compactRunning = true;
 
-    console.log("compact(" + start + ', ' + end + ')');
+//    console.log("compact(" + start + ', ' + end + ')');
 
-    var startDate = null, endDate = null;
-    if (isNumber(start))
-        startDate = new Date(Number(start));
-    else
-        startDate = new Date(start);
+//    var startDate = null, endDate = null;
+//    if (isNumber(start))
+//        startDate = new Date(Number(start));
+//    else
+//        startDate = new Date(start);
 
-    if (isNumber(end))
-        endDate = new Date(Number(end));
-    else
-        endDate = new Date(end);
+//    if (isNumber(end))
+//        endDate = new Date(Number(end));
+//    else
+//        endDate = new Date(end);
 
     
-    db.compact(startDate, endDate, function (err) {
-        compactRunning = false;
-        if (err) {
-            next(err);
-        }
-        else {
-            res.send("compacted in: " + elapsed + " seconds");
-        }
-    });
+//    db.compact(startDate, endDate, function (err) {
+//        compactRunning = false;
+//        if (err) {
+//            next(err);
+//        }
+//        else {
+//            res.send("compacted in: " + elapsed + " seconds");
+//        }
+//    });
     
-});
+//});
 app.get('/count', function (req, res, next) {
     var start = req.query.start;
     var end = req.query.end;
