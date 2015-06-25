@@ -159,9 +159,7 @@ var SetCircuit = function (board, currentChannel, voltageChannel) {
 
         // set voltage channel
         cs5463.DigitalWrite(OutputPins.voltage0, (voltageChannel & 0x1));
-        if (HardwareVersion == 1.2) {
-            cs5463.DigitalWrite(OutputPins.voltage1, (voltageChannel & 0x2));
-        }
+        cs5463.DigitalWrite(OutputPins.voltage1, (voltageChannel & 0x2));
 
         // enable
         cs5463.DigitalWrite(OutputPins.disable, 0);
@@ -318,52 +316,22 @@ var Open = function () {
         cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
         //cs5463.Open("/dev/spidev0.0", 1200000);  // banana pi
 
-        console.log("Configuring hardware version: " + HardwareVersion);
-
-        if (HardwareVersion == 1.1) {
-            // pins 0, 1, 2, 3 control the channel
-            // pins 4, 5, 6 control the board
-            // pin 7 controls the voltage
-            // pin 8 is a global disable for both voltage and current
-            // pin 9 is to reset the meter IC
-            OutputPins = {
-                channel0: 0,    // header 11 - GPIO0
-                channel1: 1,    // header 12 - GPIO1
-                channel2: 2,    // header 13 - GPIO2
-                channel3: 3,    // header 15 - GPIO3
-                board0: 4,      // header 16 - GPIO4
-                board1: 5,      // header 18 - GPIO5
-                board2: 6,      // header 22 - GPIO6
-                voltage0: 7,    // header 7  - GPIO7
-                disable: 8,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
-                reset: 9        // header 5  - SCL0
-            }
-
-            InputPins = {
-                isr: 15         // Header 8 - TxD  (interrupt pin - connect to INT (20) on CS5463)
-            }
+        OutputPins = {
+            channel0: 0,    // header 11 - GPIO0
+            channel1: 1,    // header 12 - GPIO1
+            channel2: 2,    // header 13 - GPIO2
+            channel3: 3,    // header 15 - GPIO3
+            board0: 4,      // header 16 - GPIO4
+            board1: 15,      // header 18 - TxD
+            board2: 9,      // header 22 - GPIO6
+            voltage0: 7,    // header 7  - GPIO7
+            voltage1: 16,    // header 10  - RxD
+            disable: 8,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
+            reset: 6        // header 22  - GPIO6
         }
-        else if (HardwareVersion == 1.2) {
-            OutputPins = {
-                channel0: 0,    // header 11 - GPIO0
-                channel1: 1,    // header 12 - GPIO1
-                channel2: 2,    // header 13 - GPIO2
-                channel3: 3,    // header 15 - GPIO3
-                board0: 4,      // header 16 - GPIO4
-                board1: 15,      // header 18 - TxD
-                board2: 9,      // header 22 - GPIO6
-                voltage0: 7,    // header 7  - GPIO7
-                voltage1: 16,    // header 10  - RxD
-                disable: 8,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
-                reset: 6        // header 22  - GPIO6
-            }
 
-            InputPins = {
-                isr: 5         // Header 18 - GPIO5  (interrupt pin - connect to INT (20) on CS5463)
-            }
-        } else {
-            Console.log('Invalid Hardware version');
-            throw "Invalid hardware version";
+        InputPins = {
+            isr: 5         // Header 18 - GPIO5  (interrupt pin - connect to INT (20) on CS5463)
         }
 
         // enable output gpio pins

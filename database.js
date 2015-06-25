@@ -134,7 +134,8 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                         TableStates.Readings = "Error";
                     } else {
                         // schedule for later to improve perf
-                        setTimeout(updateTotalRowCount, 5000);
+                        updateTotalRowCount();
+                        //setTimeout(updateTotalRowCount, 5000);
 
                         console.log('Readings table ready');
                         TableStates.Readings = true;
@@ -759,8 +760,7 @@ var db =
                                     }
                                 }
 
-                                if (result["HardwareVersion"] != "1.1")
-                                    result["HardwareVersion"] = "1.2";
+                                result["HardwareVersion"] = "2.2";
 
                                 //console.log(JSON.stringify(result));
                                 result.Circuits = circuits;
