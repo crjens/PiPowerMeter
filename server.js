@@ -9,8 +9,6 @@ var onFinished = require('on-finished')
 var basicAuth = require('basic-auth');
 var path = require('path');
 
-
-
 var username = "", password = "", compactRunning = false;
 
 var app = express(), server;
@@ -200,11 +198,16 @@ app.get('/cumulative', function (req, res, next) {
     });
 });
 app.get('/config', function (req, res, next) {
+    var sendFile = req.query.file;
     power.GetCircuits(function (err, result) {
         if (err)
             next(err);
         else {
+            if (sendFile) {
+                res.set({ "Content-Disposition": "attachment; filename=config.json" });
+            }
             res.send(result);
+            
         }
     }, true);
 });
@@ -313,6 +316,7 @@ app.post('/config', function (req, res, next) {
         }, config);
     }
 });
+
 app.post('/restoreconfig', function (req, res, next) {
     var config = req.body;
 

@@ -659,7 +659,15 @@ var db =
     },
     updateCircuits: function (circuits, callback) {
         cachedConfig = null;
-        var f = function (index) {
+
+        // first drop any existing circuits that are not in the new config
+        var newCktIds = [];
+        for (i = 0; i < circuits.length; i++) {
+            newCktIds.push(circuits[i].id);
+        }
+
+
+        var f = function (index, callback) {
             if (index < circuits.length) {
                 db.updateCircuit(circuits[index].id, circuits[index].Name, circuits[index].Description, circuits[index].Enabled, circuits[index].IsMain, circuits[index].Probes, function (err) {
                     if (err) {
@@ -667,7 +675,7 @@ var db =
                         if (callback != null)
                             callback(err);
                     } else {
-                        f(index + 1);
+                        f(index + 1, callback);
                     }
                 });
             } else {
@@ -676,7 +684,45 @@ var db =
             }
         }
 
-        f(0);
+        var f2 = function (index, results, callback) {
+            if (index < results.length) {
+                db.deleteCircuit(function (err) {
+                    if (err) {
+                        console.log('deleteCircuit failed: ' + err);
+                        if (callback != null)
+                            callback(err);
+                    } else {
+                        f2(index + 1, results, callback);
+                    }
+                }, results[index].id);
+            } else {
+                if (callback != null)
+                    callback(null);
+            }
+        }
+
+        
+
+        db.select(function (err, results) {
+            if (err) {
+                callback(err);
+            } else {
+                f2(0, results, function (err) {
+                    if (err) {
+                        if (callback != null)
+                            callback(err);
+                    } else {
+                        f(0, callback);
+                    }
+                });
+
+                
+            }
+
+            
+        }, "select id from circuits where id not in (" + newCktIds.join(",") + ");");
+
+        //f(0);
     },
     getCircuits: function (callback, strip) {
 

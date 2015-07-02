@@ -15,6 +15,43 @@
 
         var templates = {}, Configuration = {};
 
+        var openFile = function(event) {
+          var input = event.target;
+
+          var reader = new FileReader();
+          reader.onload = function(){
+            var text = reader.result;
+//            $("#configJson").val(text);
+	    ImportConfig(text);
+          };
+          reader.readAsText(input.files[0]);
+        };
+
+	var ImportConfig = function(configText) {
+		// validate
+                if (configText == null || configText.length == 0) {
+		     alert("Please paste the configuration you want to restore into the text area and try again.");
+		     return;
+	        }
+
+	     var json= JSON.parse(configText);
+	     var config = { PiPowerMeterConfig: { Date: (new Date()).toString(), Configuration: json}};
+             if (config.PiPowerMeterConfig == null || config.PiPowerMeterConfig.Configuration == null || config.PiPowerMeterConfig.Configuration.Probes == null || config.PiPowerMeterConfig.Configuration.Circuits == null) {
+		   alert("Invalid configuration.");
+		   return;
+              }
+		         
+	      
+
+              var url = '/restoreconfig';
+              $.post(url, config, function (result) {
+                  load();
+                 //alert('configuration update succeded');
+              });
+	}
+
+
+
         var load = function () {
             $('#content').empty();
             $('#probedefs').empty();
@@ -46,6 +83,10 @@
                     }).find('img').addClass('hidden');
 
                     $(templates.probedeftable(result)).appendTo($('#probedefs'));
+
+	            if (location.search.indexOf("advanced")  == -1) {
+			$('.advanced').closest('tr').hide();
+		    }
 		    
                 }
             });
@@ -71,6 +112,26 @@
             Handlebars.registerPartial("circuit", $('#circuit-partial').html());
             Handlebars.registerPartial("probe", $('#probe-partial').html());
             Handlebars.registerPartial("probedef", $('#probedef-partial').html());
+
+	    var area = document.getElementById('configJson');
+if (area != null) {
+	    if (area.addEventListener) {
+		 area.addEventListener('input', function() {
+		   // event handling code for sane browsers
+		   var e= $('#configfile');
+                   e.wrap('<form>').closest('form').get(0).reset();
+		   e.unwrap();
+		 }, false);
+	    } else if (area.attachEvent) {
+		area.attachEvent('onpropertychange', function() {
+		   // IE-specific event handling code
+		   var e= $('#configfile');
+                   e.wrap('<form>').closest('form').get(0).reset();
+		   e.unwrap();
+
+		});
+            }
+}
 
             $("#save")
                   .button()
@@ -102,46 +163,32 @@
                       });
                   });
 
-            $("#backupConfig")
+            $("#exportConfigFile")
+                  .button()
+                  .click(function () {
+			window.location = "/config?file=1";
+                  });
+            $("#exportConfigText")
                   .button()
                   .click(function () {
                       $.ajax({
-                	url: '/config',
+                	url: '/config?file=1',
 	                type: 'get',
         	        dataType: 'json',
                 	cache: false,
 	                success: function (json) {
 			    var config = { PiPowerMeterConfig: { Date: (new Date()).toString(), Configuration: json}}; 
-
 			    $("#configJson").val(JSON.stringify(config)).select();
-//	                    window.prompt("Copy to clipboard: Ctrl+C, Enter", JSON.stringify(json));
         	        }
 	            });
                   });
 
-	    $("#restoreConfig")
+	    $("#importConfigText")
                   .button()
                   .click(function () {
                       var configText = $('#configJson').val();
 
-                      // validate
-                      if (configText == null || configText.length == 0) {
-		           alert("Please paste the configuration you want to restore into the text area and try again.");
-		           return;
-		      }
-
-		      var config = JSON.parse(configText);
-		      if (config.PiPowerMeterConfig == null || config.PiPowerMeterConfig.Configuration == null || config.PiPowerMeterConfig.Configuration.Probes == null || config.PiPowerMeterConfig.Configuration.Circuits == null) {
-		           alert("Invalid configuration.");
-		           return;
-		      }
-		         
-
-                      var url = '/restoreconfig';
-                      $.post(url, config, function (result) {
-                          load();
-                          //alert('configuration update succeded');
-                      });
+                      ImportConfig(configText);
                   });
 
 	    var updating = false;
@@ -317,40 +364,43 @@
                 <button id='saveProbeDefs'>Save</button>
             </div>
         </div>
-        <h3>Backup/Restore</h3>
+        <h3>Import/Export Configuration</h3>
         <div>
+	    <div class='xbuttons'> 
+                Export: <button id='exportConfigFile'>Export</button><br/><br/>
+		Import: <input id='configfile' type="file" onchange='openFile(event)' />
+            </div>
+            <!--<div class='buttons2'>Export to: 
+                <button id='exportConfigText'>Text</button>
+                <button id='exportConfigFile'>File</button>
+            </div>
             <div id='jsonConfig'>
-		<div>To backup, click the Backup button and then use CTRL+C to copy the configuration to the clipboard.</div>
-		<div>To restore copy the new configuration into the text area and click the Restore button.</div>
       		<textarea name="json" id="configJson" value="" cols="50" rows="20"></textarea>
 	    </div>
-            <div class='buttons2'>
-                <button id='backupConfig'>Backup</button>
-                <button id='restoreConfig'>Restore</button>
-            </div>
+	    <div class='buttons2'>Import
+                <button id='importConfigText'>Import</button>
+		<input id='configfile' type="file" onchange='openFile(event)' />
+            </div>-->
         </div>
     </div>
 
     <script id="probedeftable-template" type="text/x-handlebars-template">
         <table id='configTable'>
             <tr><th>Name</th><th>Value</th></tr>
-
-        
-<!--<tr><td>Mode:</td><td><input type="text" name="Mode" id="Mode" value="{{Mode}}" class="text ui-widget-content ui-corner-all"></td></tr>
-        <tr><td>Config:</td><td><input type="text" name="Config" id="Config" value="{{Config}}" class="text ui-widget-content ui-corner-all"></td></tr>-->
-        <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
-        <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
-
+            <tr><td>Mode:</td><td><input type="text" name="Mode" id="Mode" value="{{Mode}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Config:</td><td><input type="text" name="Config" id="Config" value="{{Config}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
             <tr><td>Cost per KWh:</td><td><input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Voltage Scale:</td><td><input type="text" name="VoltageScale" id="VoltageScale" value="{{VoltageScale}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>User Name:</td><td><input type="text" name="UserName" id="UserName" value="{{UserName}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Password:</td><td><input type="text" name="Password" id="Password" value="{{Password}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <!--<tr><td>Hardware Version:</td><td><input type="text" name="HardwareVersion" id="HardwareVersion" value="{{HardwareVersion}}" class="text ui-widget-content ui-corner-all"></td></tr>-->
-            <tr><td>Text Number:</td><td><input type="text" name="Text" id="Text" value="{{Text}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Twilio Number:</td><td><input type="text" name="Twilio" id="Twilio" value="{{Twilio}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Twilio SID:</td><td><input type="text" name="TwilioSID" id="TwilioSID" value="{{TwilioSID}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Twilio Auth Token:</td><td><input type="text" name="TwilioAuthToken" id="TwilioAuthToken" value="{{TwilioAuthToken}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Backup Database:</td><td><input type="text" name="BackupDB" id="BackupDB" value="{{BackupDB}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <!--<tr><td>Hardware Version:</td><td><input type="text" name="HardwareVersion" id="HardwareVersion" value="{{HardwareVersion}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>-->
+            <tr><td>Text Number:</td><td><input type="text" name="Text" id="Text" value="{{Text}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Twilio Number:</td><td><input type="text" name="Twilio" id="Twilio" value="{{Twilio}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Twilio SID:</td><td><input type="text" name="TwilioSID" id="TwilioSID" value="{{TwilioSID}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Twilio Auth Token:</td><td><input type="text" name="TwilioAuthToken" id="TwilioAuthToken" value="{{TwilioAuthToken}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Backup Database:</td><td><input type="text" name="BackupDB" id="BackupDB" value="{{BackupDB}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Database size:</td><td>{{DatabaseSize}}</td></tr>
             <tr><td>Database rows:</td><td>{{DatabaseRows}}</td></tr>
             <tr><td>Software timestamp:</td><td>{{SoftwareVersion.Installed.Timestamp}}</td></tr>
