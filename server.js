@@ -11,8 +11,7 @@ var path = require('path');
 
 var username = "", password = "", compactRunning = false;
 
-var app = express(), server;
-
+var app = express(), server = null, httpPort = 3000;
 
 // Add timestamp to console messages
 (function (o) {
@@ -55,7 +54,7 @@ var auth = function (req, res, next) {
 
 
 
-app.set('port', 3000);
+app.set('port', httpPort);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(auth);
 app.use(logger);
@@ -66,9 +65,42 @@ app.use(logErrors);
 app.use(clientErrorHandler);
 app.use(errorHandler);
 
-  
+// read configuration and start the web server
+// restart web server if port changes
+var StartServer = function () {
 
-var readConfig = function () {
+    
+
+    var listen = function (port) {
+
+        var connections = {};
+
+        console.log("Setting port: " + port);
+        app.set('port', port);
+        httpPort = port;
+
+        var httpServer = app.listen(app.get('port'), function () {
+            console.log('App Server running at port ' + app.get('port'));
+        });
+        
+        connections = {};
+        httpServer.on('connection', function (conn) {
+            var key = conn.remoteAddress + ':' + conn.remotePort;
+            connections[key] = conn;
+            conn.on('close', function () {
+                delete connections[key];
+            });
+        });
+
+        httpServer.closeconnections = function () {
+            for (var key in connections) {
+                console.log('closing connection: ' + key);
+                connections[key].destroy();
+            }
+        }
+
+        return httpServer;
+    };
 
     db.readConfig(function (err, results) {
         if (err) {
@@ -79,11 +111,34 @@ var readConfig = function () {
                 password = results["Password"];
             }
             console.log('username: ' + username + "    password: " + password);
+
+            var port = parseInt(results["Port"], 10);
+
+            if (isNaN(port))  {
+                console.log("Invalid Port: (" + results["Port"] + ") using " + httpPort + " instead");
+                port = httpPort;
+            }
+
+            if (server == null) {
+                server = listen(port);
+            }
+            else if (port != httpPort) {
+
+                console.log("closing server because port changed from " + httpPort + " to " + port);
+                server.close(function () {
+                    console.log("server closed  - restarting on port " + port);
+                    server = listen(port);
+                });
+            
+                // closing the server only disables new connections so we also need to close existing connections
+                server.closeconnections();
+                console.log('closed all existing connections');
+            } 
+
+            
         }
     });
 };
-
-readConfig();
 
 function logger(req, res, next) {
     var start = (new Date()).getTime();
@@ -211,7 +266,7 @@ app.get('/config', function (req, res, next) {
         }
     }, true);
 });
-app.get('/restart', function (req, res, next) {
+app.post('/restart', function (req, res, next) {
     gracefulShutdown();
     res.send("shutting down");
 });
@@ -345,7 +400,7 @@ app.post('/restoreconfig', function (req, res, next) {
                         res.send('success');
 
                     // reload config in case username/password changed
-                    readConfig();
+                    StartServer();
 
                 }, config);
             }
@@ -366,8 +421,8 @@ app.post('/probeDef', function (req, res, next) {
                 res.send('success');
 
             // reload config in case username/password changed
-            readConfig();
-
+            StartServer();
+            
         }, config);
     }
 });
@@ -458,14 +513,12 @@ app.get('/', function (req, res, next) {
 });
 // Express route for any other unrecognised incoming requests 
 app.get('*', function(req, res){ 
-	res.send(404, 'Unrecognised API call'); 
+	res.send(404, 'Unrecognized API call'); 
 }); 
 
 
-server = app.listen(app.get('port'), function() {
-    power.Start();
-    console.log('App Server running at port ' + app.get('port'));
-});
+power.Start();
+StartServer();
 
 
 // this function is called when you want the server to die gracefully
@@ -473,10 +526,12 @@ server = app.listen(app.get('port'), function() {
 var gracefulShutdown = function () {
     console.log("Received kill signal, shutting down gracefully.");
     power.Stop();
-    server.close(function () {
-        console.log("Closed out remaining connections.");
-        process.exit()
-    });
+    if (server != null) {
+        server.close(function () {
+            console.log("Closed out remaining connections.");
+            process.exit()
+        });
+    }
 
     // if after 
     setTimeout(function () {

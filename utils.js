@@ -57,7 +57,7 @@ console.log('running: ' + command);
     });
 });
 
-exports.InitializeTwilio = function (to, from, sid, token, deviceName) {
+exports.InitializeTwilio = function (to, from, sid, token, deviceName, port) {
 
     if (to != null && from != null && sid != null && token != null && to != '' && from != '' && sid != '' && token != '') {
 
@@ -80,7 +80,7 @@ exports.InitializeTwilio = function (to, from, sid, token, deviceName) {
                     exports.sendText("ip error: " + error);
                 } else {
                     console.log("ip: " + ip);
-                    exports.sendText("ip: " + ip);
+                    exports.sendText("ip: " + ip + ":" + port);
                 }
 
             }, false);

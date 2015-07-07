@@ -13,7 +13,7 @@
     
     <script type="text/javascript">
 
-        var templates = {}, Configuration = {};
+        var templates = {}, Configuration = {}, HttpPort = 0;
 
         var openFile = function(event) {
           var input = event.target;
@@ -63,6 +63,7 @@
                 cache: false,
                 success: function (result) {
 
+		    HttpPort = result["Port"];
                     Configuration.DefinedProbes = result.Probes;
                     Configuration.HardwareVersion = result.HardwareVersion;
 
@@ -158,8 +159,27 @@ if (area != null) {
 
                       var url = '/probeDef';
                       $.post(url, { config: config }, function (result) {
+			  if (config.Port != HttpPort){
+                              var loc = window.location;
+                              var port = "";
+			      if (config.Port != "80")
+                                 port = ":" + config.Port;
+                              window.location = loc.protocol + "//" + loc.hostname + port + loc.pathname
+			  }
+			else {
                           load();
+                        } 
                           //alert('configuration update succeded');
+                      });
+                  });
+
+            $("#restart")
+                  .button()
+                  .click(function () {
+                      var url = '/restart';
+                      $.post(url, {}, function (result) {
+                          //alert('configuration update succeded');
+                          load();
                       });
                   });
 
@@ -362,6 +382,7 @@ if (area != null) {
             <div id='probedefs'></div>
             <div class='buttons2'>
                 <button id='saveProbeDefs'>Save</button>
+	        <button id='restart'>Restart Device</button>
             </div>
         </div>
         <h3>Import/Export Configuration</h3>
@@ -390,6 +411,7 @@ if (area != null) {
             <tr><td>Mode:</td><td><input type="text" name="Mode" id="Mode" value="{{Mode}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Config:</td><td><input type="text" name="Config" id="Config" value="{{Config}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
             <tr><td>Cost per KWh:</td><td><input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Voltage Scale:</td><td><input type="text" name="VoltageScale" id="VoltageScale" value="{{VoltageScale}}" class="text ui-widget-content ui-corner-all"></td></tr>

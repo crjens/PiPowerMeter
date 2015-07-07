@@ -106,7 +106,8 @@ var loadConfiguration = function (callback) {
             //console.log("configuration: " + JSON.stringify(configuration));
             //console.log("configuration.Circuits: " + JSON.stringify(configuration.Circuits));
 
-            netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName);
+            var port = data.Port;
+            netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName, port);
         }
 
         if (callback != null)
