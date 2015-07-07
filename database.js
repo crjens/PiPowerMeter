@@ -664,7 +664,8 @@ var db =
         // first drop any existing circuits that are not in the new config
         var newCktIds = [];
         for (i = 0; i < circuits.length; i++) {
-            newCktIds.push(circuits[i].id);
+            if (circuits[i].id != "")
+                newCktIds.push(circuits[i].id);
         }
 
 
