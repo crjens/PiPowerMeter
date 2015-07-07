@@ -11,7 +11,8 @@ var bytesPerSample = 10;
 var OutputPins, InputPins;
 var sampleBuffer = new Buffer(samples * bytesPerSample);
 var Mode, Config;
-var Epsilon = "01eb85";  // default to 60Hz
+var Epsilon60Hz = "01eb85", Epsilon50Hz = "01999a";
+var Epsilon = Epsilon60Hz;  // default to 60Hz
 
 var Registers = {
     RealPower: 10,
@@ -187,7 +188,7 @@ var ReadPower = function (iFactor, vFactor) {
         ts: new Date()
     };
 
-    var lastV=0, lastTs=0, totalTime=0, totalCount=0;
+    var lastV=0, lastTsZC=0, lastTs=0, totalTime=0, totalCount=0;
     sampleBuffer.fill(0);
 
     // do measurement
@@ -215,13 +216,18 @@ var ReadPower = function (iFactor, vFactor) {
 
         // frequency detect
         if ((lastV > 0 && vInst < 0) || (lastV < 0 && vInst > 0)) {
-            if (lastTs > 0) {
+
+            var tsZCInterpolated = lastTs + lastV * (tsInst - lastTs) / (lastV - vInst)
+            if (lastTsZC > 0) {
                 totalCount++;
-                totalTime += (tsInst - lastTs);
+                //totalTime += (tsInst - lastTsZC);
+                totalTime += (tsZCInterpolated - lastTsZC);
             }
-            lastTs = tsInst;
+            //lastTsZC = tsInst;
+            lastTsZC = tsZCInterpolated;
         }
         lastV = vInst;
+        lastTs = tsInst;
     }
     if (totalCount > 0)
         result.CalculatedFrequency = 1000/((totalTime / totalCount) * 2);  //in Hz
@@ -231,11 +237,13 @@ var ReadPower = function (iFactor, vFactor) {
     console.log('CalculatedFrequency: ' + result.CalculatedFrequency);
 
     if (result.CalculatedFrequency > 45 && result.CalculatedFrequency < 55) {
-        //Epsilon = "01999a";  // 50Hz
+        //Epsilon = Epsilon50Hz;  // 50Hz
     }
     else if (result.CalculatedFrequency > 55 && result.CalculatedFrequency < 65) {
-        //Epsilon = "01eb85";  // 60Hz
+        //Epsilon = Epsilon60Hz;  // 60Hz
     }
+
+    
 
     // read average values over complete cycle
     var cmd = makeReadCommand(
@@ -435,6 +443,13 @@ process.on('message', function (data) {
                 result = null;
 
             probe.Result = result;
+
+            if (Epsilon == Epsilon50Hz)
+                data.Frequency = "50Hz";
+            else if (Epsilon == Epsilon60Hz)
+                data.Frequency = "60Hz";
+            else
+                data.Frequency = "Unknown";
         }
 
         process.send(data);

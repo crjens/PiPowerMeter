@@ -260,9 +260,13 @@ var GetProbeAlertThreshold = function (probe) {
 // create reader process
 var reader = require('child_process').fork(__dirname + '/reader.js');
 
+var frequency = "unknown";
 
 // Process read results from child process
 reader.on('message', function (data) {
+
+    // copy out frequency
+    frequency = data.Frequency;
 
     // find circuit
     var circuit = FindCircuit(data.CircuitId);
@@ -539,6 +543,7 @@ var exports = {
 
                 _config.Uptime = timeSince(bootTime);
                 _config.DatabaseSize = numberWithCommas(getFilesizeInBytes('powermeter.db'));
+                _config.Frequency = frequency;
                 callback(err, _config);
 
             } else {
