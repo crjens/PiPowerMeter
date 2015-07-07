@@ -373,6 +373,7 @@ var Start = function () {
 
 var Stop = function () {
     _running = false;
+    console.log('sending Stop to reader');
     reader.send({ Action: "Stop"});
 }
 
@@ -461,7 +462,7 @@ var exports = {
 
             if (ckt.Samples != null && ckt.Samples.length > 0) {
 
-                var w = [], a = [], v = [], q = [], pf = [], l = [], ts = [], probe = [], breaker=[];
+                var w = [], a = [], v = [], q = [], pf = [], l = [], ts = [], probe = [], breaker=[], f=[];
                 for (var p = 0; p < ckt.Probes.length; p++) {
                     w.push(ckt.Samples[p].pAve.toFixed(0));
                     a.push(ckt.Samples[p].iRms.toFixed(1));
@@ -472,6 +473,7 @@ var exports = {
                     pf.push(ckt.Samples[p].pf.toFixed(5));
                     l.push(Math.round(ckt.Samples[p].iRms * 100.0 / ckt.Probes[p].Breaker) + " %");
                     ts.push(ckt.Samples[p].ts);
+                    f.push(ckt.Samples[p].CalculatedFrequency.toFixed(2));
                 }
 
                 if (ckt.Probes.length > 1) {
@@ -492,6 +494,7 @@ var exports = {
                     q: q,
                     pf: pf,
                     timestamp: ts,
+                    f: f,
                     load: l
                 });
             }

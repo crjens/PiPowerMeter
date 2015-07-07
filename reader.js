@@ -11,6 +11,7 @@ var bytesPerSample = 10;
 var OutputPins, InputPins;
 var sampleBuffer = new Buffer(samples * bytesPerSample);
 var Mode, Config;
+var Epsilon = "01eb85";  // default to 60Hz
 
 var Registers = {
     RealPower: 10,
@@ -176,6 +177,9 @@ var ReadPower = function (iFactor, vFactor) {
 
     ResetIfNeeded();
 
+    if (!_DeviceOpen)
+        return;
+
     var result = {
         vInst: [],
         iInst: [],
@@ -183,6 +187,7 @@ var ReadPower = function (iFactor, vFactor) {
         ts: new Date()
     };
 
+    var lastV=0, lastTs=0, totalTime=0, totalCount=0;
     sampleBuffer.fill(0);
 
     // do measurement
@@ -207,6 +212,29 @@ var ReadPower = function (iFactor, vFactor) {
         result.iInst.push(Number(iInst.toFixed(1)));
         result.vInst.push(Number(vInst.toFixed(1)));
         result.tsInst.push(Number(tsInst.toFixed(2)));
+
+        // frequency detect
+        if ((lastV > 0 && vInst < 0) || (lastV < 0 && vInst > 0)) {
+            if (lastTs > 0) {
+                totalCount++;
+                totalTime += (tsInst - lastTs);
+            }
+            lastTs = tsInst;
+        }
+        lastV = vInst;
+    }
+    if (totalCount > 0)
+        result.CalculatedFrequency = 1000/((totalTime / totalCount) * 2);  //in Hz
+    else
+        result.CalculatedFrequency = 0;
+
+    console.log('CalculatedFrequency: ' + result.CalculatedFrequency);
+
+    if (result.CalculatedFrequency > 45 && result.CalculatedFrequency < 55) {
+        //Epsilon = "01999a";  // 50Hz
+    }
+    else if (result.CalculatedFrequency > 55 && result.CalculatedFrequency < 65) {
+        //Epsilon = "01eb85";  // 60Hz
     }
 
     // read average values over complete cycle
@@ -243,8 +271,8 @@ var ResetIfNeeded = function() {
     var epsilon = read(13);
     var mode = read(18);
     var config = read(0);
-    if (epsilon.toString('hex') != "01eb85") {
-        console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + "01eb85");
+    if (epsilon.toString('hex') != Epsilon) {
+        console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + Epsilon);
         Reset();
     }
     else if (mode.toString('hex') != Mode) {
@@ -271,11 +299,17 @@ var Reset = function () {
     command('80', 'reset');
     var s;
     do {
+        if (!_DeviceOpen)
+            return;
+
         s = read(15); // read status
         console.log('status: ' + s.toString('hex'));
-        sleep(500);
+
+        if (!(s[0] & 0x80))
+            sleep(500);
     } while (!(s[0] & 0x80));
 
+    
     write("5EFFFFFF", "clear status");
 
 
@@ -299,7 +333,7 @@ var Reset = function () {
     read(0, 'read configuration register');
     
     console.log('epsilon before: ' + convert(read(13), 0, true));
-    write('5A01EB85', 'set epsilon to 60Hz');
+    write('5A' + Epsilon, 'set epsilon to ' + Epsilon);
     console.log('epsilon after: ' + convert(read(13), 0, true));
 
     console.log('initialized');
@@ -345,23 +379,38 @@ var Open = function () {
 
         Reset();
 
-        var intSetup = 0, intFallingEdge = 1, intRisingEdge = 2, intBothEdges = 3;
-        var noResistor = 0, pullDownResistor = 1, pullUpResistor = 2;
-        cs5463.InitializeISR(InputPins.isr, pullUpResistor, intFallingEdge);
+        if (_DeviceOpen) {
+
+            var intSetup = 0, intFallingEdge = 1, intRisingEdge = 2, intBothEdges = 3;
+            var noResistor = 0, pullDownResistor = 1, pullUpResistor = 2;
+            cs5463.InitializeISR(InputPins.isr, pullUpResistor, intFallingEdge);
+
+            
+        }
     }
 }
 
+//var DetectFrequency = function() {
+//    SetCircuit(0, 0, 0);
+//    var result = ReadPower(1, 1);
+//    if (result) {
+
+//    }
+//}
+
 var _DeviceOpen = false;
 var Close = function () {
+    console.log("reader closed 1");
     _DeviceOpen = false;
     if (cs5463 != null)
         cs5463.Close();
-    console.log("reader closed");
+    
+    console.log("reader closed 2");
 }
 
 // read from hardware
 process.on('message', function (data) {
-
+    console.log('reader received: ' + data.Action);
     if (data.Action == "Start") {
         HardwareVersion = data.HardwareVersion;
         Mode = data.Mode;
@@ -369,6 +418,7 @@ process.on('message', function (data) {
         Open();
     }
     else if (data.Action == "Stop") {
+        console.log("reader recieved stop");
         Close();
     }
     else if (data.Action == "Read") {
@@ -392,5 +442,7 @@ process.on('message', function (data) {
 
 });
 
-process.on("SIGINT", function () {  });
-process.on("SIGTERM", function () {  });
+//process.on("SIGINT", function () { console.log("reader SIGINT"); Close(); });
+//process.on("SIGTERM", function () { console.log("reader SIGTERM"); Close(); });
+//process.on("SIGINT", Close);
+//process.on("SIGTERM", Close);
