@@ -143,11 +143,11 @@ var StartServer = function () {
 function logger(req, res, next) {
     var start = (new Date()).getTime();
     res._startTime = start;
-    console.log('start %s %s', req.method, req.url);
+    console.log('start: ' + req.method + " " + req.url);
    
     onFinished(res, function (err) {
         var duration = (new Date()).getTime() - res._startTime;
-        console.log('end %s %s : %s ms', req.method, req.url, duration);
+        console.log('end: ' + req.method + " " + req.url + " " + duration + " ms");
     })
 
   next();
@@ -531,6 +531,8 @@ var gracefulShutdown = function () {
             console.log("Closed out remaining connections.");
             process.exit()
         });
+
+        server.closeconnections();
     }
 
     // if after 

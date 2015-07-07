@@ -356,6 +356,7 @@ var Close = function () {
     _DeviceOpen = false;
     if (cs5463 != null)
         cs5463.Close();
+    console.log("reader closed");
 }
 
 // read from hardware
@@ -390,3 +391,6 @@ process.on('message', function (data) {
     }
 
 });
+
+process.on("SIGINT", function () {  });
+process.on("SIGTERM", function () {  });
