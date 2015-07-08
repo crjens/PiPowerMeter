@@ -221,8 +221,15 @@ var ReadPower = function (iFactor, vFactor) {
 
             var tsZCInterpolated = lastTs + lastV * (tsInst - lastTs) / (lastV - vInst)
             if (lastTsZC > 0) {
-                totalCount++;
-                totalTime += (tsZCInterpolated - lastTsZC);
+
+                // throw out any samples that are not between 40Hz and 70Hz
+                // ex: (1/40) / 2 = 12.5 ms
+                // ex: (1/70) / 2 = 7.1 ms
+                var sampleTime = tsZCInterpolated - lastTsZC;
+                if (sampleTime >= 7.1 && sampleTime <= 12.5) {
+                    totalCount++;
+                    totalTime += (tsZCInterpolated - lastTsZC);
+                }
             }
             lastTsZC = tsZCInterpolated;
         }
@@ -237,20 +244,23 @@ var ReadPower = function (iFactor, vFactor) {
 
     console.log('CalculatedFrequency: ' + result.CalculatedFrequency);
 
-    // Change fundamental frequency when we get at least 10 samples in a row
-    if (result.CalculatedFrequency > 45 && result.CalculatedFrequency < 55) {
-        Samples50Hz++;
-        Samples60Hz = 0;
+    // only consider samples with at least 10 data points
+    if (totalCount >= 10) {
+        // Change fundamental frequency when we get at least 15 samples in a row
+        if (result.CalculatedFrequency > 45 && result.CalculatedFrequency < 55) {
+            Samples50Hz++;
+            Samples60Hz = 0;
 
-        if (Samples50Hz >= 10)
-            Epsilon = Epsilon50Hz;
-    }
-    else if (result.CalculatedFrequency > 55 && result.CalculatedFrequency < 65) {
-        Samples60Hz++
-        Samples50Hz = 0;
+            if (Samples50Hz >= 15)
+                Epsilon = Epsilon50Hz;
+        }
+        else if (result.CalculatedFrequency > 55 && result.CalculatedFrequency < 65) {
+            Samples60Hz++
+            Samples50Hz = 0;
 
-        if (Samples60Hz >= 10)
-            Epsilon = Epsilon60Hz;
+            if (Samples60Hz >= 15)
+                Epsilon = Epsilon60Hz;
+        }
     }
 
     
