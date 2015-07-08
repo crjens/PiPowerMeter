@@ -12,7 +12,7 @@ var OutputPins, InputPins;
 var sampleBuffer = new Buffer(samples * bytesPerSample);
 var Mode, Config;
 var Epsilon60Hz = "01eb85", Epsilon50Hz = "01999a";
-var Epsilon = Epsilon60Hz;  // default to 60Hz
+var Epsilon = Epsilon50Hz;  // default to 60Hz
 
 var Registers = {
     RealPower: 10,
@@ -173,6 +173,8 @@ var resultFromBuffer = function (buffer, index) {
     return buffer.slice(offset, offset + 3);
 }
 
+var Samples60Hz = 0, Samples50Hz = 0;
+
 var ReadPower = function (iFactor, vFactor) {
     //console.log(iFactor +", " + vFactor);
 
@@ -220,15 +222,14 @@ var ReadPower = function (iFactor, vFactor) {
             var tsZCInterpolated = lastTs + lastV * (tsInst - lastTs) / (lastV - vInst)
             if (lastTsZC > 0) {
                 totalCount++;
-                //totalTime += (tsInst - lastTsZC);
                 totalTime += (tsZCInterpolated - lastTsZC);
             }
-            //lastTsZC = tsInst;
             lastTsZC = tsZCInterpolated;
         }
         lastV = vInst;
         lastTs = tsInst;
     }
+
     if (totalCount > 0)
         result.CalculatedFrequency = 1000/((totalTime / totalCount) * 2);  //in Hz
     else
@@ -236,11 +237,20 @@ var ReadPower = function (iFactor, vFactor) {
 
     console.log('CalculatedFrequency: ' + result.CalculatedFrequency);
 
+    // Change fundamental frequency when we get at least 10 samples in a row
     if (result.CalculatedFrequency > 45 && result.CalculatedFrequency < 55) {
-        //Epsilon = Epsilon50Hz;  // 50Hz
+        Samples50Hz++;
+        Samples60Hz = 0;
+
+        if (Samples50Hz >= 10)
+            Epsilon = Epsilon50Hz;
     }
     else if (result.CalculatedFrequency > 55 && result.CalculatedFrequency < 65) {
-        //Epsilon = Epsilon60Hz;  // 60Hz
+        Samples60Hz++
+        Samples50Hz = 0;
+
+        if (Samples60Hz >= 10)
+            Epsilon = Epsilon60Hz;
     }
 
     
