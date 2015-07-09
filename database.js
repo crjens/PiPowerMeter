@@ -2,7 +2,7 @@ var databaseFile = 'powermeter.db';
 var exec = require('child_process').exec;
 var fs = require('fs');
 
-var readingsTableColumnsSQL = "id INTEGER primary key, CircuitId int, I real, V real, P real, Q real, PF real, Timestamp int, Compacted int";
+var readingsTableColumnsSQL = "id INTEGER primary key, CircuitId int, I real, V real, P real, Q real, PF real, Timestamp int, Compacted int, F real";
 
 var dbLocked = false;
 var cachedConfig = null, strippedConfig = null;
@@ -56,6 +56,13 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                 TableStates.Probes = "Error";
             } else {
 
+                var afterReady = function () {
+                    // insert first probe if none exist
+                    db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;", null, true);
+
+                    console.log('Probes table ready');
+                    TableStates.Probes = true;
+                }
                 
                 // add Alert column if doesn't exist
                 db.all("pragma table_info(Probes);", function(err, results) {
@@ -69,26 +76,15 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                               console.log("Error adding Alert column to Probes table: " + err);
                               TableStates.Probes = "Error";
                            } else {
-
-                              // insert first probe if none exist
-                               db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;", null, true);
-
-                              console.log('Probes table ready');
-                              TableStates.Probes = true;
+                               afterReady();
                            }
                        }, true);
                    } else {
-                        // insert first probe if none exist
-                       db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;", null, true);
-
-                       console.log('Probes table ready');
-                       TableStates.Probes = true;
+                       afterReady();
                    }
                 }, true);
-
             }
         }, true);
-
 
         db.runSql("create table if not exists Config ( Name text primary key, Value Text);", function (err) {
             if (err) {
@@ -134,15 +130,38 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                         console.log("Error creating Readings table: " + err);
                         TableStates.Readings = "Error";
                     } else {
-                        // schedule for later to improve perf
-                        updateTotalRowCount();
-                        //setTimeout(updateTotalRowCount, 5000);
 
-                        console.log('Readings table ready');
-                        TableStates.Readings = true;
-                        //db.runSql("create index if not exists Readings_CircuitId_idx on Readings(CircuitId);", null, true);
-                        db.runSql("create index if not exists Readings_Timestamp_CircuitId_P_idx on Readings(Timestamp, CircuitId, P);", null, true);
-                        db.runSql("create index if not exists Readings_CircuitId_Timestamp_P_idx on Readings(CircuitId, Timestamp, P);", null, true);
+                        var afterTableReady = function () {
+
+                            // schedule for later to improve perf
+                            updateTotalRowCount();
+                            //setTimeout(updateTotalRowCount, 5000);
+
+                            console.log('Readings table ready');
+                            TableStates.Readings = true;
+                            //db.runSql("create index if not exists Readings_CircuitId_idx on Readings(CircuitId);", null, true);
+                            db.runSql("create index if not exists Readings_Timestamp_CircuitId_P_idx on Readings(Timestamp, CircuitId, P);", null, true);
+                            db.runSql("create index if not exists Readings_CircuitId_Timestamp_P_idx on Readings(CircuitId, Timestamp, P);", null, true);
+                        }
+
+                        // add F column if doesn't exist
+                        db.all("pragma table_info(Readings);", function (err, results) {
+                            if (err) {
+                                console.log("Error selecting from Readings table: " + err);
+                                TableStates.Readings = "Error";
+                            } else if (results.length == 9) {
+                                db.runSql("Alter table Readings add column F real;", function (err) {
+                                    if (err) {
+                                        console.log("Error adding F column to Readings table: " + err);
+                                        TableStates.Readings = "Error";
+                                    } else {
+                                        afterTableReady();
+                                    }
+                                }, true);
+                            } else {
+                                afterTableReady();
+                            }
+                        }, true);
                     }
                 }, true);
             }
@@ -264,7 +283,7 @@ var db =
             }, true);
         });
     },
-    insert: function (circuitId, i, v, p, q, pf, ts, callback) {
+    insert: function (circuitId, i, v, p, q, pf, ts, f, callback) {
         WaitForTable("Readings", function (err) {
 
             if (err) {
@@ -272,7 +291,7 @@ var db =
                     callback(err);
             } else {
 
-                var sql = "Insert into Readings Values(null," + circuitId + ',' + i + ',' + v + ',' + p + "," + q + ',' + pf + ",'" + ts.getTime() / 1000 + "',null);"
+                var sql = "Insert into Readings Values(null," + circuitId + ',' + i + ',' + v + ',' + p + "," + q + ',' + pf + ",'" + ts.getTime() / 1000 + "',null," + f + ");"
 
                 db.execSql(sql, function (err) {
                     if (err)
@@ -366,8 +385,8 @@ var db =
 
         sql.push("insert into archive.Readings Select * from Readings " + where + " and Compacted is null;");
         sql.push("delete from Readings " + where + ";");
-        sql.push("insert into Readings (CircuitId, I, V, P, Q, PF, Timestamp, Compacted) " +
-                    "Select CircuitId, round(avg(I),1) as I,round(avg(V),1) as V, round(avg(P),1) as P,round(avg(Q),1) as Q, round(avg(PF),5) as PF, strftime('%s', strftime('%Y-%m-%d %H:00:00', datetime(timestamp, 'unixepoch'))) as Timestamp, 1 as Compacted " +
+        sql.push("insert into Readings (CircuitId, I, V, P, Q, PF, Timestamp, Compacted, F) " +
+                    "Select CircuitId, round(avg(I),1) as I,round(avg(V),1) as V, round(avg(P),1) as P,round(avg(Q),1) as Q, round(avg(PF),5) as PF, strftime('%s', strftime('%Y-%m-%d %H:00:00', datetime(timestamp, 'unixepoch'))) as Timestamp, 1 as Compacted, round(avg(F),2) as F " +
                     "from archive.Readings " + where + " group by CircuitId, strftime('%Y%m%d%H', datetime(timestamp, 'unixepoch'));");
 
         sql.push("detach database archive;");

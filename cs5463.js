@@ -325,8 +325,8 @@ reader.on('message', function (data) {
         }
         
         //console.log(JSON.stringify(circuit.Samples[0]));
-        db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts));
-        console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.toFixed(1) + '  I= ' + circuit.Samples[0].iRms.toFixed(1) + '  P= ' + pTotal.toFixed(1) + '  Q= ' + qTotal.toFixed(1) + '  PF= ' + circuit.Samples[0].pf.toFixed(4));
+        db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts), circuit.Samples[0].CalculatedFrequency);
+        console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.toFixed(1) + '  I= ' + circuit.Samples[0].iRms.toFixed(1) + '  P= ' + pTotal.toFixed(1) + '  Q= ' + qTotal.toFixed(1) + '  PF= ' + circuit.Samples[0].pf.toFixed(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.toFixed(3));
     }
 
     // start next read
