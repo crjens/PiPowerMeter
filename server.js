@@ -8,6 +8,7 @@ var db = require('./database');
 var onFinished = require('on-finished')
 var basicAuth = require('basic-auth');
 var path = require('path');
+var ua = require('universal-analytics');
 
 var username = "", password = "", compactRunning = false;
 
@@ -55,6 +56,7 @@ var auth = function (req, res, next) {
 
 
 app.set('port', httpPort);
+app.use(ua.middleware("UA-64954808-1", { cookieName: '_ga' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(auth);
 app.use(logger);
@@ -148,6 +150,9 @@ function logger(req, res, next) {
     onFinished(res, function (err) {
         var duration = (new Date()).getTime() - res._startTime;
         console.log('end: ' + req.method + " " + req.url + " " + duration + " ms");
+
+        //req.visitor.debug();
+        req.visitor.timing(req.method, req.url, duration).send();
     })
 
   next();
@@ -156,6 +161,7 @@ function logger(req, res, next) {
 function logErrors(err, req, res, next) {
   console.log(err);
   console.error(err.stack);
+  req.visitor.exception(err.message + "\r\n" + err.stack).send();
   next(err);
 }
 
