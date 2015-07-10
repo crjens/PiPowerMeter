@@ -259,7 +259,7 @@ var GetProbeAlertThreshold = function (probe) {
 
 // create reader process
 var reader = require('child_process').fork(__dirname + '/reader.js');
-
+console.log('spawned reader with pid: ' + reader.pid);
 var frequency = "unknown";
 
 // Process read results from child process
@@ -377,8 +377,17 @@ var Start = function () {
 
 var Stop = function () {
     _running = false;
-    console.log('sending Stop to reader');
+    console.log('sending Stop to reader...');
     reader.send({ Action: "Stop"});
+    console.log('running: sudo kill -9 ' + reader.pid);
+
+    var exec = require('child_process').exec;
+    exec('sudo kill -9 ' + reader.pid, function (error, stdout, stderr) {
+        if (err)
+            console.log('failed to kill reader');
+        else
+            console.log('killed reader');
+    });
 }
 
 
