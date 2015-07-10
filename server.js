@@ -9,7 +9,7 @@ var onFinished = require('on-finished')
 var basicAuth = require('basic-auth');
 var path = require('path');
 
-var ua = null;
+var ua;
 
 try {
     ua = require('universal-analytics');
