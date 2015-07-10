@@ -25,13 +25,13 @@ case "$1" in
     echo "* starting node-server * [`date`]" >> /var/log/node-server.log
     cd /home/pi/app
 #	sudo $NODE $SERVER_JS_FILE >> /dev/null 2>&1&
-    sudo $FOREVER start --workingDir $APP_DIR -a -o /dev/null -e $OUT/nodejs.err.log  $SERVER_JS_FILE
+    sudo $FOREVER start --workingDir $APP_DIR -a -o /dev/null -e $OUT/nodejs.err.log --killSignal=SIGTERM $SERVER_JS_FILE
     ;;
   stop)
     echo "* stopping node-server * "
     echo "* stopping node-server * [`date`]" >> /var/log/node-server.log
 #	killall $NODE
-    sudo $FOREVER stop $SERVER_JS_FILE
+    sudo $FOREVER stop --killSignal=SIGTERM $SERVER_JS_FILE 
     ;;
   *)
     echo "Usage: /etc/init.d/node-server {start|stop}"
