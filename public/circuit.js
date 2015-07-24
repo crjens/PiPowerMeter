@@ -432,7 +432,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
 
                     data.push({ data: v, label: "Probe" + obj.id + " Volts = -000.00", points: { show: true, radius: 2 } });
                     data.push({ data: c, label: "Probe" + obj.id + " Amps = -000.00", yaxis: 2, points: { show: true, radius: 2 } });
-                    data.push({ data: zc, label: "ZC" + obj.id , yaxis: 2, points: { show: true, radius: 2 } });
+                    //data.push({ data: zc, label: "ZC" + obj.id , yaxis: 2, points: { show: true, radius: 2 } });
                 });
 
 
