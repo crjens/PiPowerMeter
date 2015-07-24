@@ -12,7 +12,7 @@ var OutputPins, InputPins;
 var sampleBuffer = new Buffer(samples * bytesPerSample);
 var Mode, Config;
 var Epsilon60Hz = "01eb85", Epsilon50Hz = "01999a";
-var Epsilon = Epsilon50Hz;  // default to 60Hz
+var Epsilon = Epsilon60Hz;  // default to 60Hz
 
 var Registers = {
     RealPower: 10,
@@ -187,7 +187,8 @@ var ReadPower = function (iFactor, vFactor) {
         vInst: [],
         iInst: [],
         tsInst: [],
-        ts: new Date()
+        ts: new Date(),
+        tsZC: []
     };
 
     var lastV=0, lastTsZC=0, lastTs=0, totalTime=0, totalCount=0;
@@ -217,10 +218,13 @@ var ReadPower = function (iFactor, vFactor) {
         result.tsInst.push(Number(tsInst.toFixed(2)));
 
         // frequency detect
+	// look for zero crossing and ensure we didn't miss any samples 
         if ((lastV > 0 && vInst < 0) || (lastV < 0 && vInst > 0)) {
 
             var tsZCInterpolated = lastTs + lastV * (tsInst - lastTs) / (lastV - vInst)
-            if (lastTsZC > 0) {
+            if (lastTsZC > 0 && (tsInst-lastTs) < 0.375) {
+                // Sample freq should be 4000Hz which is 0.25 ms per sample so use 0.375 for some margin
+                // if sample freq > 0.375 ms we'll assume a sample was missed and throw out the reading
 
                 // throw out any samples that are not between 40Hz and 70Hz
                 // ex: (1/40) / 2 = 12.5 ms
@@ -229,6 +233,7 @@ var ReadPower = function (iFactor, vFactor) {
                 if (sampleTime >= 7.1 && sampleTime <= 12.5) {
                     totalCount++;
                     totalTime += (tsZCInterpolated - lastTsZC);
+		    result.tsZC.push(Number(tsZCInterpolated.toFixed(2)));
                 }
             }
             lastTsZC = tsZCInterpolated;
