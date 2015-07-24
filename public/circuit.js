@@ -422,7 +422,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
 
 
                     for (var i = 0; i < sample.tsZC.length; i++) {
-                        var now = sample.tsZC[i] - sample.tsZC[start];
+                        var now = sample.tsZC[i] - sample.tsInst[start];
 			if (now >= 0.0)
                              zc.push([now, 0.0]);
                     }
