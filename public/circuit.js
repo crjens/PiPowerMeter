@@ -396,7 +396,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                     var obj = result.Probes[index];
                     //choiceContainer.append("<br/><input type='checkbox' name='" + obj.id + "' checked='checked' id='id" + obj.id + "'></input>" + "<label for='id" + obj.id + "'>" + obj.id + "</label>");
 
-                    var v = [], c = [], vref = [];
+                    var v = [], c = [], vref = [], zc = [];
                     var sample = result.Samples[index];
 
                     var start = 0;
@@ -420,11 +420,19 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                             minTs = now;
                     }
 
+
+                    for (var i = 0; i < sample.tsZC.length; i++) {
+                        var now = sample.tsZC[i] - sample.tsZC[start];
+			if (now >= 0.0)
+                             zc.push([now, 0.0]);
+                    }
+
                     //var channel = { v: v, c: c };
                     //datasets[obj.id] = channel;
 
                     data.push({ data: v, label: "Probe" + obj.id + " Volts = -000.00", points: { show: true, radius: 2 } });
                     data.push({ data: c, label: "Probe" + obj.id + " Amps = -000.00", yaxis: 2, points: { show: true, radius: 2 } });
+                    data.push({ data: zc, label: "ZC" + obj.id , yaxis: 2, points: { show: true, radius: 2 } });
                 });
 
 
