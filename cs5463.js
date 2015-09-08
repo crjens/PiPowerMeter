@@ -441,8 +441,8 @@ var stateLastUpdated = 0;
 var updateState = function () {
     var now = new Date(); // now
     var msPerHour = 1000 * 60 * 60;
-    if (stateLastUpdated < now - msPerHour) {
-        stateLastUpdated = now;
+    if (stateLastUpdated < now.getTime() - msPerHour) {
+        stateLastUpdated = now.getTime();
 
         var start = new Date(now - (msPerHour * 24)); // 24hr ago
         var telemetry = [];
