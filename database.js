@@ -477,7 +477,7 @@ var db =
             orderBy = "Watts";  // default to Watts
 
         if (start != null && end != null) {
-            sql = "Select C.Name as CircuitId, avg(P) as Watts, min(P) as Min, max(P) as Max from Readings R inner join Circuits C on R.CircuitId=C.id where C.IsMain = 0 and Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + " group by CircuitId order by " + orderBy + " desc;";
+            sql = "Select C.Name as CircuitId, round(avg(P),0) as Watts, round(min(P),0) as Min, round(max(P),0) as Max from Readings R inner join Circuits C on R.CircuitId=C.id where C.IsMain = 0 and Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + " group by CircuitId order by " + orderBy + " desc;";
         }
         else {
             sql = 'select (select Name from Circuits where id = CircuitId) as CircuitId, P as Watts, P as Min, P as Max from (select * from readings order by timestamp desc limit (select count(*) from Circuits where Enabled=1))  where (select IsMain from Circuits where id=CircuitId) = 0 order by ' + orderBy + ' desc;';
