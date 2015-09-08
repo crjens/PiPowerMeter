@@ -331,6 +331,9 @@ reader.on('message', function (data) {
 
     // start next read
     ReadNext();
+
+    // keep 24hr avg up to date
+    updateState();
 });
 
 
@@ -434,6 +437,26 @@ var timeSince = function (date) {
     return interval + ' ' + intervalType;
 };
 
+var stateLastUpdated = 0;
+var updateState = function () {
+    var now = new Date(); // now
+    var msPerHour = 1000 * 60 * 60;
+    if (stateLastUpdated < now - msPerHour) {
+        stateLastUpdated = now;
+
+        var start = new Date(now - (msPerHour * 24)); // 24hr ago
+        var telemetry = [];
+
+        for (var i = 0; i < configuration.Circuits.length; i++) {
+            var id = configuration.Circuits[i].id;
+            db.minmaxavg(id, start, now, telemetry, function (err, result) {
+                if (result) {
+                    configuration.Circuits[i].LastDayKwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
+                }
+            });
+        }
+    }
+};
 
 var exports = {
     // waveform
@@ -442,6 +465,15 @@ var exports = {
             if (configuration.Circuits[i].id == circuitId) {
                 configuration.Circuits[i].DeviceName = deviceName || "";
                 return configuration.Circuits[i];
+            }
+        }
+        return null;
+    },
+    // return inst power on circuit and Kwh used in last day
+    ReadState: function (circuitId) {
+        for (var i = 0; i < configuration.Circuits.length; i++) {
+            if (configuration.Circuits[i].id == circuitId) {
+                return { current: configuration.Circuits[i].pTotal, last24Kwh: configuration.Circuits[i].LastDayKwh };
             }
         }
         return null;

@@ -81,8 +81,6 @@ app.use(errorHandler);
 // restart web server if port changes
 var StartServer = function () {
 
-    
-
     var listen = function (port) {
 
         var connections = {};
@@ -240,6 +238,19 @@ app.get('/power', function (req, res, next) {
             next(err);
         else {
             result.Telemetry = telemetry;
+            res.send(result);
+        }
+    });
+});
+app.get('/state', function (req, res, next) {
+    var circuitId = req.query.circuitId;
+    
+    console.log("state(" + circuitId + ')');
+    power.Readstate(circuitId, function (err, result) {
+
+        if (err)
+            next(err);
+        else {
             res.send(result);
         }
     });
