@@ -246,14 +246,7 @@ app.get('/state', function (req, res, next) {
     var circuitId = req.query.circuitId;
     
     console.log("state(" + circuitId + ')');
-    power.ReadState(circuitId, function (err, result) {
-
-        if (err)
-            next(err);
-        else {
-            res.send(result);
-        }
-    });
+    res.send(power.ReadState(circuitId));
 });
 app.get('/cumulative', function (req, res, next) {
     var start = req.query.start;
