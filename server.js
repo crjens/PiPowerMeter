@@ -246,7 +246,7 @@ app.get('/state', function (req, res, next) {
     var circuitId = req.query.circuitId;
     
     console.log("state(" + circuitId + ')');
-    power.Readstate(circuitId, function (err, result) {
+    power.ReadState(circuitId, function (err, result) {
 
         if (err)
             next(err);
