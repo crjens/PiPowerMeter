@@ -446,10 +446,8 @@ var updateState = function () {
 
         var start = new Date(now - (msPerHour * 24)); // 24hr ago
         var telemetry = [];
-
-        for (var i = 0; i < configuration.Circuits.length; i++) {
-            var id = configuration.Circuits[i].id;
-            
+        var CalcLastDayKwh = function(id)
+        {
             db.minmaxavg(id, start, now, telemetry, function (err, result) {
                 if (result) {
                     var circuit = FindCircuit(id);
@@ -465,8 +463,15 @@ var updateState = function () {
                 }
             });
         }
+
+
+        for (var i = 0; i < configuration.Circuits.length; i++) {
+            CalcLastDayKwh(configuration.Circuits[i].id);
+        }
     }
 };
+
+
 
 var exports = {
     // waveform
