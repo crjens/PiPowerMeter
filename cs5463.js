@@ -455,6 +455,8 @@ var updateState = function () {
                         var kwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
                         console.log("setting lastkwh for ckt: " + id + " to " + kwh);
                         configuration.Circuits[i].LastDayKwh = kwh;
+                    } else {
+                        stateLastUpdated = 0;
                     }
                 } else {
                     console.log("failed to set kwh for ckt: " + id);
