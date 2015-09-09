@@ -489,8 +489,10 @@ var exports = {
 
         var circuit = FindCircuit(circuitId);
         if (circuit != null) {
-            console.log("returning : " + circuit.LastDayKwh);
-            return { current: circuit.pTotal, last24Kwh: circuit.LastDayKwh };
+            
+            var res = { current: circuit.pTotal, last24Kwh: circuit.LastDayKwh };
+            console.log("returning : " + JSON.stringify(res));
+            return res;
         }
         
         return null;
