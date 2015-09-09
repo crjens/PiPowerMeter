@@ -451,7 +451,8 @@ var updateState = function () {
             var id = configuration.Circuits[i].id;
             db.minmaxavg(id, start, now, telemetry, function (err, result) {
                 if (result) {
-                    configuration.Circuits[i].LastDayKwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
+                    if (configuration.Circuits[i] != null)
+                        configuration.Circuits[i].LastDayKwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
                 }
             });
         }
