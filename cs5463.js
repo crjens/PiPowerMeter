@@ -451,8 +451,13 @@ var updateState = function () {
             var id = configuration.Circuits[i].id;
             db.minmaxavg(id, start, now, telemetry, function (err, result) {
                 if (result) {
-                    if (configuration.Circuits[i] != null)
-                        configuration.Circuits[i].LastDayKwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
+                    if (configuration.Circuits[i] != null) {
+                        var kwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
+                        console.log("setting lastkwh for ckt: " + id + " to " + kwh);
+                        configuration.Circuits[i].LastDayKwh = kwh;
+                    }
+                } else {
+                    console.log("failed to set kwh for ckt: " + id);
                 }
             });
         }
@@ -474,6 +479,7 @@ var exports = {
     ReadState: function (circuitId) {
         for (var i = 0; i < configuration.Circuits.length; i++) {
             if (configuration.Circuits[i].id == circuitId) {
+                console.log("returning : " + configuration.Circuits[i].LastDayKwh);
                 return { current: configuration.Circuits[i].pTotal, last24Kwh: configuration.Circuits[i].LastDayKwh };
             }
         }
