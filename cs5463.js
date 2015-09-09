@@ -481,12 +481,13 @@ var exports = {
     },
     // return inst power on circuit and Kwh used in last day
     ReadState: function (circuitId) {
-        for (var i = 0; i < configuration.Circuits.length; i++) {
-            if (configuration.Circuits[i].id == circuitId) {
-                console.log("returning : " + configuration.Circuits[i].LastDayKwh);
-                return { current: configuration.Circuits[i].pTotal, last24Kwh: configuration.Circuits[i].LastDayKwh };
-            }
+
+        var circuit = FindCircuit(id);
+        if (circuit != null) {
+            console.log("returning : " + circuit.LastDayKwh);
+            return { current: circuit.pTotal, last24Kwh: circuit.LastDayKwh };
         }
+        
         return null;
     },
     UpdateCircuitEnabled: function (circuitId, enabled) {
