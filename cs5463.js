@@ -482,7 +482,7 @@ var exports = {
     // return inst power on circuit and Kwh used in last day
     ReadState: function (circuitId) {
 
-        var circuit = FindCircuit(id);
+        var circuit = FindCircuit(circuitId);
         if (circuit != null) {
             console.log("returning : " + circuit.LastDayKwh);
             return { current: circuit.pTotal, last24Kwh: circuit.LastDayKwh };
