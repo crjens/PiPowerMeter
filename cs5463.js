@@ -449,12 +449,13 @@ var updateState = function () {
 
         for (var i = 0; i < configuration.Circuits.length; i++) {
             var id = configuration.Circuits[i].id;
+            var j = i;
             db.minmaxavg(id, start, now, telemetry, function (err, result) {
                 if (result) {
-                    if (configuration.Circuits[i] != null) {
+                    if (configuration.Circuits[j] != null) {
                         var kwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
                         console.log("setting lastkwh for ckt: " + id + " to " + kwh);
-                        configuration.Circuits[i].LastDayKwh = kwh;
+                        configuration.Circuits[j].LastDayKwh = kwh;
                     } else {
                         stateLastUpdated = 0;
                     }
