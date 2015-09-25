@@ -247,7 +247,7 @@ var ReadPower = function (iFactor, vFactor) {
     else
         result.CalculatedFrequency = 0;
 
-    console.log('CalculatedFrequency: ' + result.CalculatedFrequency);
+    //console.log('CalculatedFrequency: ' + result.CalculatedFrequency);
 
     // only consider samples with at least 10 data points
     if (totalCount >= 10) {

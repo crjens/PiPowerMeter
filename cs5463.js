@@ -8,6 +8,7 @@ var bootTime = new Date();
 var db = require('./database');
 var netUtils = require('./utils.js');
 var fs = require("fs");
+var mqtt = null, mqttClient = null;
 
 // load currently installed software version and check for updates every hour
 var exec = require('child_process').exec, softwareVersion = null;
@@ -108,6 +109,11 @@ var loadConfiguration = function (callback) {
 
             var port = data.Port;
             netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName, port);
+
+            if (Config.MqttServer != null) {
+                mqtt = require('mqtt');
+                mqttClient = mqtt.connect(Config.MqttServer);
+            }
         }
 
         if (callback != null)
@@ -297,17 +303,30 @@ reader.on('message', function (data) {
                 // check for alert
                 var alertTime = GetProbeAlertTime(probe);
                 if (alertTime >= 0) {
-                    if (circuit.AlertLevelExceeded == null)
+                    if (circuit.AlertLevelExceeded == null) {
                         circuit.AlertLevelExceeded = new Date();
+                        circuit.AlertTotalWatts = 0;
+                        circuit.AlertTotalSamples = 0;
+                    }
 
                     if (probe.Result.pAve < GetProbeAlertThreshold(probe)) {
                         circuit.AlertLevelExceeded = new Date();
-                    } else if ((circuit.AlertWarningSent == null || ((new Date()) - circuit.AlertWarningSent) > 1000 * 60 * alertTime)){// && ((new Date()) - circuit.AlertLevelExceeded) > 1000 * 60 * alertTime) {
-                        var elapsed = ((new Date()) - circuit.AlertLevelExceeded) / (1000 * 60);
-                        var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.toFixed(0) + " minutes";
-                        console.log(msg);
-                        netUtils.sendText(msg);
-                        circuit.AlertWarningSent = new Date();
+                        circuit.AlertTotalWatts = 0;
+                        circuit.AlertTotalSamples = 0;
+                    } else {
+
+                        circuit.AlertTotalWatts += probe.Result.pAve;
+                        circuit.AlertTotalSamples++;
+
+                        if ((circuit.AlertWarningSent == null || ((new Date()) - circuit.AlertWarningSent) > 1000 * 60 * alertTime)) {// && ((new Date()) - circuit.AlertLevelExceeded) > 1000 * 60 * alertTime) {
+                            var elapsed = ((new Date()) - circuit.AlertLevelExceeded) / (1000 * 60);
+                            var avgWatts = circuit.AlertTotalWatts / circuit.AlertTotalSamples;
+                            //var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.toFixed(0) + " minutes";
+                            var msg = "Alert: Threshold exceeded on " + circuit.Name + " averaged " + avgWatts + " watts for " + elapsed.toFixed(0) + " minutes";
+                            console.log(msg);
+                            netUtils.sendText(msg);
+                            circuit.AlertWarningSent = new Date();
+                        }
                     }
                 }
             }
@@ -327,6 +346,17 @@ reader.on('message', function (data) {
         //console.log(JSON.stringify(circuit.Samples[0]));
         db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts), circuit.Samples[0].CalculatedFrequency);
         console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.toFixed(1) + '  I= ' + circuit.Samples[0].iRms.toFixed(1) + '  P= ' + pTotal.toFixed(1) + '  Q= ' + qTotal.toFixed(1) + '  PF= ' + circuit.Samples[0].pf.toFixed(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.toFixed(3));
+
+        if (mqttClient != null) {
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.toFixed(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.toFixed(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.toFixed(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal).toFixed(1);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.toFixed(4));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.toFixed(3));
+        }
     }
 
     // start next read

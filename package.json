@@ -14,6 +14,7 @@
         "on-finished": ">=2.1.0",
         "basic-auth": ">=1.0.0",
         "universal-analytics": ">=0.3.8",
+        "mqtt": ">=1.4.1",
         "cs5463": "crjens/cs5463#4c375a2a344ea0cab113723dcdfab7d43c4fbddc"
     },
     "config":{
