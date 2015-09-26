@@ -110,9 +110,10 @@ var loadConfiguration = function (callback) {
             var port = data.Port;
             netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName, port);
 
-            if (Config.MqttServer != null) {
+console.log('mqtt: ' + data.MqttServer);
+            if (data.MqttServer != null) {
                 mqtt = require('mqtt');
-                mqttClient = mqtt.connect(Config.MqttServer);
+                mqttClient = mqtt.connect(data.MqttServer);
             }
         }
 
@@ -322,7 +323,7 @@ reader.on('message', function (data) {
                             var elapsed = ((new Date()) - circuit.AlertLevelExceeded) / (1000 * 60);
                             var avgWatts = circuit.AlertTotalWatts / circuit.AlertTotalSamples;
                             //var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.toFixed(0) + " minutes";
-                            var msg = "Alert: Threshold exceeded on " + circuit.Name + " averaged " + avgWatts + " watts for " + elapsed.toFixed(0) + " minutes";
+                            var msg = "Alert: Threshold exceeded on " + circuit.Name + " averaged " + avgWatts.toFixed(1) + " watts for " + elapsed.toFixed(0) + " minutes";
                             console.log(msg);
                             netUtils.sendText(msg);
                             circuit.AlertWarningSent = new Date();
@@ -352,10 +353,12 @@ reader.on('message', function (data) {
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.toFixed(1));
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.toFixed(1));
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.toFixed(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal).toFixed(1);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.toFixed(1));
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.toFixed(4));
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.toFixed(3));
+	    if (circuit.LastDayKwh != null)
+            	mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.toFixed(1));
         }
     }
 

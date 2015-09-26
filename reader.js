@@ -443,7 +443,7 @@ var Close = function () {
 
 // read from hardware
 process.on('message', function (data) {
-    console.log('reader received: ' + data.Action);
+//    console.log('reader received: ' + data.Action);
     if (data.Action == "Start") {
         HardwareVersion = data.HardwareVersion;
         Mode = data.Mode;
