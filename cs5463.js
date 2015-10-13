@@ -10,14 +10,11 @@ var netUtils = require('./utils.js');
 var fs = require("fs");
 var mqtt = null, mqttClient = null;
 
-Number.prototype.toFixed = function (decimalPlaces) {
-    var factor = Math.pow(10, decimalPlaces || 0);
-    var v = (Math.round(Math.round(this * factor * 100) / 100) / factor).toString();
-    if (v.indexOf('.') >= 0) {
-        return v + factor.toString().substr(v.length - v.indexOf('.'));
-    }
-    return v + '.' + factor.toString().substr(1);
+
+Number.prototype.round = function (decimals) {
+    return Number(Math.round(this + 'e' + decimals) + 'e-' + decimals).toFixed(decimals);
 };
+
 
 // load currently installed software version and check for updates every hour
 var exec = require('child_process').exec, softwareVersion = null;
@@ -172,10 +169,10 @@ var sendRollupText = function (callback) {
 
             console.log(JSON.stringify(data));
 
-            message += "\nToday: " + (data.LastDay * 24 / 1000).toFixed(1) + " KWh\n30 day avg: " + (data.LastMonth * 24 / 1000).toFixed(1) + " KWh";
+            message += "\nToday: " + (data.LastDay * 24 / 1000).round(1) + " KWh\n30 day avg: " + (data.LastMonth * 24 / 1000).round(1) + " KWh";
 
             for (var i = 0; i < data.Circuits.length; i++)
-                message += ("\n" + data.Circuits[i].CircuitId + ": " + (data.Circuits[i].Watts * 24 / 1000).toFixed(1) + " KWh");
+                message += ("\n" + data.Circuits[i].CircuitId + ": " + (data.Circuits[i].Watts * 24 / 1000).round(1) + " KWh");
             console.log('rollup: ' + message);
 
             netUtils.sendText(message);
@@ -307,7 +304,7 @@ reader.on('message', function (data) {
                 // check for overload
                 if (probe.Breaker > 0 && probe.Result.iRms > probe.Breaker && (circuit.OverloadWarningSent == null || ((new Date()) - circuit.OverloadWarningSent) > 1000 * 60 * 60)) {
                     if (overloadMsg == null) overloadMsg = "";
-                    overloadMsg += " [Probe: " + i + ": iRms = " + probe.Result.iRms.toFixed(1) + " amps / breaker = " + probe.Breaker + " amps]";
+                    overloadMsg += " [Probe: " + i + ": iRms = " + probe.Result.iRms.round(1) + " amps / breaker = " + probe.Breaker + " amps]";
                 }
 
                 // check for alert
@@ -331,8 +328,8 @@ reader.on('message', function (data) {
                         if ((circuit.AlertWarningSent == null || ((new Date()) - circuit.AlertWarningSent) > 1000 * 60 * alertTime)) {// && ((new Date()) - circuit.AlertLevelExceeded) > 1000 * 60 * alertTime) {
                             var elapsed = ((new Date()) - circuit.AlertLevelExceeded) / (1000 * 60);
                             var avgWatts = circuit.AlertTotalWatts / circuit.AlertTotalSamples;
-                            //var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.toFixed(0) + " minutes";
-                            var msg = "Alert: Threshold exceeded on " + circuit.Name + " averaged " + avgWatts.toFixed(1) + " watts for " + elapsed.toFixed(0) + " minutes";
+                            //var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.round(0) + " minutes";
+                            var msg = "Alert: Threshold exceeded on " + circuit.Name + " averaged " + avgWatts.round(1) + " watts for " + elapsed.round(0) + " minutes";
                             console.log(msg);
                             netUtils.sendText(msg);
                             circuit.AlertWarningSent = new Date();
@@ -342,8 +339,8 @@ reader.on('message', function (data) {
             }
         }
 
-        circuit.pTotal = Number(pTotal.toFixed(1));
-        circuit.qTotal = Number(qTotal.toFixed(1));
+        circuit.pTotal = Number(pTotal.round(1));
+        circuit.qTotal = Number(qTotal.round(1));
 
         // send text if overloaded
         if (overloadMsg != null) {
@@ -355,19 +352,19 @@ reader.on('message', function (data) {
         
         //console.log(JSON.stringify(circuit.Samples[0]));
         db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts), circuit.Samples[0].CalculatedFrequency);
-        console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.toFixed(1) + '  I= ' + circuit.Samples[0].iRms.toFixed(1) + '  P= ' + pTotal.toFixed(1) + '  Q= ' + qTotal.toFixed(1) + '  PF= ' + circuit.Samples[0].pf.toFixed(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.toFixed(3));
+        console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.round(1) + '  I= ' + circuit.Samples[0].iRms.round(1) + '  P= ' + pTotal.round(1) + '  Q= ' + qTotal.round(1) + '  PF= ' + circuit.Samples[0].pf.round(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.round(3));
 
         if (mqttClient != null) {
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.toFixed(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.toFixed(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.toFixed(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.toFixed(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.toFixed(4));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.round(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.round(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.round(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.round(4));
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.toFixed(3));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.round(3));
 	    if (circuit.LastDayKwh != null)
-            	mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.toFixed(1));
+	        mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.round(1));
         }
     }
 
@@ -494,7 +491,7 @@ var updateState = function () {
                 if (result) {
                     var circuit = FindCircuit(id);
                     if (circuit != null) {
-                        var kwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).toFixed(1));
+                        var kwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).round(1));
                         console.log("setting lastkwh for ckt: " + id + " to " + kwh);
                         circuit.LastDayKwh = kwh;
                     } else {
@@ -570,21 +567,21 @@ var exports = {
 
                 var w = [], a = [], v = [], q = [], pf = [], l = [], ts = [], probe = [], breaker=[], f=[];
                 for (var p = 0; p < ckt.Probes.length; p++) {
-                    w.push(ckt.Samples[p].pAve.toFixed(0));
-                    a.push(ckt.Samples[p].iRms.toFixed(1));
+                    w.push(ckt.Samples[p].pAve.round(0));
+                    a.push(ckt.Samples[p].iRms.round(1));
                     probe.push(ckt.Probes[p].id);
                     breaker.push(ckt.Probes[p].Breaker + " Amp");
-                    v.push(ckt.Samples[p].vRms.toFixed(1));
-                    q.push(ckt.Samples[p].qAve.toFixed(0));
-                    pf.push(ckt.Samples[p].pf.toFixed(5));
-                    l.push(Math.round(ckt.Samples[p].iRms * 100.0 / ckt.Probes[p].Breaker) + " %");
+                    v.push(ckt.Samples[p].vRms.round(1));
+                    q.push(ckt.Samples[p].qAve.round(0));
+                    pf.push(ckt.Samples[p].pf.round(5));
+                    l.push((ckt.Samples[p].iRms * 100.0 / ckt.Probes[p].Breaker).round(0) + " %");
                     ts.push(ckt.Samples[p].ts);
-                    f.push(ckt.Samples[p].CalculatedFrequency.toFixed(2));
+                    f.push(ckt.Samples[p].CalculatedFrequency.round(2));
                 }
 
                 if (ckt.Probes.length > 1) {
-                    w.push(ckt.pTotal.toFixed(0));
-                    q.push(ckt.qTotal.toFixed(0));
+                    w.push(ckt.pTotal.round(0));
+                    q.push(ckt.qTotal.round(0));
                     probe.push("All");
                 }
 
