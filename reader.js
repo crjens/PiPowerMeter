@@ -27,7 +27,16 @@ var Registers = {
 
 var cs5463 = null; 
 // comment below line for WebMatrix testing
-var cs5463 = require( "cs5463" );
+var cs5463 = require("cs5463");
+
+Number.prototype.toFixed = function (decimalPlaces) {
+    var factor = Math.pow(10, decimalPlaces || 0);
+    var v = (Math.round(Math.round(this * factor * 100) / 100) / factor).toString();
+    if (v.indexOf('.') >= 0) {
+        return v + factor.toString().substr(v.length - v.indexOf('.'));
+    }
+    return v + '.' + factor.toString().substr(1);
+};
        
 
 var sleep = function (delayMs) {

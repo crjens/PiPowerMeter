@@ -10,6 +10,15 @@ var netUtils = require('./utils.js');
 var fs = require("fs");
 var mqtt = null, mqttClient = null;
 
+Number.prototype.toFixed = function (decimalPlaces) {
+    var factor = Math.pow(10, decimalPlaces || 0);
+    var v = (Math.round(Math.round(this * factor * 100) / 100) / factor).toString();
+    if (v.indexOf('.') >= 0) {
+        return v + factor.toString().substr(v.length - v.indexOf('.'));
+    }
+    return v + '.' + factor.toString().substr(1);
+};
+
 // load currently installed software version and check for updates every hour
 var exec = require('child_process').exec, softwareVersion = null;
 (function checkForUpdates(){
