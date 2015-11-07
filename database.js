@@ -97,7 +97,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                 db.runSql("Insert or ignore into Config Values('Config', '801001');", null, true);
                 db.runSql("Insert or ignore into Config Values('DeviceName', '');", null, true);
                 db.runSql("Insert or ignore into Config Values('Price', '0.1');", null, true);
-                db.runSql("Insert or ignore into Config Values('VoltageScale', '384');", null, true);
+                db.runSql("Insert or ignore into Config Values('VoltageScale', '368.6');", null, true);
 
                 db.runSql("Insert or ignore into Config Values('Probes', '[{''Name'':''30A'',''Factor'':''31''},{''Name'':''100A'',''Factor'':''115''},{''Name'':''200A'',''Factor'':''370''}]');", null, true);
 
