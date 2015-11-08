@@ -296,8 +296,8 @@ var ReadPower = function (iFactor, vFactor) {
     result.vPeak = Number((convert(resultFromBuffer(r, 6), 0, true) * vFactor).round(2));
     result.freq = Number((convert(resultFromBuffer(r, 7), 0, true) * 4000.0).round(5));
 
-    if (result.pAve < 3.0)
-        result.pAve = 0;  // noise
+    //if (Math.abs(result.pAve) < 3.0)
+    //    result.pAve = 0;  // noise
 
     //_pf = result.pf;
 
