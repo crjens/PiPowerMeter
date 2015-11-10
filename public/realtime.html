@@ -44,7 +44,9 @@
                     $('#content').empty();
                     $(templates.configtable({ Result: result.Readings })).appendTo($('#content'));
 
-                    $('.format_num').toNumber({region: region});
+                    
+//$('.format_num').toNumber({region: region});
+
 
                     $(":checkbox").change(function () {
 
