@@ -1,6 +1,6 @@
 var rollupTimeHr = 16;  // hour at which rollups are sent 16 == 4pm UTC which is 9 am PST
 var _circuit = 0, Mode, Config;
-var costPerKWH = 0.0, deviceName="";
+var costPerKWH = 0.0, deviceName="", region="en-US";
 var configuration={};
 var rollupEvent = null, runInterval = null;
 var bootTime = new Date();
@@ -598,7 +598,8 @@ var exports = {
                     pf: pf,
                     timestamp: ts,
                     f: f,
-                    load: l
+                    load: l,
+		    region: region
                 });
             }
         }
@@ -611,6 +612,7 @@ var exports = {
             } else {
                 if (result != null) {
                     result.Cost = costPerKWH;
+                    result.Region = region;
                     result.DeviceName = deviceName;
                 }
 
@@ -633,6 +635,10 @@ var exports = {
                 costPerKWH = _config.Price;
                 if (costPerKWH <= 0)
                     costPerKWH = 0.1; // default to 10 / KWh
+
+                region = _config.Region;
+                if (region == null || region == "")
+                    region = "en-US"; // default
 
                 if (_config.DeviceName != null)
                     deviceName = _config.DeviceName;
@@ -664,15 +670,20 @@ var exports = {
                     results.MaxWatts = 0.0;
 
                 if (costPerKWH == 0) {
-                    db.getCostPerKWh(function (err, cost) {
+                    db.getCostPerKWh(function (err, cost, _region) {
                         if (cost != null && cost.length == 1)
                             costPerKWH = cost[0].Value;
 
+                        if (_region != null && _region.length == 1)
+                            region = _region[0].Value;
+
                         results.CostPerKWH = costPerKWH;
+                        results.Region = region;
                         callback(err, results);
                     });
                 } else {
                     results.CostPerKWH = costPerKWH;
+                    results.Region = region;
                     callback(err, results);
                 }
             });

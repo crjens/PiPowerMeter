@@ -8,6 +8,10 @@ var ResetGraph = function () {
      });
 }
 
+var toCurrency = function (amount) {
+    return $('<input />').val(amount).formatCurrency({ region: Region }).val();
+}
+
 var html = "";
 
 var selectTimespanOption = function (timespan) {
@@ -28,6 +32,9 @@ var InitializeGraph = function (channel, timespan, start, end, callback) {
         dataType: 'json',
         cache: false,
         success: function (data) {
+            Region = data.Region;
+            if (Region == null || Region == "")
+                Region = "en-US";
 	        data = data.Circuits;
             var select = $("#circuits");
             for (var i = 0; i < data.length; i++) {
@@ -224,13 +231,13 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
 	    }
             
             var Kwh = (result.avg / 1000) * ((end.getTime() - start.getTime()) / (1000 * 60 * 60));
-            var cost = Number(result.Cost) * Kwh;
+            var cost = toCurrency(result.Cost * Kwh);
 
             html = "<tr><td>Min</td><td>" + result.min + " watts</td></tr>" +
                         "<tr><td>Avg</td><td>" + result.avg + " watts</td></tr>" +
                         "<tr><td>Max</td><td>" + result.max + " watts</td></tr>" +
                         "<tr><td>KWh</td><td>" + Kwh.toFixed(2) + "</td></tr>" + 
-                        "<td>Cost</td><td>$" + cost.toFixed(2) + "</td></tr>";
+                        "<td>Cost</td><td>" + cost + "</td></tr>";
 
 
             data = [{ data: p, label: "Watts = -0000.00", color: "#5482FF"}];

@@ -10,6 +10,9 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+
+<script src="jquery.formatCurrency-1.4.0.min.js"></script>
+        <script src="jquery.formatCurrency.all.js"></script>
     
     <script type="text/javascript">
 
@@ -26,17 +29,22 @@
                 success: function (result) {
 
                     var lastTimestamp = latestTimestamp;
+                    var region = 'en_US';
                     $.each(result.Readings, function (index, value) {
                         if (lastTimestamp != "" && value.timestamp > lastTimestamp)
                             value.display = 'updatedreading';
 
                         if (value.timestamp > latestTimestamp)
                             latestTimestamp = value.timestamp;
+
+                        region = value.region;
                     });
 
                     $('.header').text(result.DeviceName + " Power Meter Readings");
                     $('#content').empty();
                     $(templates.configtable({ Result: result.Readings })).appendTo($('#content'));
+
+                    $('.format_num').toNumber({region: region});
 
                     $(":checkbox").change(function () {
 
@@ -141,12 +149,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <td><div id='circuitid'>{{id}}</div></td>
             <td><input id="{{id}}" type="checkbox" name="enabled" value="enabled" {{#if enabled}} checked{{/if}}></td>
             <td><div id='probe'>{{#each probe}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
-            <td><div id='volts'>{{#each volts}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
-            <td><div id='watts'>{{#each watts}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
-            <td><div id='q'>{{#each q}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
-            <td><div id='pf'>{{#each pf}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
-            <td><div id='f'>{{#each f}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
-            <td><div id='amps'>{{#each amps}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='volts' class='format_num'>{{#each volts}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='watts' class='format_num'>{{#each watts}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='q' class='format_num'>{{#each q}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='pf' class='format_num'>{{#each pf}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            <td><div id='f' class='format_num'>{{#each f}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
+            
+<td><div id='amps'  class='format_num'>{{#each amps}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
             <td><div id='breaker'>{{#each breaker}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
             <td><div id='load'>{{#each load}}{{#if @index}}<br />{{/if}}{{this}}{{/each}}</div></td>
             <td><div id='timestamp'>{{#each timestamp}}{{#if @index}}<br />{{/if}}{{prettifyDate this}}{{/each}}</div></td>

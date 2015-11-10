@@ -10,6 +10,9 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
+
+    <script src="jquery.formatCurrency-1.4.0.min.js"></script>
+    <script src="jquery.formatCurrency.all.js"></script>
     
     <script type="text/javascript">
 
@@ -62,6 +65,11 @@
                 dataType: 'json',
                 cache: false,
                 success: function (result) {
+
+                    result.Regions = [];
+                    for (var region in $.formatCurrency.regions) {
+                        result.Regions.push(region);
+                    }
 
 		    HttpPort = result["Port"];
                     Configuration.DefinedProbes = result.Probes;
@@ -346,6 +354,8 @@ if (area != null) {
                 config[name] = value;
             });
 
+            config["Region"] = $('#configTable').find('#Region option:selected').val();
+
             var probes = [];
             $('#probeDefTable tr.probedefdata').each(function (index, row) {
 
@@ -422,7 +432,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Frequency</td><td>{{Frequency}}</td></tr>
             <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
-            <tr><td>Cost per KWh:</td><td><input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Cost per KWh:</td><td><input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all"><!--</td></tr>
+            <tr>
+                <td>Currency</td>
+                <td>-->
+                    <select id="Region">
+                        {{#select Region}}
+                        {{#each Regions}}
+                        <option value='{{this}}'>{{this}}</option>
+                        {{/each}}
+                        {{/select}}
+                    </select>
+                </td>
+            </tr>
             <tr><td>Voltage Scale:</td><td><input type="text" name="VoltageScale" id="VoltageScale" value="{{VoltageScale}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>User Name:</td><td><input type="text" name="UserName" id="UserName" value="{{UserName}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Password:</td><td><input type="text" name="Password" id="Password" value="{{Password}}" class="text ui-widget-content ui-corner-all"></td></tr>
@@ -595,8 +617,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             </td>
 	    <td>
                 <input type="text" name="alert" id="alert" value="{{Alert}}" class="text ui-widget-content ui-corner-all">
-            </td>
-            <td><img src='images/delete.jpg' class='size18x18' onClick='deleteProbe($(this))'></td>
+ <td><img src='images/delete.jpg' class='size18x18' onClick='deleteProbe($(this))'></td>
         </tr>
           
     </script>
