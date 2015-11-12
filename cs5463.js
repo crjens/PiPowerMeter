@@ -567,21 +567,21 @@ var exports = {
 
                 var w = [], a = [], v = [], q = [], pf = [], l = [], ts = [], probe = [], breaker=[], f=[];
                 for (var p = 0; p < ckt.Probes.length; p++) {
-                    w.push(ckt.Samples[p].pAve.round(0));
-                    a.push(ckt.Samples[p].iRms.round(1));
+                    w.push(Number(ckt.Samples[p].pAve));
+                    a.push(Number(ckt.Samples[p].iRms));
                     probe.push(ckt.Probes[p].id);
                     breaker.push(ckt.Probes[p].Breaker + " Amp");
-                    v.push(ckt.Samples[p].vRms.round(1));
-                    q.push(ckt.Samples[p].qAve.round(0));
-                    pf.push(ckt.Samples[p].pf.round(5));
-                    l.push((ckt.Samples[p].iRms * 100.0 / ckt.Probes[p].Breaker).round(0) + " %");
+                    v.push(Number(ckt.Samples[p].vRms));
+                    q.push(Number(ckt.Samples[p].qAve));
+                    pf.push(Number(ckt.Samples[p].pf));
+                    l.push(Number(ckt.Samples[p].iRms / ckt.Probes[p].Breaker));
                     ts.push(ckt.Samples[p].ts);
-                    f.push(ckt.Samples[p].CalculatedFrequency.round(2));
+                    f.push(Number(ckt.Samples[p].CalculatedFrequency));
                 }
 
                 if (ckt.Probes.length > 1) {
-                    w.push(ckt.pTotal.round(0));
-                    q.push(ckt.qTotal.round(0));
+                    w.push(Number(ckt.pTotal));
+                    q.push(Number(ckt.qTotal));
                     probe.push("All");
                 }
 
@@ -599,7 +599,7 @@ var exports = {
                     timestamp: ts,
                     f: f,
                     load: l,
-		    region: region
+		            region: region
                 });
             }
         }
