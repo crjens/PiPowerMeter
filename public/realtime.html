@@ -91,15 +91,14 @@
                 return context;
             };
             function formatPercent(context, options) {
-                var fixed = options.hash.fixed || 2;
-                return (context * 100).toFixed(fixed) + '%';
+                return formatFloat(context * 100, options) + ' %';
             };
-            function formatDate(context) {
-                return new Date(context).toLocaleString();
+            function formatDate(context, options) {
+                return Globalize().format(new Date(context), 'F', region);
             };
             function formatFloat(context, options) {
                 var fixed = options.hash.fixed || 2;
-                return parseFloat(context).toFixed(fixed);
+                return Globalize().format(context, 'n' + fixed, region);
             };
 
             load();
