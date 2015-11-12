@@ -570,7 +570,7 @@ var exports = {
                     w.push(Number(ckt.Samples[p].pAve));
                     a.push(Number(ckt.Samples[p].iRms));
                     probe.push(ckt.Probes[p].id);
-                    breaker.push(ckt.Probes[p].Breaker + " Amp");
+                    breaker.push(Number(ckt.Probes[p].Breaker));
                     v.push(Number(ckt.Samples[p].vRms));
                     q.push(Number(ckt.Samples[p].qAve));
                     pf.push(Number(ckt.Samples[p].pf));
