@@ -185,7 +185,7 @@ j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; 
             <td><div id='f' class='format_num'>{{#each f}}{{#if @index}}<br />{{/if}}{{format this type='float' fixed='2'}}{{/each}}</div></td>
 
             <td><div id='amps' class='format_num'>{{#each amps}}{{#if @index}}<br />{{/if}}{{format this type='float' fixed='1'}}{{/each}}</div></td>
-            <td><div id='breaker'>{{#each breaker}}{{#if @index}}<br />{{/if}}{{this}}{{/each}} Amps</div></td>
+            <td><div id='breaker'>{{#each breaker}}{{#if @index}}<br />{{/if}}{{this}} Amps{{/each}}</div></td>
             <td><div id='load'>{{#each load}}{{#if @index}}<br />{{/if}}{{format this type='percent' fixed='0'}}{{/each}}</div></td>
             <td><div id='timestamp'>{{#each timestamp}}{{#if @index}}<br />{{/if}}{{format this type='date'}}{{/each}}</div></td>
         </tr>
