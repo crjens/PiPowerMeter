@@ -1,7 +1,11 @@
 
 var toCurrency = function(amount)
 {
-    return $('<input />').val(amount).formatCurrency({ region: Region }).val();
+    return Globalize().format(amount, "c", Region);
+}
+
+var toFloat = function (amount, fixed) {
+    return Globalize().format(amount, 'n' + fixed, Region);
 }
 
 
@@ -58,11 +62,11 @@ function labelFormatter(label, series) {
         cost = "    (" + toCurrency(kw * dollarsPerKWh * hours) + ")";
     }
         
-    return "<div style='font-size:12pt; text-align:center; padding:2px; color: black;'>" +  label + "<br/>" + Math.round(series.percent) + "%" + cost + "</div>";
+    return "<div style='font-size:12pt; text-align:center; padding:2px; color: black;'>" +  label + "<br/>" + toFloat(series.percent, 0) + "%" + cost + "</div>";
 }
 
 function labelFormatter2(label, series) {
-    return "<div style='font-size:12pt; text-align:center; padding:2px; color: black;'>" + label + "<br/>" + series.data[0][1].toFixed(1) + " W</div>";
+    return "<div style='font-size:12pt; text-align:center; padding:2px; color: black;'>" + label + "<br/>" + toFloat(series.data[0][1], 1) + " W</div>";
 }
 
 var options = {
@@ -149,10 +153,7 @@ var RefreshComparisonGraph = function (start, end, callback) {
                 }
             }
 
-            //if (max < 1000)
-            usage = min.toFixed(1) + ' / ' + avg.toFixed(1) + ' / ' + max.toFixed(1) + ' Watts (min/avg/max)';
-            //else
-            //  usage = (parseFloat(min) / 1000.0).toFixed(1) + " / " + (watts/1000).toFixed(1) + ' / ' + (max/1000).toFixed(1) + ' KW (min/avg/max)';
+            usage = toFloat(min, 1) + ' / ' + toFloat(avg, 1) + ' / ' + toFloat(max, 1) + ' Watts (min/avg/max)';
 
             $("#tooltip")
                 .html("<span style='font-weight:bold; color:black;'>" + obj.series.label + "</span><span style='color:black;'><br/>Usage: " + usage + "<br/>Cost: " + costPerHour + " / " + costPerDay + " / " + costPerMonth + " / " + costPerYear + " (hr/day/month/year)</span>")
@@ -242,7 +243,7 @@ var draw = function (callback) {
 
             var plot = $.plot(placeholder, data, options);
             maxWatts = results.MaxWatts;
-            currentWatts = totalWatts.toFixed(0);
+            currentWatts = toFloat(totalWatts, 0);
             resizeGage(true);
         }
     }

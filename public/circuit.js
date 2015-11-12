@@ -9,7 +9,11 @@ var ResetGraph = function () {
 }
 
 var toCurrency = function (amount) {
-    return $('<input />').val(amount).formatCurrency({ region: Region }).val();
+    return Globalize().format(amount, "c", Region);
+}
+
+var toFloat = function (amount, fixed) {
+    return Globalize().format(amount, 'n' + fixed, Region);
 }
 
 var html = "";
@@ -236,7 +240,7 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
             html = "<tr><td>Min</td><td>" + result.min + " watts</td></tr>" +
                         "<tr><td>Avg</td><td>" + result.avg + " watts</td></tr>" +
                         "<tr><td>Max</td><td>" + result.max + " watts</td></tr>" +
-                        "<tr><td>KWh</td><td>" + Kwh.toFixed(2) + "</td></tr>" + 
+                        "<tr><td>KWh</td><td>" + toFloat(Kwh,2) + "</td></tr>" + 
                         "<td>Cost</td><td>" + cost + "</td></tr>";
 
 
@@ -258,7 +262,7 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
 
             placeholder.bind("plotselected", function (event, ranges) {
 
-                $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+                $("#selection").text(toFloat(ranges.xaxis.from,1) + " to " + toFloat(ranges.xaxis.to,1));
 
                 plot = $.plot(placeholder, data, $.extend(true, {}, options, {
                     xaxis: {
@@ -344,7 +348,7 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
                                 y = p2[1];
                         }
 
-                        legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(2)));
+                        legends.eq(i).text(series.label.replace(/=.*/, "= " + toFloat(y,2)));
                     }
                 }
 
@@ -463,12 +467,12 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                     for (var i = 0; i < samples.length; i++) {
                         if (i > 0)
                             result += ", ";
-                        result += samples[i][property].toFixed(digits);
+                        result += toFloat(samples[i][property], digits);
                         total += samples[i][property];
                     }
 
                     if (includeTotal && samples.length > 1) {
-                        result += " (" + total.toFixed(digits) + ")";
+                        result += " (" + toFloat(total, digits) + ")";
                     }
                     return result;
                 }
@@ -530,7 +534,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
 
             placeholder.bind("plotselected", function (event, ranges) {
 
-                $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+                $("#selection").text(toFloat(ranges.xaxis.from, 1) + " to " + toFloat(ranges.xaxis.to, 1));
 
                 plot = $.plot(placeholder, data, $.extend(true, {}, options, {
                     xaxis: {
@@ -597,7 +601,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                             y = p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]);
                         }
 
-                        legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(2)));
+                        legends.eq(i).text(series.label.replace(/=.*/, "= " + toFloat(y, 2)));
 
                     }
                 }

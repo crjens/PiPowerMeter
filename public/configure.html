@@ -11,8 +11,8 @@
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.min.js"></script>
 
-    <script src="jquery.formatCurrency-1.4.0.min.js"></script>
-    <script src="jquery.formatCurrency.all.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/globalize.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/cultures/globalize.cultures.js"></script>
     
     <script type="text/javascript">
 
@@ -67,9 +67,15 @@
                 success: function (result) {
 
                     result.Regions = [];
-                    for (var region in $.formatCurrency.regions) {
-                        result.Regions.push(region);
+                    for (var culture in Globalize.cultures) {
+                        result.Regions.push(Globalize.cultures[culture]);
                     }
+
+                    result.Regions.sort(function (a, b) {
+                        if (a.englishName < b.englishName) return -1;
+                        if (a.englishName > b.englishName) return 1;
+                        return 0;
+                    });
 
 		    HttpPort = result["Port"];
                     Configuration.DefinedProbes = result.Probes;
@@ -432,14 +438,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Frequency</td><td>{{Frequency}}</td></tr>
             <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
-            <tr><td>Cost per KWh:</td><td><input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all"><!--</td></tr>
             <tr>
-                <td>Currency</td>
-                <td>-->
-                    <select id="Region">
+                <td>Cost per KWh:</td>
+                <td class="twocol">
+                    <input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all">
+                    <select id="Region" class="text ui-widget-content ui-corner-all">
                         {{#select Region}}
                         {{#each Regions}}
-                        <option value='{{this}}'>{{this}}</option>
+                        <option value='{{this.name}}'>{{this.englishName}}</option>
                         {{/each}}
                         {{/select}}
                     </select>

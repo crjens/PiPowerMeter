@@ -205,7 +205,10 @@ text-align:left;
 
 #configTable td input {
     width: 450px;
-    
+}
+
+#configTable .twocol input {
+    width: 100px;
 }
 
 .settingsiconright {
