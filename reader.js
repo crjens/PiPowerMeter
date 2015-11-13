@@ -29,10 +29,6 @@ var cs5463 = null;
 // comment below line for WebMatrix testing
 var cs5463 = require("cs5463");
 
-Number.prototype.round = function (decimals) {
-    return Number(Math.round(this + 'e' + decimals) + 'e-' + decimals).toFixed(decimals);
-};
-       
 
 var sleep = function (delayMs) {
     var s = new Date().getTime();
@@ -217,9 +213,9 @@ var ReadPower = function (iFactor, vFactor) {
         var vInst = convert(sampleBuffer.slice(offset + 3, offset + 6), 0, true) * vFactor;
         var tsInst = sampleBuffer.readInt32LE(offset + 6) / 1000000.0;
 
-        result.iInst.push(Number(iInst.round(1)));
-        result.vInst.push(Number(vInst.round(1)));
-        result.tsInst.push(Number(tsInst.round(2)));
+        result.iInst.push(Number(iInst));
+        result.vInst.push(Number(vInst));
+        result.tsInst.push(Number(tsInst));
 
         // frequency detect
 	// look for zero crossing and ensure we didn't miss any samples 
@@ -237,7 +233,7 @@ var ReadPower = function (iFactor, vFactor) {
                 if (sampleTime >= 7.1 && sampleTime <= 12.5) {
                     totalCount++;
                     totalTime += (tsZCInterpolated - lastTsZC);
-                    result.tsZC.push(Number(tsZCInterpolated.round(2)));
+                    result.tsZC.push(Number(tsZCInterpolated));
                 }
             }
             lastTsZC = tsZCInterpolated;
@@ -287,14 +283,14 @@ var ReadPower = function (iFactor, vFactor) {
 
     var r = new Buffer(cs5463.send(cmd), 'hex');
 
-    result.iRms = Number((convert(resultFromBuffer(r, 0), -1, false) * iFactor).round(2));
-    result.vRms = Number((convert(resultFromBuffer(r, 1), -1, false) * vFactor).round(2));
-    result.pAve = Number((convert(resultFromBuffer(r, 2), 0, true) * vFactor * iFactor).round(1));
-    result.qAve = Number((convert(resultFromBuffer(r, 3), 0, true) * vFactor * iFactor).round(1));  // average reactive power
-    result.pf = Number((convert(resultFromBuffer(r, 4), 0, true)).round(5));
-    result.iPeak = Number((convert(resultFromBuffer(r, 5), 0, true) * iFactor).round(2));
-    result.vPeak = Number((convert(resultFromBuffer(r, 6), 0, true) * vFactor).round(2));
-    result.freq = Number((convert(resultFromBuffer(r, 7), 0, true) * 4000.0).round(5));
+    result.iRms = convert(resultFromBuffer(r, 0), -1, false) * iFactor;
+    result.vRms = convert(resultFromBuffer(r, 1), -1, false) * vFactor;
+    result.pAve = convert(resultFromBuffer(r, 2), 0, true) * vFactor * iFactor;
+    result.qAve = convert(resultFromBuffer(r, 3), 0, true) * vFactor * iFactor;  // average reactive power
+    result.pf = convert(resultFromBuffer(r, 4), 0, true);
+    result.iPeak = convert(resultFromBuffer(r, 5), 0, true) * iFactor;
+    result.vPeak = convert(resultFromBuffer(r, 6), 0, true) * vFactor;
+    result.freq = convert(resultFromBuffer(r, 7), 0, true) * 4000.0;
 
     //if (Math.abs(result.pAve) < 3.0)
     //    result.pAve = 0;  // noise

@@ -339,8 +339,8 @@ reader.on('message', function (data) {
             }
         }
 
-        circuit.pTotal = Number(pTotal.round(1));
-        circuit.qTotal = Number(qTotal.round(1));
+        circuit.pTotal = Number(pTotal);
+        circuit.qTotal = Number(qTotal);
 
         // send text if overloaded
         if (overloadMsg != null) {
@@ -356,15 +356,15 @@ reader.on('message', function (data) {
 
         if (mqttClient != null) {
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.round(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.round(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.round(1));
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.round(4));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf);
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.round(3));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency);
 	    if (circuit.LastDayKwh != null)
-	        mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.round(1));
+	        mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh);
         }
     }
 
@@ -491,7 +491,7 @@ var updateState = function () {
                 if (result) {
                     var circuit = FindCircuit(id);
                     if (circuit != null) {
-                        var kwh = Number(((result[0].avg || 0) / 1000.0 * 24.0).round(1));
+                        var kwh = (result[0].avg || 0) / 1000.0 * 24.0;
                         console.log("setting lastkwh for ckt: " + id + " to " + kwh);
                         circuit.LastDayKwh = kwh;
                     } else {
