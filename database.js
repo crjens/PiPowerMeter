@@ -292,7 +292,7 @@ var db =
                     callback(err);
             } else {
 
-                var sql = "Insert into Readings Values(null," + circuitId + ',' + i + ',' + v + ',' + p + "," + q + ',' + pf + ",'" + ts.getTime() / 1000 + "',null," + f + ");"
+                var sql = "Insert into Readings Values(null," + circuitId + ',' + i.toFixed(4) + ',' + v.toFixed(2) + ',' + p.toFixed(2) + "," + q.toFixed(2) + ',' + pf.toFixed(6) + ",'" + ts.getTime() / 1000 + "',null," + f.toFixed(4) + ");"
 
                 db.execSql(sql, function (err) {
                     if (err)
