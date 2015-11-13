@@ -68,7 +68,8 @@
 
                     result.Regions = [];
                     for (var culture in Globalize.cultures) {
-                        result.Regions.push(Globalize.cultures[culture]);
+			if (culture != "default")
+	                        result.Regions.push(Globalize.cultures[culture]);
                     }
 
                     result.Regions.sort(function (a, b) {
