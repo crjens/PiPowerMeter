@@ -88,13 +88,14 @@
                 }
             });
             function formatCurrency(context, options) {
-                return context;
+                return Globalize().format(context, 'c', region);
             };
             function formatPercent(context, options) {
-                return formatFloat(context * 100, options) + ' %';
+		var fixed = options.hash.fixed || 2;
+		return Globalize().format(context, 'p' + fixed, region);
             };
             function formatDate(context, options) {
-                return Globalize().format(new Date(context), 'F', region);
+                return Globalize().format(new Date(context), 'h:mm:ss', region);
             };
             function formatFloat(context, options) {
                 var fixed = options.hash.fixed || 2;
