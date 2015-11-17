@@ -356,15 +356,15 @@ reader.on('message', function (data) {
 
         if (mqttClient != null) {
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.round(2));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.round(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.round(1));
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.round(4));
             mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
-            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency);
-	    if (circuit.LastDayKwh != null)
-	        mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh);
+            mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.round(3));
+            if (circuit.LastDayKwh != null)
+                mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.round(1));
         }
     }
 
