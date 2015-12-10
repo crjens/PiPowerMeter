@@ -1,5 +1,6 @@
 var databaseFile = 'powermeter.db';
-var exec = require('child_process').exec;
+var exec = require('child_process').exec; 
+
 var fs = require('fs');
 
 var readingsTableColumnsSQL = "id INTEGER primary key, CircuitId int, I real, V real, P real, Q real, PF real, Timestamp int, Compacted int, F real";
