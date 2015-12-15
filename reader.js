@@ -302,36 +302,36 @@ var ReadPower = function (iFactor, vFactor) {
 
 var ResetIfNeeded = function () {
 
-    Reset();
-
-    //var epsilon = read(13);
-    //var mode = read(18);
-    //var config = read(0);
-    //if (epsilon.toString('hex') != Epsilon) {
-    //    console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + Epsilon);
-    //    Reset();
-    //}
-    //else if (mode.toString('hex') != Mode) {
-    //    console.log('Resetting due to incorrect Mode: ' + mode.toString('hex') + ' expected: ' + Mode);
-    //    Reset();
-    //}
-    //else if (config.toString('hex') != Config) {
-    //    console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
-    //    Reset();
-    //} else {
-    //    //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
-    //}
+    var epsilon = read(13);
+    var mode = read(18);
+    var config = read(0);
+    if (epsilon.toString('hex') != Epsilon) {
+        console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + Epsilon);
+        Reset(true);
+    }
+    else if (mode.toString('hex') != Mode) {
+        console.log('Resetting due to incorrect Mode: ' + mode.toString('hex') + ' expected: ' + Mode);
+        Reset(true);
+    }
+    else if (config.toString('hex') != Config) {
+        console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
+        Reset(true);
+    } else {
+        Reset(false);
+        //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
+    }
 }
 
-var Reset = function () {
-    console.log('RESET');
+var Reset = function (needed) {
+    if (needed)
+        console.log('RESET');
 
     // HARD RESET CHIP
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
 
     sleep(20);
     
-    write('FFFFFFFE', 'init serial port');
+    write('FFFFFFFE', needed ? 'init serial port' : null);
     command('80', 'reset');
     var s;
     do {
@@ -339,40 +339,42 @@ var Reset = function () {
             return;
 
         s = read(15); // read status
-        console.log('status: ' + s.toString('hex'));
+        if (needed)
+            console.log('status: ' + s.toString('hex'));
 
         if (!(s[0] & 0x80))
             sleep(500);
     } while (!(s[0] & 0x80));
 
     
-    write("5EFFFFFF", "clear status");
+    write("5EFFFFFF", needed ? "clear status" : null);
 
 
     //write('64000060', 'hpf on');
     //write('64000160', 'hpf on with voltage phase compensation');
-    read(18, 'read Mode register');
+    read(18, needed ? 'read Mode register' : null);
     // 60 = 0110 0000  => High-Pass filters enabled on both current and voltage channels
     // E0 = 1110 0000  => one sample of current channel delay, High-Pass filters enabled on both current and voltage channels
     // E1 = 1110 0001  => one sample of current channel delay, High-Pass filters enabled on both current and voltage channels, auto line frequency measurement enabled
     //write('640000E0', 'hpf on with current phase compensation');  
-    write('64' + Mode, 'hpf on with current phase compensation');
-    read(18, 'read Mode register');
+    write('64' + Mode, needed ? 'hpf on with current phase compensation' : null);
+    read(18, needed ? 'read Mode register' : null);
 
-    read(0, 'read configuration register');
+    read(0, needed ? 'read configuration register' : null);
     //write('40001001', 'interrupts set to high to low pulse');
     //write('40C01001', 'interrupts set to high to low pulse with phase comp');
-    write('40' + Config, 'interrupts set to high to low pulse with phase comp');
+    write('40' + Config, needed ? 'interrupts set to high to low pulse with phase comp' : null);
     // C0 = 1100 0000 => first 7 bits set delay in voltage channel relative to current channel (00-7F), 1100000 => 
     // 10 = 0001 0000 => set interrupts to high to low pulse
     // 01 = 0000 0001 => set clock divider to 1 (default)
-    read(0, 'read configuration register');
+    read(0, needed ? 'read configuration register' : null);
     
-    console.log('epsilon before: ' + convert(read(13), 0, true));
-    write('5A' + Epsilon, 'set epsilon to ' + Epsilon);
-    console.log('epsilon after: ' + convert(read(13), 0, true));
+    //console.log('epsilon before: ' + convert(read(13), 0, true));
+    write('5A' + Epsilon, needed ? 'set epsilon to ' + Epsilon : null);
+    //console.log('epsilon after: ' + convert(read(13), 0, true));
 
-    console.log('initialized');
+    if (needed)
+        console.log('initialized');
 
 }
 
