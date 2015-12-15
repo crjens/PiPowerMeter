@@ -300,24 +300,27 @@ var ReadPower = function (iFactor, vFactor) {
     return result;
 }
 
-var ResetIfNeeded = function() {
-    var epsilon = read(13);
-    var mode = read(18);
-    var config = read(0);
-    if (epsilon.toString('hex') != Epsilon) {
-        console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + Epsilon);
-        Reset();
-    }
-    else if (mode.toString('hex') != Mode) {
-        console.log('Resetting due to incorrect Mode: ' + mode.toString('hex') + ' expected: ' + Mode);
-        Reset();
-    }
-    else if (config.toString('hex') != Config) {
-        console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
-        Reset();
-    } else {
-        //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
-    }
+var ResetIfNeeded = function () {
+
+    Reset();
+
+    //var epsilon = read(13);
+    //var mode = read(18);
+    //var config = read(0);
+    //if (epsilon.toString('hex') != Epsilon) {
+    //    console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + Epsilon);
+    //    Reset();
+    //}
+    //else if (mode.toString('hex') != Mode) {
+    //    console.log('Resetting due to incorrect Mode: ' + mode.toString('hex') + ' expected: ' + Mode);
+    //    Reset();
+    //}
+    //else if (config.toString('hex') != Config) {
+    //    console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
+    //    Reset();
+    //} else {
+    //    //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
+    //}
 }
 
 var Reset = function () {
@@ -326,7 +329,7 @@ var Reset = function () {
     // HARD RESET CHIP
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
 
-    sleep(500);
+    sleep(20);
     
     write('FFFFFFFE', 'init serial port');
     command('80', 'reset');
