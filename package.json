@@ -4,19 +4,19 @@
     "description": "raspberry pi power meter using CS5463 chip dependencies",
     "author": "Craig Jensen",
     "license": "BSD",
-    "dependencies": {
-        "sqlite3": ">=3.0.2",
-        "twilio": ">=1.7.0",
-        "express": ">=4.9.7",
-        "body-parser": ">=1.9.0",
-        "serve-favicon": ">=2.1.5",
-        "method-override": ">=2.2.0",
-        "on-finished": ">=2.1.0",
-        "basic-auth": ">=1.0.0",
-        "universal-analytics": ">=0.3.8",
-        "mqtt": ">=1.4.1",
-        "cs5463": "crjens/cs5463#4c375a2a344ea0cab113723dcdfab7d43c4fbddc"
-    },
+  "dependencies": {
+    "sqlite3": ">=3.0.2",
+    "twilio": ">=1.7.0",
+    "express": ">=4.9.7",
+    "body-parser": ">=1.9.0",
+    "serve-favicon": ">=2.1.5",
+    "method-override": ">=2.2.0",
+    "on-finished": ">=2.1.0",
+    "basic-auth": ">=1.0.0",
+    "universal-analytics": ">=0.3.8",
+    "mqtt": ">=1.4.1",
+    "cs5463": "crjens/cs5463#117f95106f73462107f66ac5b6e20a2b90aaf386"
+  },
     "config":{
         "unsafe-perm":true
     },
