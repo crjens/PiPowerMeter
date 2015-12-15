@@ -305,7 +305,14 @@ var ResetIfNeeded = function () {
     var epsilon = read(13);
     var mode = read(18);
     var config = read(0);
-    if (epsilon.toString('hex') != Epsilon) {
+    var status = read(15);
+    
+    if ((status & 0x137C5C) != 0) {
+        console.log('Resetting due to incorrect status: ' + status.toString('hex'));
+        console.error('Resetting due to incorrect status: ' + status.toString('hex'));
+        Reset(true);
+    }
+    else if (epsilon.toString('hex') != Epsilon) {
         console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + Epsilon);
         Reset(true);
     }
@@ -317,7 +324,7 @@ var ResetIfNeeded = function () {
         console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
         Reset(true);
     } else {
-        Reset(false);
+        //Reset(false);
         //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
     }
 }
