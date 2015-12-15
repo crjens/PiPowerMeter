@@ -332,7 +332,7 @@ var Reset = function (needed) {
     sleep(20);
     
     write('FFFFFFFE', needed ? 'init serial port' : null);
-    command('80', 'reset');
+    command('80', needed ? 'reset' : null);
     var s;
     do {
         if (!_DeviceOpen)
