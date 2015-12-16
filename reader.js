@@ -306,8 +306,12 @@ var ResetIfNeeded = function () {
     var mode = read(18);
     var config = read(0);
     var status = read(15);
-    
-    if ((status & 0x137C5C) != 0) {
+
+    // Check status of:
+    //   IOR and VOR
+    //   IROR, VROR, EOR, IFAULT, VSAG
+    //   TOD, VOD, IOD, LSD 
+    if ((status[0] & 0x03) || (status[1] & 0x7C) || (status[2] & 0x5C))
         console.log('Resetting due to incorrect status: ' + status.toString('hex'));
         console.error('Resetting due to incorrect status: ' + status.toString('hex'));
         Reset(true);
@@ -331,12 +335,12 @@ var ResetIfNeeded = function () {
 
 var Reset = function (needed) {
     if (needed)
-        console.log('RESET');
+        console.log('RESET initial status: ' + read(15).toString('hex'));
 
     // HARD RESET CHIP
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
 
-    sleep(20);
+    sleep(500);
     
     write('FFFFFFFE', needed ? 'init serial port' : null);
     command('80', needed ? 'reset' : null);
@@ -376,9 +380,9 @@ var Reset = function (needed) {
     // 01 = 0000 0001 => set clock divider to 1 (default)
     read(0, needed ? 'read configuration register' : null);
     
-    //console.log('epsilon before: ' + convert(read(13), 0, true));
+    console.log('epsilon before: ' + convert(read(13), 0, true));
     write('5A' + Epsilon, needed ? 'set epsilon to ' + Epsilon : null);
-    //console.log('epsilon after: ' + convert(read(13), 0, true));
+    console.log('epsilon after: ' + convert(read(13), 0, true));
 
     if (needed)
         console.log('initialized');
