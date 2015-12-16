@@ -311,7 +311,7 @@ var ResetIfNeeded = function () {
     //   IOR and VOR
     //   IROR, VROR, EOR, IFAULT, VSAG
     //   TOD, VOD, IOD, LSD 
-    if ((status[0] & 0x03) || (status[1] & 0x7C) || (status[2] & 0x5C))
+    if ((status[0] & 0x03) || (status[1] & 0x7C) || (status[2] & 0x5C)) {
         console.log('Resetting due to incorrect status: ' + status.toString('hex'));
         console.error('Resetting due to incorrect status: ' + status.toString('hex'));
         Reset(true);
