@@ -314,78 +314,76 @@ var ResetIfNeeded = function () {
     if ((status[0] & 0x03) || (status[1] & 0x7C) || (status[2] & 0x5C)) {
         console.log('Resetting due to incorrect status: ' + status.toString('hex'));
         console.error('Resetting due to incorrect status: ' + status.toString('hex'));
-        Reset(true);
+        Reset();
     }
     else if (epsilon.toString('hex') != Epsilon) {
         console.log('Resetting due to incorrect epsilon: ' + epsilon.toString('hex') + ' expected: ' + Epsilon);
-        Reset(true);
+        Reset();
     }
     else if (mode.toString('hex') != Mode) {
         console.log('Resetting due to incorrect Mode: ' + mode.toString('hex') + ' expected: ' + Mode);
-        Reset(true);
+        Reset();
     }
     else if (config.toString('hex') != Config) {
         console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
-        Reset(true);
+        Reset();
     } else {
-        //Reset(false);
+        //Reset();
         //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
     }
 }
 
-var Reset = function (needed) {
-    if (needed)
-        console.log('RESET initial status: ' + read(15).toString('hex'));
+var Reset = function () {
+
+    console.log('RESET initial status: ' + read(15).toString('hex'));
 
     // HARD RESET CHIP
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
 
     sleep(500);
     
-    write('FFFFFFFE', needed ? 'init serial port' : null);
-    command('80', needed ? 'reset' : null);
+    write('FFFFFFFE', 'init serial port');
+    command('80', 'reset');
     var s;
     do {
         if (!_DeviceOpen)
             return;
 
         s = read(15); // read status
-        if (needed)
-            console.log('status: ' + s.toString('hex'));
+        console.log('status: ' + s.toString('hex'));
 
         if (!(s[0] & 0x80))
             sleep(500);
     } while (!(s[0] & 0x80));
 
     
-    write("5EFFFFFF", needed ? "clear status" : null);
+    write("5EFFFFFF", "clear status");
 
 
     //write('64000060', 'hpf on');
     //write('64000160', 'hpf on with voltage phase compensation');
-    read(18, needed ? 'read Mode register' : null);
+    read(18, 'read Mode register');
     // 60 = 0110 0000  => High-Pass filters enabled on both current and voltage channels
     // E0 = 1110 0000  => one sample of current channel delay, High-Pass filters enabled on both current and voltage channels
     // E1 = 1110 0001  => one sample of current channel delay, High-Pass filters enabled on both current and voltage channels, auto line frequency measurement enabled
     //write('640000E0', 'hpf on with current phase compensation');  
-    write('64' + Mode, needed ? 'hpf on with current phase compensation' : null);
-    read(18, needed ? 'read Mode register' : null);
+    write('64' + Mode, 'hpf on with current phase compensation');
+    read(18, 'read Mode register');
 
-    read(0, needed ? 'read configuration register' : null);
+    read(0, 'read configuration register');
     //write('40001001', 'interrupts set to high to low pulse');
     //write('40C01001', 'interrupts set to high to low pulse with phase comp');
-    write('40' + Config, needed ? 'interrupts set to high to low pulse with phase comp' : null);
+    write('40' + Config, 'interrupts set to high to low pulse with phase comp');
     // C0 = 1100 0000 => first 7 bits set delay in voltage channel relative to current channel (00-7F), 1100000 => 
     // 10 = 0001 0000 => set interrupts to high to low pulse
     // 01 = 0000 0001 => set clock divider to 1 (default)
-    read(0, needed ? 'read configuration register' : null);
+    read(0, 'read configuration register');
     
     console.log('epsilon before: ' + convert(read(13), 0, true));
-    write('5A' + Epsilon, needed ? 'set epsilon to ' + Epsilon : null);
+    write('5A' + Epsilon, 'set epsilon to ' + Epsilon);
     console.log('epsilon after: ' + convert(read(13), 0, true));
 
-    if (needed)
-        console.log('initialized');
+    console.log('initialized');
 
 }
 
