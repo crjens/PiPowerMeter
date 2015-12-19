@@ -15,14 +15,38 @@ var Epsilon60Hz = "01eb85", Epsilon50Hz = "01999a";
 var Epsilon = Epsilon60Hz;  // default to 60Hz
 
 var Registers = {
+    Config: 0,
+    CurrentDCOffset: 1,
+    CurrentGain: 2,
+    VoltageDCOffset: 3,
+    VoltageGain: 4,
+    CycleCount: 5,
+    PulseRateE: 6,
+    InstCurrent: 7,
+    InstVoltage: 8,
+    InstPower: 9,
     RealPower: 10,
     RmsCurrent: 11,
     RmsVoltage: 12,
     Epsilon: 13, // line frequency ratio
+    PowerOffset: 14,
+    Status: 15,
+    CurrentACOffset: 16,
+    VoltageACOffset: 17,
+    Mode: 18,
+    Temp: 19,
     AveReactivePower: 20,
+    InstReactivePower: 21,
     PeakCurrent: 22,
     PeakVoltge: 23,
-    PowerFactor: 25
+    ReactivePowerTriangle: 24,
+    PowerFactor: 25,
+    InterruptMask: 26,
+    ApparentPower: 27,
+    Control: 28,
+    HarmonicActivePower: 29,
+    FundamentalActivePower: 30,
+    FundamentalReactivePower: 31
 };
 
 var cs5463 = null; 
@@ -302,10 +326,10 @@ var ReadPower = function (iFactor, vFactor) {
 
 var ResetIfNeeded = function () {
 
-    var epsilon = read(13);
-    var mode = read(18);
-    var config = read(0);
-    var status = read(15);
+    var epsilon = read(Registers.Epsilon);
+    var mode = read(Registers.Mode);
+    var config = read(Registers.Config);
+    var status = read(Registers.Status);
 
     // Check status of:
     //   IOR and VOR
@@ -333,9 +357,18 @@ var ResetIfNeeded = function () {
     }
 }
 
+var DumpRegisters = function () {
+    console.log("Register dump:");
+    for (var propertyName in Registers) {
+        var val = Registers[propertyName];
+        console.log(val + ' - ' + propertyName + ': ' + read(val).toString('hex'));
+    }
+}
+
 var Reset = function () {
 
-    console.log('RESET initial status: ' + read(15).toString('hex'));
+    console.log('RESET');
+    DumpRegisters();
 
     // HARD RESET CHIP
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
