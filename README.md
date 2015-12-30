@@ -32,20 +32,31 @@ Screenshots
 
 Install Instructions
 --------------------
-1. Start with latest Raspian image from http://downloads.raspberrypi.org/raspbian_latest
+1. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_latest
+	1. (verified with Raspbian Jessie 2015-11-21 and Raspbian Jessie Lite 2015-11-21)  The installation steps are different so pay attention to step 4!
+	2. It's recommended that you use the Lite version because it's smaller and installs faster but you can use either.
 2. login to Pi with Putty or other 
 3. run 'sudo raspi-config' 
 	1. set locale and timezone under internationalisation options
 	2. enable SPI under Advanced Options
 	3. expand filesystem
-4. Install nodejs:
-	1.	wget http://nodejs.org/dist/v0.10.28/node-v0.10.28-linux-arm-pi.tar.gz
-	2.	tar -xvzf node-v0.10.28-linux-arm-pi.tar.gz
-	3.  create symbolic links to node and npm
-		1.	sudo ln -s /home/pi/node-v0.10.28-linux-arm-pi/bin/node /usr/bin/node
-		2.	sudo ln -s /home/pi/node-v0.10.28-linux-arm-pi/bin/npm /usr/bin/npm
-	4. (both node -v and npm -v should now show current version)
+	4. reboot when prompted after exiting raspi-config
+4a. Raspbian Jessie Lite Only.  Jessie-Lite does not ship with Git so install it
+	1. sudo apt-get install git
+4b. Raspbian Jessie Full Only.  The 2015-11-21 full version ships with Nodejs v0.10.29 which contains a bug that prevents installation of many 3rd party node packages so you'll need to remove it before installing Nodejs v4.  Jessie-Lite does not ship with Nodejs so you can skip this step if using Jessie-Lite.
+	1. sudo apt-get remove nodejs nodejs-legacy
+5. Install Nodejs v4.0.0
+	1. For Raspberry Pi model A+ or B+
+		1. wget https://nodejs.org/dist/v4.0.0/node-v4.0.0-linux-armv6l.tar.gz 
+		2. tar -xvf node-v4.0.0-linux-armv6l.tar.gz 
+		3. sudo cp -R ./node-v4.0.0-linux-armv6l/* /usr/local/
+	2. For Raspberry Pi 2
+		1. wget https://nodejs.org/dist/v4.0.0/node-v4.0.0-linux-armv7l.tar.gz 
+		2. tar -xvf node-v4.0.0-linux-armv7l.tar.gz 
+		3. sudo cp -R ./node-v4.0.0-linux-armv7l/* /usr/local/
 6. Clone PiPowerMeter into app directory
 	1. git clone https://github.com/crjens/PiPowerMeter.git app
-7. cd into the 'app' directory and type 'npm install'
+	2. cd app
+	3. npm install
+
 
