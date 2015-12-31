@@ -13,7 +13,7 @@
 path_to_node_app=/home/pi/app/server.js
 APP_DIR=/home/pi/app
 SERVER_JS_FILE=/home/pi/app/server.js
-FOREVER=/usr/lib/node_modules/forever/bin/forever
+FOREVER=forever
 USER=pi
 OUT=/home/pi
 NODE=/usr/bin/node
