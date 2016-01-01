@@ -216,15 +216,26 @@ var ReadPower = function (iFactor, vFactor) {
     };
 
     var lastV=0, lastTsZC=0, lastTs=0, totalTime=0, totalCount=0;
-    sampleBuffer.fill(0);
+    sampleBuffer.fill(0); 
 
     // do measurement
-    var instSamples = cs5463.ReadCycleWithInterrupts(sampleBuffer);
-    if (instSamples <= 0) {
-        console.log("ReadCycle returned: " + instSamples + ' samples');
+    var instSamples; 
+    try {
+        instSamples = cs5463.ReadCycleWithInterrupts(sampleBuffer);
+        if (instSamples <= 0) {
+            console.log("ReadCycle returned: " + instSamples + ' samples');
+            return null;
+        }
+    }
+    catch (err) {
+        //console.log("ReadCycleWithInterrupts failed: " + err);
+        console.error("ReadCycleWithInterrupts failed: " + err);
         return null;
     }
 
+    
+
+    //console.log("ReadCycle returned: " + instSamples + ' samples');
     // convert buffer values for instantaneous current and voltage
     // buffer is formatted as follows:  
     //      bytes 0-2: Instantaneous current
