@@ -15,7 +15,7 @@
     "basic-auth": ">=1.0.0",
     "universal-analytics": ">=0.3.8",
     "mqtt": ">=1.4.1",
-    "cs5463": "crjens/cs5463#a7ee4b7ceec4ace02657c2339f3402422bf9b988"
+    "cs5463": "crjens/cs5463#97a8e00b7dded6fac966a6e20e0ee5ff8642e5cc"
   },
     "config":{
         "unsafe-perm":true
