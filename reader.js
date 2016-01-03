@@ -49,7 +49,7 @@ var Registers = {
     FundamentalReactivePower: 31
 };
 
-var cs5463 = null; 
+var cs5463 = null;
 // comment below line for WebMatrix testing
 var cs5463 = require("cs5463");
 
@@ -126,7 +126,7 @@ var convert = function (buffer, binPt, neg) {
         var byte = buffer[i];
         //console.log(byte.toString())
 
-        for (var j = 7; j >=0; j--) {
+        for (var j = 7; j >= 0; j--) {
             if (byte & (1 << j)) {
 
                 var x;
@@ -215,11 +215,11 @@ var ReadPower = function (iFactor, vFactor) {
         tsZC: []
     };
 
-    var lastV=0, lastTsZC=0, lastTs=0, totalTime=0, totalCount=0;
-    sampleBuffer.fill(0); 
+    var lastV = 0, lastTsZC = 0, lastTs = 0, totalTime = 0, totalCount = 0;
+    sampleBuffer.fill(0);
 
     // do measurement
-    var instSamples; 
+    var instSamples;
     try {
         instSamples = cs5463.ReadCycleWithInterrupts(sampleBuffer);
         if (instSamples <= 0) {
@@ -233,7 +233,7 @@ var ReadPower = function (iFactor, vFactor) {
         return null;
     }
 
-    
+
 
     //console.log("ReadCycle returned: " + instSamples + ' samples');
     // convert buffer values for instantaneous current and voltage
@@ -253,11 +253,11 @@ var ReadPower = function (iFactor, vFactor) {
         result.tsInst.push(Number(tsInst));
 
         // frequency detect
-	// look for zero crossing and ensure we didn't miss any samples 
+        // look for zero crossing and ensure we didn't miss any samples 
         if ((lastV > 0 && vInst < 0) || (lastV < 0 && vInst > 0)) {
 
             var tsZCInterpolated = lastTs + lastV * (tsInst - lastTs) / (lastV - vInst)
-            if (lastTsZC > 0 && (tsInst-lastTs) < 0.375) {
+            if (lastTsZC > 0 && (tsInst - lastTs) < 0.375) {
                 // Sample freq should be 4000Hz which is 0.25 ms per sample so use 0.375 for some margin
                 // if sample freq > 0.375 ms we'll assume a sample was missed and throw out the reading
 
@@ -278,7 +278,7 @@ var ReadPower = function (iFactor, vFactor) {
     }
 
     if (totalCount > 0)
-        result.CalculatedFrequency = 1000/((totalTime / totalCount) * 2);  //in Hz
+        result.CalculatedFrequency = 1000 / ((totalTime / totalCount) * 2);  //in Hz
     else
         result.CalculatedFrequency = 0;
 
@@ -303,7 +303,7 @@ var ReadPower = function (iFactor, vFactor) {
         }
     }
 
-    
+
 
     // read average values over complete cycle
     var cmd = makeReadCommand(
@@ -372,6 +372,7 @@ var DumpRegisters = function () {
     console.log("Register dump:");
     for (var propertyName in Registers) {
         var val = Registers[propertyName];
+        //vconsole.log(val + ' - ' + propertyName + ': ' + read(val).toString('hex'));
         console.log(val + ' - ' + propertyName + ': ' + read(val).toString('hex'));
     }
 }
@@ -385,7 +386,7 @@ var Reset = function () {
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
 
     sleep(500);
-    
+
     write('FFFFFFFE', 'init serial port');
     command('80', 'reset');
     var s;
@@ -400,7 +401,7 @@ var Reset = function () {
             sleep(500);
     } while (!(s[0] & 0x80));
 
-    
+
     write("5EFFFFFF", "clear status");
 
 
@@ -422,7 +423,7 @@ var Reset = function () {
     // 10 = 0001 0000 => set interrupts to high to low pulse
     // 01 = 0000 0001 => set clock divider to 1 (default)
     read(0, 'read configuration register');
-    
+
     console.log('epsilon before: ' + convert(read(13), 0, true));
     write('5A' + Epsilon, 'set epsilon to ' + Epsilon);
     console.log('epsilon after: ' + convert(read(13), 0, true));
@@ -476,7 +477,7 @@ var Open = function () {
             var noResistor = 0, pullDownResistor = 1, pullUpResistor = 2;
             cs5463.InitializeISR(InputPins.isr, pullUpResistor, intFallingEdge);
 
-            
+
         }
     }
 }
@@ -495,13 +496,13 @@ var Close = function () {
     _DeviceOpen = false;
     if (cs5463 != null)
         cs5463.Close();
-    
+
     console.log("reader closed 2");
 }
 
 // read from hardware
 process.on('message', function (data) {
-//    console.log('reader received: ' + data.Action);
+    //    console.log('reader received: ' + data.Action);
     if (data.Action == "Start") {
         HardwareVersion = data.HardwareVersion;
         Mode = data.Mode;
