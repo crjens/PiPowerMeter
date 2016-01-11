@@ -243,6 +243,8 @@ var draw = function (callback) {
 
             var plot = $.plot(placeholder, data, options);
             maxWatts = results.MaxWatts;
+            avgWatts = results.AvgWatts;
+            minWatts = results.MinWatts;
             currentWatts = toFloat(totalWatts, 0);
             resizeGage(true);
         }
@@ -252,7 +254,7 @@ var draw = function (callback) {
         callback();
 }
 
-var lastWidth = 0, lastHeight = 0, currentWatts=0, maxWatts=0, gage=null;
+var lastWidth = 0, lastHeight = 0, currentWatts = 0, maxWatts = 0, avgWatts = 0, minWatts = 0, gage = null;
 
 var resizeGage = function (force) {
     var width = $(window).width();
@@ -282,8 +284,9 @@ var resizeGage = function (force) {
 
         gage = new JustGage({
             id: "gauge",
-            value: currentWatts,
-            min: 0,
+            //value: currentWatts,
+            value: avgWatts,
+            min: minWatts,
             max: maxWatts,
             title: "Watts"
         });

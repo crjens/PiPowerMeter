@@ -174,7 +174,7 @@ var GetLineGraphOptions = function (timeFormat) {
             shadowSize: 0
         },
         xaxis: { mode: 'time', timezone: 'browser', timeformat: timeFormat },
-        yaxes: [{ min: 0, tickFormatter: function (val, axis) { return val + " W"; } }],
+        yaxes: [{ tickFormatter: function (val, axis) { return val + " W"; } }],
         //yaxis: { min: -200, max: 200 }, //, zoomRange: [400, 400] },
         selection: { mode: "x" },
         crosshair: { mode: "x" },
@@ -194,21 +194,19 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
     if (groupBy == null)
         groupBy = "";
 
-    var timeFormat;
+    var timeFormat, isLineGraph = false;
     if (groupBy.toLowerCase() == 'hour') {
         timeFormat = '%b %e<br>%I:%M %p';
-        //options = GetLineGraphOptions(timeFormat);
         options = GetBarGraphOptions(timeFormat, 1000 * 60 * 60);  // barwidth= 1 hour
     } else if (groupBy.toLowerCase() == 'day') {
         timeFormat = '%b %e';
-        //options = GetLineGraphOptions(timeFormat);
         options = GetBarGraphOptions(timeFormat, 1000 * 60 * 60 * 24);  // barwidth= 1 day
     } else if (groupBy.toLowerCase() == 'month') {
         timeFormat = '%b';
-        //options = GetLineGraphOptions(timeFormat);
         options = GetBarGraphOptions(timeFormat, 1000 * 60 * 60 * 24 * 30, [1, "month"]);  // barwidth= 1 month
     } else {
         timeFormat = '%I:%M %p';
+        isLineGraph = true;
         options = GetLineGraphOptions(timeFormat);
     }
 
@@ -228,11 +226,23 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
 
         $('.header').text(result.DeviceName + " Power Meter");
 
-	    if (result.ts.length > 0) {
+        var min = 0, max = 0;
+        if (result.ts.length > 0) {
+            min = max = result.P[0];
             for (var i = 0; i < result.ts.length; i++) {
                 p.push([result.ts[i] * 1000, result.P[i]]);
+                if (result.P[i] > max)
+                    max = result.P[i];
+                if (result.P[i] < min)
+                    min = result.P[i];
             }
-	    }
+        }
+        if (isLineGraph) {
+            if (min > 0)
+                options.yaxes[0].min = 0.0;
+            if (max < 0)
+                options.yaxes[0].max = 0.0;
+        }
             
             var Kwh = (result.avg / 1000) * ((end.getTime() - start.getTime()) / (1000 * 60 * 60));
             var cost = toCurrency(result.Cost * Kwh);

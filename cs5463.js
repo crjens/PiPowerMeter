@@ -667,11 +667,18 @@ var exports = {
             results.result = result;
             results.DeviceName = deviceName;
 
-            db.minmaxavg("(select id from Circuits where IsMain=1)", start, end, telemetry, function (err, _max) {
-                if (_max != null && _max.length == 1)
-                    results.MaxWatts = _max[0].max;
-                else
+            db.minmaxavg("(select id from Circuits where IsMain=1)", start, end, telemetry, function (err, _val) {
+                if (_val != null && _val.length == 1) {
+                    results.MaxWatts = _val[0].max;
+                    results.AvgWatts = _val[0].avg;
+                    results.MinWatts = _val[0].min;
+                }
+                else {
                     results.MaxWatts = 0.0;
+                    results.AvgWatts = 0.0;
+                    results.MinWatts = 0.0;
+                }
+                    
 
                 if (costPerKWH == 0) {
                     db.getCostPerKWh(function (err, cost, _region) {
