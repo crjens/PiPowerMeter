@@ -18,57 +18,73 @@ Number.prototype.round = function (decimals) {
 
 // load currently installed software version and check for updates every hour
 var exec = require('child_process').exec, softwareVersion = null;
-(function checkForUpdates(){
-    exec("git log -1 --format='%H %ad'", function (error, stdout, stderr) {
-        if (error)
-            console.error('unable to fetch installed software version: ' + error);
-        else {
+(function checkForUpdates() {
+    try {
+        exec("git log -1 --format='%H %ad'", function (error, stdout, stderr) {
+            if (error)
+                console.error('unable to fetch installed software version: ' + error);
+            else {
+                try {
+                    var pos = stdout.trim().indexOf(" ");
+                    var currentSha = stdout.trim().substring(0, pos);
+                    var currentDate = (new Date(stdout.trim().substring(pos))).toISOString();
 
-            var pos = stdout.trim().indexOf(" ");
-            var currentSha = stdout.trim().substring(0, pos);
-            var currentDate = (new Date(stdout.trim().substring(pos))).toISOString();
-
-            console.log('currentSha: ' + currentSha);
-            console.log('currentDate: ' + currentDate);
+                    console.log('currentSha: ' + currentSha);
+                    console.log('currentDate: ' + currentDate);
             
-            var obj = { Installed: { Sha: currentSha, Timestamp: currentDate } };
+                    var obj = { Installed: { Sha: currentSha, Timestamp: currentDate } };
 
-            // get latest commit from github
-            exec("curl https://api.github.com/repos/crjens/pipowermeter/git/refs/heads/master", function (error, stdout, stderr) {
-                if (error)
-                    console.error('unable to fetch latest commit from github: ' + error);
-                else {
-                    var json = JSON.parse(stdout.trim());
-                    var latestSha = json.object.sha;
-                    console.log('latest software version: ' + latestSha);
-
-                    if (currentSha == latestSha) {
-                        console.log('software is up to date - will periodically check for updates');
-                        obj.Latest = { Sha: currentSha, Timestamp: currentDate };
-                        obj.UpdateRequired = false;
-                        softwareVersion = obj;
-                    } else {
-
-                        // load actual commit to get date
-                        exec("curl " + json.object.url, function (error, stdout, stderr) {
-                            if (error)
-                                console.error('unable to fetch commit ' + latestSha + ' from github: ' + error);
-                            else {
+                    // get latest commit from github
+                    exec("curl https://api.github.com/repos/crjens/pipowermeter/git/refs/heads/master", function (error, stdout, stderr) {
+                        if (error)
+                            console.error('unable to fetch latest commit from github: ' + error);
+                        else {
+                            try {
                                 var json = JSON.parse(stdout.trim());
+                                var latestSha = json.object.sha;
+                                console.log('latest software version: ' + latestSha);
 
-                                console.log('latest software date: ' + json.author.date);
+                                if (currentSha == latestSha) {
+                                    console.log('software is up to date - will periodically check for updates');
+                                    obj.Latest = { Sha: currentSha, Timestamp: currentDate };
+                                    obj.UpdateRequired = false;
+                                    softwareVersion = obj;
+                                } else {
 
-                                obj.Latest = { Sha: json.sha, Timestamp: json.author.date };
-                                obj.UpdateRequired = true;
+                                    // load actual commit to get date
+                                    exec("curl " + json.object.url, function (error, stdout, stderr) {
+                                        if (error)
+                                            console.error('unable to fetch commit ' + latestSha + ' from github: ' + error);
+                                        else {
+                                            try {
+                                                var json = JSON.parse(stdout.trim());
+
+                                                console.log('latest software date: ' + json.author.date);
+
+                                                obj.Latest = { Sha: json.sha, Timestamp: json.author.date };
+                                                obj.UpdateRequired = true;
+                                            } catch (err)
+                                            {
+                                                console.error("Error checking for updates during latest commit proceesing: " + err);
+                                            }
+                                        }
+                                        softwareVersion = obj;
+                                    });
+                                }
+                            } catch (err) {
+                                console.error("Error checking for updates during latest commit processing: " + err);
                             }
-                            softwareVersion = obj;
-                        });
-                    }
 
+                        }
+                    });
+                } catch (err) {
+                    console.error("Error checking for updates during git log processing: " + err);
                 }
-            });
-        }
-    });
+            }
+        });
+    } catch (err) {
+        console.error("Error checking for updates: " + err);
+    }
 
     setTimeout(checkForUpdates, 1000 * 60 * 60);
 })();
@@ -116,10 +132,18 @@ var loadConfiguration = function (callback) {
             var port = data.Port;
             netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName, port);
 
-console.log('mqtt: ' + data.MqttServer);
+            console.log('mqtt: ' + data.MqttServer);
             if (data.MqttServer != null) {
-                mqtt = require('mqtt');
-                mqttClient = mqtt.connect(data.MqttServer);
+                try{
+                    mqtt = require('mqtt');
+                    mqttClient = mqtt.connect(data.MqttServer);
+                }
+                catch (err) {
+                    mqttClient = null;
+                    console.error("Error initializing MQTT server: " +  data.MqttServer + ".  Error: " + err);
+                }
+            } else {
+                mqttClient = null;
             }
         }
 
@@ -356,16 +380,21 @@ reader.on('message', function (data) {
             console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.round(1) + '  I= ' + circuit.Samples[0].iRms.round(1) + '  P= ' + pTotal.round(1) + '  Q= ' + qTotal.round(1) + '  PF= ' + circuit.Samples[0].pf.round(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.round(3) + '  F2= ' + circuit.Samples[0].freq.round(3) + ' (' + circuit.Samples[0].tsInst.length + ' samples in ' + circuit.Samples[0].tsInst[circuit.Samples[0].tsInst.length-1] + 'ms)'); 
 
             if (mqttClient != null) {
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.round(2));
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.round(1));
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.round(1));
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.round(4));
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
-                mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.round(3));
-                if (circuit.LastDayKwh != null)
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.round(1));
+                try {
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.round(2));
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.round(1));
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.round(1));
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.round(4));
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
+                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.round(3));
+                    if (circuit.LastDayKwh != null)
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.round(1));
+                }
+                catch (err) {
+                    console.error("Error writing to MQTT server: " + data.MqttServer + ".  Error: " + err);
+                }
             }
         } else {
             console.log(circuit.Name + ' ********* Read operation failed *******');
