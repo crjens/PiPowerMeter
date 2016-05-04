@@ -409,11 +409,13 @@ var db =
     // return data for a given time range
     read: function (circuitId, start, end, groupBy, timeOffset, telemetry, callback) {
 
-        
         var sql;
 
         if (groupBy == null)
             groupBy = '';
+
+        if (!timeOffset.startsWith('-'))
+            timeOffset = "+" + timeOffset;
 
         if (groupBy.toLowerCase() == 'hour')
             sql = "Select round(avg(P),0) as P, strftime('%s', (strftime('%Y-%m-%d %H:00:00', datetime(timestamp, 'unixepoch')))) as Timestamp from Readings where CircuitId = " + circuitId + " and Timestamp >= " + start.getTime() / 1000 + " and Timestamp < " + end.getTime() / 1000 + " group by strftime('%Y%m%d%H', datetime(timestamp, 'unixepoch'));";
