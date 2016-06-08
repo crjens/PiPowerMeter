@@ -32,7 +32,7 @@ Screenshots
 
 Install Instructions
 --------------------
-1. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_latest
+1. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_lite_latest
 	1. (verified with Raspbian Jessie 2016-05-27 (both lite and full))  The installation steps are different so pay attention to step 4!
 	2. It's recommended that you use the Lite version because it's smaller and installs faster but you can use either.
 2. login to Pi with Putty or other 
