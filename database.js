@@ -50,7 +50,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
         //db.run('PRAGMA temp_store=memory', null, true);
         db.runSql('PRAGMA foreign_keys=on', null, true);
 
-        db.runSql("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=3), Breaker int, Alert Text);", function (err) {
+        db.runSql("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=3), Breaker int, Alert Text, Type int);", function (err) {
             if (err) {
                 console.log("Error creating Probes table: " + err);
                 TableStates.Probes = "Error";
@@ -58,7 +58,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
 
                 var afterReady = function () {
                     // insert first probe if none exist
-                    db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null where (select count(*) from Probes) = 0;", null, true);
+                    db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert) select 1,'30A',0,0,0,20,null,0  where (select count(*) from Probes) = 0;", null, true);
 
                     console.log('Probes table ready');
                     TableStates.Probes = true;
@@ -75,6 +75,22 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                            if(err) {
                               console.log("Error adding Alert column to Probes table: " + err);
                               TableStates.Probes = "Error";
+                           } else {
+                               db.runSql("Alter table Probes add column Type int;", function (err) {
+                                   if (err) {
+                                       console.log("Error adding Type column to Probes table: " + err);
+                                       TableStates.Probes = "Error";
+                                   } else {
+                                       afterReady();
+                                   }
+                               }, true);
+                           }
+                       }, true);
+                   } else if (results.length == 7) {
+                       db.runSql("Alter table Probes add column Type int;", function (err) {
+                           if (err) {
+                               console.log("Error adding Type column to Probes table: " + err);
+                               TableStates.Probes = "Error";
                            } else {
                                afterReady();
                            }

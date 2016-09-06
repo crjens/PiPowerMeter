@@ -526,6 +526,11 @@ process.on('message', function (data) {
             if (result == null || result.freq > 70 || result.freq < 40)
                 result = null;
 
+            if (probe.Type == 0 && probe.pAve < 0.0) // load cannot generate
+                result.pAve = 0.0;
+            else if (probe.Type == 1 && probe.pAve > 0.0)  // source cannot consume
+                result.pAve = 0.0;
+
             probe.Result = result;
 
             if (Epsilon == Epsilon50Hz)
@@ -541,7 +546,3 @@ process.on('message', function (data) {
 
 });
 
-//process.on("SIGINT", function () { console.log("reader SIGINT"); Close(); });
-//process.on("SIGTERM", function () { console.log("reader SIGTERM"); Close(); });
-//process.on("SIGINT", Close);
-//process.on("SIGTERM", Close);

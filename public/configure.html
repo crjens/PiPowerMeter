@@ -337,6 +337,7 @@ if (area != null) {
                     probe.Board = $(row2).find('#board option:selected').val();
                     probe.CurrentChannel = $(row2).find('#currentchannel option:selected').val();
                     probe.VoltageChannel = $(row2).find('#voltagechannel option:selected').val();
+                    probe.Type = $(row2).find('#type option:selected').val();
                     probe.Breaker = $(row2).find('#breaker option:selected').val();
                     probe.Alert = $(row2).find('#alert').val();
                     sensor.Probes.push(probe);
@@ -509,7 +510,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <th>Description</th>
                 <th>Main</th>
                 <th>Enabled</th>
-                <th>Probe, Board, Channel, Phase, Breaker, Alert (mins, watts)</th>
+                <th>Probe, Board, Channel, Phase, Type, Breaker, Alert (mins, watts)</th>
                 <th><img src='images/add.jpg' class='size18x18' onClick='addCircuit()'></th>
             </tr>
             {{#each Result.Circuits}}
@@ -605,6 +606,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         <option value='1'>V2</option>
                         <option value='2'>V3</option>
                         <option value='3'>V1+V2</option>
+                    {{/select}}
+                </select>
+            </td>
+            <td>
+                <select id="type">
+                    {{#select Type}}
+                    <option value='0'>Load</option>
+                    <option value='1'>Source</option>
+                    <option value='2'>Both</option>
                     {{/select}}
                 </select>
             </td>
