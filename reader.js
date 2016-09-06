@@ -510,7 +510,7 @@ process.on('message', function (data) {
         Open();
     }
     else if (data.Action == "Stop") {
-        console.log("reader recieved stop");
+        console.log("reader received stop");
         Close();
     }
     else if (data.Action == "Read") {
