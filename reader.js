@@ -523,18 +523,13 @@ process.on('message', function (data) {
             SetCircuit(probe.Board, probe.CurrentChannel, probe.VoltageChannel);
 
             var result = ReadPower(probe.iFactor, probe.vFactor);
-            if (result == null || result.freq > 70 || result.freq < 40) {
+            if (result == null || result.freq > 70 || result.freq < 40) 
                 result = null;
-            }
-            else if (probe.SourceType == 1 && probe.pAve < 0.0) { // load cannot generate
+            else if (probe.SourceType == 1 && result.pAve < 0.0)  // load cannot generate
                 result.pAve = 0.0;
-                console.log("negative load");
-            }
-            else if (probe.SourceType == 2 && probe.pAve > 0.0) { // source cannot consume
+            else if (probe.SourceType == 2 && result.pAve > 0.0)  // source cannot consume
                 result.pAve = 0.0;
-                console.log("positive source");
-            }
-
+            
             probe.Result = result;
 
             if (Epsilon == Epsilon50Hz)
