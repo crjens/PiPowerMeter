@@ -526,9 +526,9 @@ process.on('message', function (data) {
             if (result == null || result.freq > 70 || result.freq < 40)
                 result = null;
 
-            if (probe.Type == 1 && probe.pAve < 0.0) // load cannot generate
+            if (probe.SourceType == 1 && probe.pAve < 0.0) // load cannot generate
                 result.pAve = 0.0;
-            else if (probe.Type == 2 && probe.pAve > 0.0)  // source cannot consume
+            else if (probe.SourceType == 2 && probe.pAve > 0.0)  // source cannot consume
                 result.pAve = 0.0;
 
             probe.Result = result;
