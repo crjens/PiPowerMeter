@@ -647,7 +647,7 @@ var db =
         var probeIds = [];
         var f = function (index) {
             if (index < probes.length) {
-                db.updateProbe(probes[index].id, probes[index].Type, probes[index].Board, probes[index].CurrentChannel, probes[index].VoltageChannel, probes[index].Breaker, probes[index].Alert, probes[index].Type, function (err, lastID) {
+                db.updateProbe(probes[index].id, probes[index].Type, probes[index].Board, probes[index].CurrentChannel, probes[index].VoltageChannel, probes[index].Breaker, probes[index].Alert, probes[index].SourceType, function (err, lastID) {
                     if (err) {
                         if (callback != null)
                             callback(err);
