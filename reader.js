@@ -476,8 +476,6 @@ var Open = function () {
             var intSetup = 0, intFallingEdge = 1, intRisingEdge = 2, intBothEdges = 3;
             var noResistor = 0, pullDownResistor = 1, pullUpResistor = 2;
             cs5463.InitializeISR(InputPins.isr, pullUpResistor, intFallingEdge);
-
-
         }
     }
 }
@@ -525,10 +523,14 @@ process.on('message', function (data) {
             var result = ReadPower(probe.iFactor, probe.vFactor);
             if (result == null || result.freq > 70 || result.freq < 40) 
                 result = null;
-            else if (probe.SourceType == 1 && result.pAve < 0.0)  // load cannot generate
+            else if ((probe.SourceType == 1 && result.pAve < 0.0) || // load cannot generate 
+                     (probe.SourceType == 2 && result.pAve > 0.0)) { // source cannot consume
+                result.iRms = 0.0;
                 result.pAve = 0.0;
-            else if (probe.SourceType == 2 && result.pAve > 0.0)  // source cannot consume
-                result.pAve = 0.0;
+                result.qAve = 0.0;
+                result.pf = 1.0;
+                result.iPeak = 0.0;
+            }
             
             probe.Result = result;
 
