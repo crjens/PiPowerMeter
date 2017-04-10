@@ -18,7 +18,7 @@ Features
    * Ability to recieve text alerts for overloads or other events.
  
 
- ![hardware](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/boards.jpg)
+ ![hardware](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/DSC_0009.jpg)
 
 Screenshots
 -----------
