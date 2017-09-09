@@ -40,30 +40,28 @@ Additional Images
 Install Instructions
 --------------------
 1. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_lite_latest
-	1. (verified with Raspbian Jessie 2016-05-27 (both lite and full))  The installation steps are different so pay attention to step 4!
+	1. (verified with Raspbian Stretch 2017-09-07 (both lite and full))
 	2. It's recommended that you use the Lite version because it's smaller and installs faster but you can use either.
 2. login to Pi with Putty or other 
-3. run 'sudo raspi-config' 
-	1. set locale and timezone under internationalisation options
-	2. enable SPI under Advanced Options
-	3. expand filesystem
-	4. reboot when prompted after exiting raspi-config
-4. Raspbian Jessie Lite Only.  Jessie-Lite does not ship with Git so install it
-	1. sudo apt-get install git
-5. Raspbian Jessie Full Only.  The Raspbian full version ships with Nodejs v0.10.29 which contains a bug that prevents installation of many 3rd party node packages so you'll need to remove it before installing Nodejs v4.*  Jessie-Lite does not ship with Nodejs so you can skip this step if using Jessie-Lite.
-	1. sudo apt-get remove nodejs nodejs-legacy
-6. Install Nodejs v4.4.5
-	1. For Raspberry Pi model A+ or B+
-		1. wget https://nodejs.org/dist/v4.4.5/node-v4.4.5-linux-armv6l.tar.gz 
-		2. tar -xvf node-v4.4.5-linux-armv6l.tar.gz 
-		3. sudo cp -R ./node-v4.4.5-linux-armv6l/* /usr/local/
-	2. For Raspberry Pi 2 or Raspberry Pi 3
-		1. wget https://nodejs.org/dist/v4.4.5/node-v4.4.5-linux-armv7l.tar.gz 
-		2. tar -xvf node-v4.4.5-linux-armv7l.tar.gz 
-		3. sudo cp -R ./node-v4.4.5-linux-armv7l/* /usr/local/
-7. Clone PiPowerMeter into app directory
-	1. git clone https://github.com/crjens/PiPowerMeter.git app
-	2. cd app
-	3. npm install
-
-
+	1. the latest versions of Raspbian have ssh disabled.  You can enable ssh via raspi-config or just create an empty file named 'ssh' in the boot partition of the sd card.
+3. Install/Update Nodejs (use one of the two methods below depending your model of Raspberry Pi)
+	1. For Raspberry Pi 2 or Raspberry Pi 3 (64 bit only)
+		a. curl -sL https://deb.nodesource.com/setup_6.x | sudo bash -
+		b. sudo apt -y install nodejs
+	2. For Raspberry Pi all versions (32 or 64 bit)
+		a. wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | bash
+		b. nvm install --lts
+		c. sudo cp -R $NVM_DIR/versions/node/$(nvm version)/* /usr/local/
+4. Install PiPowerMeter software into app directory
+	1. (Raspbian-Lite only) If using Raspbian-Lite you'll need to first install git.  Raspbian-Full has git preinstalled so you can skip this step.
+		a. sudo apt-get -y install git
+	2. git clone https://github.com/crjens/PiPowerMeter.git app
+	3. cd app
+	4. npm install
+5. run 'sudo raspi-config' 
+	1. set locale and timezone under Localisation options
+	2. enable SPI under Interfacing Options
+	3. expand filesystem under Advanced options
+	4. change user password (optional)
+	5. reboot when prompted after exiting raspi-config
+6. Open your browser to http://<Your Raspberry Pi's IP Address>:3000
