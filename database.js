@@ -58,7 +58,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
 
                 var afterReady = function () {
                     // insert first probe if none exist
-                    db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert, SourceType) select 1,'30A',0,0,0,20,null,0  where (select count(*) from Probes) = 0;", null, true);
+                    db.runSql("Insert into Probes (id, Type, Board, CurrentChannel, VoltageChannel, Breaker, Alert, SourceType) select 1,'SCT-006',0,0,0,20,null,0  where (select count(*) from Probes) = 0;", null, true);
 
                     console.log('Probes table ready');
                     TableStates.Probes = true;
@@ -116,7 +116,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                 db.runSql("Insert or ignore into Config Values('Region', 'en-US');", null, true);
                 db.runSql("Insert or ignore into Config Values('VoltageScale', '384');", null, true);
 
-                db.runSql("Insert or ignore into Config Values('Probes', '[{''Name'':''30A'',''Factor'':''41''},{''Name'':''100A'',''Factor'':''101''},{''Name'':''200A'',''Factor'':''305''}]');", null, true);
+                db.runSql("Insert or ignore into Config Values('Probes', '[{''Name'':''SCT-006'',''Factor'':''40''},{''Name'':''SCT-010'',''Factor'':''152''},{''Name'':''SCT-013'',''Factor'':''101''},{''Name'':''SCT-016'',''Factor'':''152''},{''Name'':''SCT-019'',''Factor'':''295''}]');", null, true);
 
                 console.log('Config table ready');
                 TableStates.Config = true;
