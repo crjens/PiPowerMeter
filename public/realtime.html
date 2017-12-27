@@ -115,6 +115,10 @@
                 return Globalize().format(context, 'n' + fixed, region);
             };
 
+	    if (location.search.indexOf("advanced") == -1) {
+		$('.advanced').hide();
+	    }
+
             $.get('/config', function (result) {
 		Configuration = result;
 
@@ -174,7 +178,7 @@ j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; 
     <div class='buttons'>
         <button id='reset'>Reset</button>
         <button id='clear'>Clear All</button>
-        <button id='test'>Test</button>
+        <button id='test' class='advanced'>Test</button>
     </div>
 
     <script id="configtable-template" type="text/x-handlebars-template">
