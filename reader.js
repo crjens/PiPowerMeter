@@ -10,7 +10,7 @@ var samples = 500;   // number of instantaneous voltage and current samples to c
 var bytesPerSample = 10;
 var OutputPins, InputPins;
 var sampleBuffer = new Buffer(samples * bytesPerSample);
-var Mode, Config;
+var Mode, Config, CycleCount;
 var Epsilon60Hz = "01eb85", Epsilon50Hz = "01999a";
 var Epsilon = Epsilon60Hz;  // default to 60Hz
 
@@ -339,6 +339,7 @@ var ResetIfNeeded = function () {
 
     var epsilon = read(Registers.Epsilon);
     var mode = read(Registers.Mode);
+    var cycleCount = read(Registers.CycleCount);
     var config = read(Registers.Config);
     var status = read(Registers.Status);
 
@@ -359,10 +360,15 @@ var ResetIfNeeded = function () {
         console.log('Resetting due to incorrect Mode: ' + mode.toString('hex') + ' expected: ' + Mode);
         Reset();
     }
-    else if (config.toString('hex') != Config) {
+    else if (config.toString('hex') != Config.toLowerCase()) {
         console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
         Reset();
-    } else {
+    } 
+    else if (cycleCount.toString('hex') != CycleCount.toLowerCase()) {
+        console.log('Resetting due to incorrect CycleCount: ' + cycleCount.toString('hex') + ' expected: ' + CycleCount);
+        Reset();
+    }
+    else {
         //Reset();
         //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
     }
@@ -423,6 +429,10 @@ var Reset = function () {
     // 10 = 0001 0000 => set interrupts to high to low pulse
     // 01 = 0000 0001 => set clock divider to 1 (default)
     read(0, 'read configuration register');
+
+    read(Registers.CycleCount, 'read cycleCount register');
+    write('4A' + CycleCount, 'set CycleCount to: ' + CycleCount);
+    read(Registers.CycleCount, 'read cycleCount register');
 
     console.log('epsilon before: ' + convert(read(13), 0, true));
     write('5A' + Epsilon, 'set epsilon to ' + Epsilon);
@@ -505,6 +515,9 @@ process.on('message', function (data) {
         HardwareVersion = data.HardwareVersion;
         Mode = data.Mode;
         Config = data.Config;
+	if (data.CycleCount == null || data.CycleCount == undefined)
+            data.CycleCount = 0xFA0;
+	CycleCount = data.CycleCount;
         Open();
     }
     else if (data.Action == "Stop") {

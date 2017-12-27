@@ -16,7 +16,7 @@
 
     <script type="text/javascript">
 
-        var templates = {}, Configuration = {}, latestTimestamp = "", region = 'en_US';
+        var templates = {}, Configuration = {}, latestTimestamp = "", region = 'en_US', CurrentIndex=-1;
 
         var load = function () {
 
@@ -37,6 +37,19 @@
                             latestTimestamp = value.timestamp;
 
                         region = value.region;
+			
+                        if (CurrentIndex >=0 && value.id == Configuration.Circuits[CurrentIndex].id && value.watts > 10) {
+//                        if (result.Readings[index].id == Configuration.Circuits[CurrentIndex].id && result.Readings[index].watts > 10) {
+			  $.post('/enabled', { config: { circuit: Configuration.Circuits[CurrentIndex].id, enabled: 0 } }, function (result) {});
+			  CurrentIndex ++;
+			  if (CurrentIndex >= Configuration.Circuits.length) {
+                             CurrentIndex = -1;
+                             $.post('/enabled', { config: { circuit: 'all', enabled: 1 } }, function (result) { });
+                          }
+			  else   	
+                             $.post('/enabled', { config: { circuit: Configuration.Circuits[CurrentIndex].id, enabled: 1 } }, function (result) {});
+
+			}		
                     });
 
                     $('.header').text(result.DeviceName + " Power Meter Readings");
@@ -77,7 +90,7 @@
                 switch (type) {
                     case 'currency':
                         return formatCurrency(context, options);
-                    case 'percent':
+                     case 'percent':
                         return formatPercent(context, options);
                     case 'date':
                         return formatDate(context, options);
@@ -102,18 +115,34 @@
                 return Globalize().format(context, 'n' + fixed, region);
             };
 
-            load();
+            $.get('/config', function (result) {
+		Configuration = result;
 
+                load();   
+            });
+
+
+
+
+            $("#test")
+                      .button()
+                      .click(function () {
+                          CurrentIndex = 0;
+                          $.post('/enabled', { config: { circuit: 'all', enabled: 0 } }, function (result) { });
+                          $.post('/enabled', { config: { circuit: Configuration.Circuits[0].id, enabled: 1 } }, function (result) {});
+                      });
 
             $("#reset")
                       .button()
                       .click(function () {
+                          CurrentIndex = -1;
                           $.post('/enabled', { config: { circuit: 'all', enabled: 1 } }, function (result) { });
                       });
 
             $("#clear")
                       .button()
                       .click(function () {
+                          CurrentIndex = -1;
                           $.post('/enabled', { config: { circuit: 'all', enabled: 0 } }, function (result) { });
                       });
         });
@@ -145,6 +174,7 @@ j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; 
     <div class='buttons'>
         <button id='reset'>Reset</button>
         <button id='clear'>Clear All</button>
+        <button id='test'>Test</button>
     </div>
 
     <script id="configtable-template" type="text/x-handlebars-template">

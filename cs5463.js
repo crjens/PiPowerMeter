@@ -1,5 +1,5 @@
 var rollupTimeHr = 16;  // hour at which rollups are sent 16 == 4pm UTC which is 9 am PST
-var _circuit = 0, Mode, Config;
+var _circuit = 0, Mode, Config, CycleCount;
 var costPerKWH = 0.0, deviceName="", region="en-US";
 var configuration={};
 var rollupEvent = null, runInterval = null;
@@ -110,6 +110,7 @@ var loadConfiguration = function (callback) {
             console.log(err);
         } else {
             Mode = data.Mode;
+            CycleCount = data.CycleCount;
             Config = data.Config;
             vFactor = data.VoltageScale;
             HardwareVersion = data.HardwareVersion;
@@ -442,7 +443,7 @@ var Start = function () {
         if (err) {
             console.log('unable to load configuration: ' + err);
         } else {
-            reader.send({ Action: "Start", HardwareVersion: HardwareVersion, Mode: Mode, Config: Config });
+            reader.send({ Action: "Start", HardwareVersion: HardwareVersion, Mode: Mode, Config: Config, CycleCount: CycleCount });
             ReadNext();
         }
     });
