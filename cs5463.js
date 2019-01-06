@@ -394,6 +394,14 @@ var exports = {
 
         return result;
     },
+    Close: function () {
+        console.log("reader closed 1");
+        _DeviceOpen = false;
+        if (cs5463 != null)
+            cs5463.Close();
+
+        console.log("reader closed 2");
+    },
     Open: function () {
         if (cs5463 != null) {
             Close();
@@ -436,14 +444,6 @@ var exports = {
                 cs5463.InitializeISR(InputPins.isr, pullUpResistor, intFallingEdge);
             }
         }
-    },
-    Close: function () {
-        console.log("reader closed 1");
-        _DeviceOpen = false;
-        if (cs5463 != null)
-            cs5463.Close();
-
-        console.log("reader closed 2");
     }
 };
 
