@@ -230,7 +230,7 @@ var exports = {
     // board should be 0-7
     // currentchannel should be 0-15
     // voltagechannel should be 0-3
-    SetCircuit = function (board, currentChannel, voltageChannel) {
+    SetCircuit: function (board, currentChannel, voltageChannel) {
         if (board < 0 || board > 8) {
             console.log('Invalid board: ' + board);
             return;
@@ -270,7 +270,7 @@ var exports = {
             cs5463.DigitalWrite(OutputPins.disable, 0);
         }
     },
-    ReadPower = function (iFactor, vFactor) {
+    ReadPower: function (iFactor, vFactor) {
     
         ResetIfNeeded();
 
@@ -394,7 +394,7 @@ var exports = {
 
         return result;
     },
-    Open = function () {
+    Open: function () {
         if (cs5463 != null) {
             Close();
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
@@ -437,7 +437,7 @@ var exports = {
             }
         }
     },
-    Close = function () {
+    Close: function () {
         console.log("reader closed 1");
         _DeviceOpen = false;
         if (cs5463 != null)
