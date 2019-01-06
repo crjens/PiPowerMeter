@@ -404,7 +404,7 @@ var exports = {
     },
     Open: function () {
         if (cs5463 != null) {
-            Close();
+            cs5463.Close();
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
             //cs5463.Open("/dev/spidev0.0", 1200000);  // banana pi
 
