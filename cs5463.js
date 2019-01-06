@@ -394,6 +394,14 @@ var exports = {
 
         return result;
     },
+    Frequency: function () {
+        if (Epsilon == Epsilon50Hz)
+            return "50Hz";
+        else if (Epsilon == Epsilon60Hz)
+            return "60Hz";
+        else
+            return "Unknown";
+    },
     Close: function () {
         console.log("reader closed 1");
         _DeviceOpen = false;

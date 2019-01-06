@@ -40,13 +40,7 @@ process.on('message', function (data) {
             }
             
             probe.Result = result;
-
-            if (Epsilon == Epsilon50Hz)
-                data.Frequency = "50Hz";
-            else if (Epsilon == Epsilon60Hz)
-                data.Frequency = "60Hz";
-            else
-                data.Frequency = "Unknown";
+            data.Frequency = driver.Frequency();
         }
 
         process.send(data);
