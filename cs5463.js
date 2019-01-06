@@ -410,7 +410,11 @@ var exports = {
 
         console.log("reader closed 2");
     },
-    Open: function () {
+    Open: function (data) {
+        HardwareVersion = data.HardwareVersion;
+        Mode = data.Mode;
+        Config = data.Config;
+        
         if (cs5463 != null) {
             cs5463.Close();
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi

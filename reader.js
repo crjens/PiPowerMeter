@@ -9,10 +9,7 @@ var driver = require('./cs5463');
 process.on('message', function (data) {
     //    console.log('reader received: ' + data.Action);
     if (data.Action == "Start") {
-        HardwareVersion = data.HardwareVersion;
-        Mode = data.Mode;
-        Config = data.Config;
-        driver.Open();
+        driver.Open(data);
     }
     else if (data.Action == "Stop") {
         console.log("reader received stop");
