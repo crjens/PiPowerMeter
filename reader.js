@@ -4,7 +4,7 @@
 // reads samples until told to stop by the parent
 // read from hardware
 
-var driver = require('./CS5463');
+var driver = require('./cs5463');
 
 process.on('message', function (data) {
     //    console.log('reader received: ' + data.Action);
