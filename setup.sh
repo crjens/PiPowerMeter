@@ -18,8 +18,17 @@ cd app
  
 # enable SPI on Raspberry Pi
 echo '>>> Enable SPI'
-if lsmod | grep spi_; then
-  echo 'SPI already enab;ed'
+sudo sed -i 's/^#dtparam=spi=on.*//' /boot/config.txt
+if grep -q 'dtparam=spi=on' /boot/config.txt; then
+  echo 'SPI already enabled'
 else
   echo 'dtparam=spi=on' >> /boot/config.txt
+  echo 'SPI enabled'
 fi
+
+# enable UART on Raspberry Pi
+echo '>>> Enable UART'
+wget -O uart_control.sh https://raw.githubusercontent.com/itemir/rpi_boat_utils/master/uart_control/uart_control
+chmod +x uart_control.sh
+sudo ./uart_control.sh gpio
+
