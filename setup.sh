@@ -16,13 +16,7 @@ npm install
  
 # enable SPI
 echo '>>> Enable SPI'
-sudo sed -i 's/^#dtparam=spi=on.*//' /boot/config.txt
-if grep -q 'dtparam=spi=on' /boot/config.txt; then
-  echo 'SPI already enabled'
-else
-  echo 'dtparam=spi=on' >> /boot/config.txt
-  echo 'SPI enabled'
-fi
+sudo sed -i 's/^#dtparam=spi=on.*/dtparam=spi=on/' /boot/config.txt
 
 # enable UART
 echo '>>> Enable UART'
