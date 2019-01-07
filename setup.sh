@@ -18,7 +18,7 @@ cd app
  
 # enable SPI on Raspberry Pi
 echo '>>> Enable SPI'
-if grep -q 'dtparam=spi=on' /boot/config.txt; then
+if lsmod | grep spi_; then
   echo 'SPI already enab;ed'
 else
   echo 'dtparam=spi=on' >> /boot/config.txt
