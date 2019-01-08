@@ -227,6 +227,12 @@ var Reset = function () {
 
 
 var exports = {
+    // returns true if able to communicate with hardware
+    Initialize: function() {
+        cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
+        var config = read(0); // read configuration register
+        return config & 0xFFFFFF;
+    },
     // board should be 0-7
     // currentchannel should be 0-15
     // voltagechannel should be 0-3
@@ -414,7 +420,7 @@ var exports = {
         HardwareVersion = data.HardwareVersion;
         Mode = data.Mode;
         Config = data.Config;
-        
+
         if (cs5463 != null) {
             cs5463.Close();
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
