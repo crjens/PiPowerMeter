@@ -231,6 +231,7 @@ var exports = {
     Initialize: function() {
         cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
         var result = cs5463.send("00FFFFFF");
+        console.log("result: " + result);
         return result & 0xFFFFFF;
     },
     // board should be 0-7
