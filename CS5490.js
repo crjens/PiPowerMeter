@@ -84,11 +84,6 @@ var write = function (register, val, desc) {
 
 var read = function (register, desc) {
     if (_DeviceOpen) {
-        var cmd = (register << 1).toString(16) + 'FFFFFF';
-        while (cmd.length < 8)
-            cmd = '0' + cmd;
-        //console.log('cmd: ' + cmd)
-
         var result = cs5490.ReadRegister(register[0], register[1]);
         if (desc != null)
             console.log('read: [' + register[0] + ', ' + register[1] + '] ' + desc + ' -> ' + result.toString('hex'));
@@ -209,8 +204,8 @@ var exports = {
     // returns true if able to communicate with hardware
     Initialize: function() {
         cs5490.Open("/dev/serial0", 600);   // raspberry pi
-        var config = read(Registers.Config0)
-        return config & 0xFFFFFF;
+        var result = cs5490.ReadRegister(Registers.Config0[0], Registers.Config0[1]);
+        return result & 0xFFFFFF;
     },
     // board should be 0-7
     // currentchannel should be 0-15
@@ -350,12 +345,9 @@ var exports = {
         return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
     },
     Close: function () {
-        console.log("reader closed 1");
         _DeviceOpen = false;
         if (cs5490 != null)
             cs5490.Close();
-
-        console.log("reader closed 2");
     },
     Open: function (data) {
         HardwareVersion = data.HardwareVersion;
