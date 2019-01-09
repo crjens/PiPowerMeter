@@ -231,7 +231,7 @@ var exports = {
     Initialize: function() {
         cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
         var result = cs5463.send("00FFFFFF");
-        return config & 0xFFFFFF;
+        return result & 0xFFFFFF;
     },
     // board should be 0-7
     // currentchannel should be 0-15
