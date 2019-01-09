@@ -230,8 +230,7 @@ var exports = {
     // returns true if able to communicate with hardware
     Initialize: function() {
         cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
-        var result = cs5463.send(cmd);
-        var config = read(0); // read configuration register
+        var result = cs5463.send("00FFFFFF");
         return config & 0xFFFFFF;
     },
     // board should be 0-7
