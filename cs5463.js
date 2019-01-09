@@ -230,7 +230,7 @@ var exports = {
     // returns true if able to communicate with hardware
     Initialize: function() {
         cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
-        cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
+        cs5463.DigitalPulse(6, 0, 1, 100);
         sleep(500);
         var result = cs5463.send("00FFFFFF");
         console.log("result: " + result);
