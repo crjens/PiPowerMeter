@@ -4,9 +4,9 @@
 // reads samples until told to stop by the parent
 // read from hardware
 
-var driver = require('./CS5490');
+var driver = require('./cs5463');
 if (driver.Initialize() == 0)
-    driver = require('./cs5463');
+    driver = require('./CS5490');
 
 process.on('message', function (data) {
     //    console.log('reader received: ' + data.Action);
