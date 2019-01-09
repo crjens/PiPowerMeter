@@ -188,7 +188,7 @@ var Reset = function () {
         if (!_DeviceOpen)
             return;
 
-        s = cs5490.ReadRegister(Registers.Status0);
+        s = read(Registers.Status0);
         console.log('status: ' + s.toString('hex'));
 
         if (!(s & 0x800000))
@@ -209,7 +209,7 @@ var exports = {
     // returns true if able to communicate with hardware
     Initialize: function() {
         cs5490.Open("/dev/serial0", 600);   // raspberry pi
-        var config = cs5490.ReadRegister(Registers.Config0)
+        var config = read(Registers.Config0)
         return config & 0xFFFFFF;
     },
     // board should be 0-7
@@ -334,19 +334,19 @@ var exports = {
         else
             result.CalculatedFrequency = 0;
 
-        result.iRms = convertInt(cs5490.ReadRegister(Registers.RmsCurrent), -1, false) * iFactor;
-        result.vRms = convertInt(cs5490.ReadRegister(Registers.RmsVoltage), -1, false) * vFactor;
-        result.pAve = convertInt(cs5490.ReadRegister(Registers.ActivePower), 0, true) * vFactor * iFactor;
-        result.qAve = convertInt(cs5490.ReadRegister(Registers.ReactivePower), 0, true) * vFactor * iFactor;  // average reactive power
-        result.pf = convertInt(cs5490.ReadRegister(Registers.PowerFactor), 0, true);
-        result.iPeak = convertInt(cs5490.ReadRegister(Registers.PeakCurrent), 0, true) * iFactor;
-        result.vPeak = convertInt(cs5490.ReadRegister(Registers.PeakVoltge), 0, true) * vFactor;
-        result.freq = convertInt(cs5490.ReadRegister(Registers.Epsilon), 0, true) * 4000.0;
+        result.iRms = convertInt(read(Registers.RmsCurrent), -1, false) * iFactor;
+        result.vRms = convertInt(read(Registers.RmsVoltage), -1, false) * vFactor;
+        result.pAve = convertInt(read(Registers.ActivePower), 0, true) * vFactor * iFactor;
+        result.qAve = convertInt(read(Registers.ReactivePower), 0, true) * vFactor * iFactor;  // average reactive power
+        result.pf = convertInt(read(Registers.PowerFactor), 0, true);
+        result.iPeak = convertInt(read(Registers.PeakCurrent), 0, true) * iFactor;
+        result.vPeak = convertInt(read(Registers.PeakVoltge), 0, true) * vFactor;
+        result.freq = convertInt(read(Registers.Epsilon), 0, true) * 4000.0;
 
         return result;
     },
     Frequency: function () {
-        var epsilon = cs5490.ReadRegister(Registers.Epsilon);
+        var epsilon = read(Registers.Epsilon);
         return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
     },
     Close: function () {
@@ -367,7 +367,7 @@ var exports = {
 
             baud = 500000
             BR = Math.ceil(baud * 524288 / 4096000);
-            cs5490.WriteRegister(0, 7, (2 << 16) + BR);  //  
+            write(Registers.SerialControl, (2 << 16) + BR); 
             cs5490.Open("/dev/serial0", baud)
 
             OutputPins = {
