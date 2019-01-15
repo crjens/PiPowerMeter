@@ -43,9 +43,9 @@ Install Instructions
 2. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_lite_latest
 	1. (verified with Raspbian Stretch 2018-11-13)
 	2. It's recommended that you use the Lite version because it's smaller and installs faster but you can use either.
-3. login to Pi with Putty or other 
-	1. the latest versions of Raspbian have ssh disabled.  You can enable ssh via raspi-config or just create an empty file named 'ssh' in the boot partition of the sd card.
-4. Install/Update Nodejs (use one of the two methods below depending your model of Raspberry Pi)
+3. login to Pi with Putty or other. 
+	1. the latest versions of Raspbian have ssh disabled.  You can enable ssh via raspi-config or just create an empty file named 'ssh' in the boot partition of the sd card.	
+4. Install/Update Nodejs (use one of the two methods below depending your model of Raspberry Pi).  Note: steps 4 through 6 must be run from the `pi` user.
 	1. For Raspberry Pi 2 or Raspberry Pi 3 (64 bit only)
 		1. curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
 		2. sudo apt install -y nodejs
