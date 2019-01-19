@@ -27,7 +27,7 @@ var OutputPins = {
     voltage0: 7,    // header 7  - GPIO7
     voltage1: 10,    // header 10  - RxD
     disable: 3,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
-    reset: 22        // header 31  - GPIO6
+    reset: 22        // header 22  - GPIO6
 };
 
 var Registers = {
@@ -199,7 +199,6 @@ var DumpRegisters = function () {
 var Reset = function () {
 
     console.log('RESET');
-    
 
     // HARD RESET CHIP
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
