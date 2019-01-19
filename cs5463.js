@@ -245,20 +245,13 @@ var Reset = function () {
     console.log('initialized');
 }
 
-
-// enable output gpio pins
-for (var pin in OutputPins) {
-    console.log('pinmode(' + OutputPins[pin] + ') ' + pin);
-    cs5463.PinMode(OutputPins[pin], 1);
-}
-
 var exports = {
     // returns true if able to communicate with hardware
     Initialize: function() {
         var result = 0;
         try {
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
-            cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
+            //cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
             sleep(500);
             result = cs5463.send("00FFFFFF"); //read config
             //result = 1
@@ -462,6 +455,12 @@ var exports = {
         Config = data.Config;
 
         if (cs5463 != null) {
+            // enable output gpio pins
+            for (var pin in OutputPins) {
+                console.log('pinmode(' + OutputPins[pin] + ') ' + pin);
+                cs5463.PinMode(OutputPins[pin], 1);
+            }
+
             cs5463.Close();
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
             //cs5463.Open("/dev/spidev0.0", 1200000);  // banana pi

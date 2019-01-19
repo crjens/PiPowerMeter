@@ -14,13 +14,18 @@ git checkout test
 git pull
 npm install
  
+# expand filesystem
+sudo raspi-config nonint do_expand_rootfs
+
 # enable SPI
 echo '>>> Enable SPI'
-sudo sed -i 's/^#dtparam=spi=on.*/dtparam=spi=on/' /boot/config.txt
+sudo raspi-config nonint do_spi 0
+#sudo sed -i 's/^#dtparam=spi=on.*/dtparam=spi=on/' /boot/config.txt
 
 # enable UART
 echo '>>> Enable UART'
-wget -O uart_control.sh https://raw.githubusercontent.com/itemir/rpi_boat_utils/master/uart_control/uart_control
-chmod +x uart_control.sh
-sudo ./uart_control.sh gpio
+sudo raspi-config nonint do_serial 0
+#wget -O uart_control.sh https://raw.githubusercontent.com/itemir/rpi_boat_utils/master/uart_control/uart_control
+#chmod +x uart_control.sh
+#sudo ./uart_control.sh gpio
 
