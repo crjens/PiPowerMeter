@@ -210,14 +210,11 @@ var Reset = function () {
 
     //cs5490.Instruction(0x01); // software Reset
 
-    //read(Registers.Status0, "read status")
     write(Registers.Status0, 0xE5557D, "clear status");
-    //read(Registers.Status0, "read status")
 
     var config2 = read(Registers.Config2, 'read Config2 register');
     // A = 1010  => High-Pass filters enabled on both current and voltage channels
     write(Registers.Config2, config2 | 0xA)
-    //read(Registers.Config2, 'read Config2 register');
 
     console.log('initialized');
 }
