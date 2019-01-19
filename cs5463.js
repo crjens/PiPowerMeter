@@ -5,13 +5,30 @@ var cs5463 = require("cs5463");
 var HardwareVersion = 0;
 var samples = 500;   // number of instantaneous voltage and current samples to collect for each measurement
 var bytesPerSample = 10;
-var OutputPins, InputPins;
-var sampleBuffer = new Buffer(samples * bytesPerSample);
+var sampleBuffer = Buffer.alloc(samples * bytesPerSample);
 var Mode, Config;
 var Epsilon60Hz = "01eb85", Epsilon50Hz = "01999a";
 var Epsilon = Epsilon60Hz;  // default to 60Hz
 var _DeviceOpen = false;
 var Samples60Hz = 0, Samples50Hz = 0;
+
+var InputPins = {
+    isr: 5         // Header 18 - GPIO5  (interrupt pin - connect to INT (20) on CS5463)
+};
+
+var OutputPins = {
+    channel0: 0,    // header 11 - GPIO0
+    channel1: 1,    // header 12 - GPIO1
+    channel2: 2,    // header 13 - GPIO2
+    channel3: 3,    // header 15 - GPIO3
+    board0: 4,      // header 16 - GPIO4
+    board1: 15,      // header 18 - TxD
+    board2: 9,      // header 22 - GPIO6
+    voltage0: 7,    // header 7  - GPIO7
+    voltage1: 16,    // header 10  - RxD
+    disable: 8,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
+    reset: 6        // header 22  - GPIO6
+};
 
 var Registers = {
     Config: 0,
@@ -69,9 +86,12 @@ var read = function (register, desc) {
         var cmd = (register << 1).toString(16) + 'FFFFFF';
         while (cmd.length < 8)
             cmd = '0' + cmd;
-        //console.log('cmd: ' + cmd)
+        
 
         var result = cs5463.send(cmd);
+
+        console.log('cmd: ' + cmd + ' -> ' + result)
+
         var ret = new Buffer(result, 'hex').slice(1);
 
         if (desc != null)
@@ -179,7 +199,7 @@ var DumpRegisters = function () {
 var Reset = function () {
 
     console.log('RESET');
-    DumpRegisters();
+    
 
     // HARD RESET CHIP
     cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
@@ -188,6 +208,9 @@ var Reset = function () {
 
     write('FFFFFFFE', 'init serial port');
     write('80', 'reset');
+
+    DumpRegisters();
+
     var s;
     do {
         if (!_DeviceOpen)
@@ -226,13 +249,28 @@ var Reset = function () {
 }
 
 
+// enable output gpio pins
+for (var pin in OutputPins) {
+    console.log('pinmode(' + OutputPins[pin] + ') ' + pin);
+    cs5463.PinMode(OutputPins[pin], 1);
+}
+
 var exports = {
     // returns true if able to communicate with hardware
     Initialize: function() {
-        cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
-        cs5463.DigitalPulse(6, 0, 1, 100);
-        sleep(500);
-        var result = cs5463.send("00FFFFFF");
+        var result = 0;
+        try {
+            cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
+            cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
+            sleep(500);
+            result = cs5463.send("00FFFFFF"); //read config
+            //result = 1
+        }
+        catch (err)
+        {
+            console.log("Error opening cs5463: " + err);
+            result = 0;
+        }
         console.log("result: " + result);
         return result & 0xFFFFFF;
     },
@@ -429,29 +467,7 @@ var exports = {
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
             //cs5463.Open("/dev/spidev0.0", 1200000);  // banana pi
 
-            OutputPins = {
-                channel0: 0,    // header 11 - GPIO0
-                channel1: 1,    // header 12 - GPIO1
-                channel2: 2,    // header 13 - GPIO2
-                channel3: 3,    // header 15 - GPIO3
-                board0: 4,      // header 16 - GPIO4
-                board1: 15,      // header 18 - TxD
-                board2: 9,      // header 22 - GPIO6
-                voltage0: 7,    // header 7  - GPIO7
-                voltage1: 16,    // header 10  - RxD
-                disable: 8,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
-                reset: 6        // header 22  - GPIO6
-            }
-
-            InputPins = {
-                isr: 5         // Header 18 - GPIO5  (interrupt pin - connect to INT (20) on CS5463)
-            }
-
-            // enable output gpio pins
-            for (var pin in OutputPins) {
-                //console.log('pinmode(' + OutputPins[pin] + ') ' + pin);
-                cs5463.PinMode(OutputPins[pin], 1);
-            }
+            
 
             _DeviceOpen = true;
             console.log("Device opened: Hardware version: " + HardwareVersion);

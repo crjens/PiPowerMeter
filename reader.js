@@ -6,7 +6,10 @@
 
 var driver = require('./cs5463');
 if (driver.Initialize() == 0)
+{
+    console.log("failed to open CS5463, trying CS5490");
     driver = require('./CS5490');
+}
 
 process.on('message', function (data) {
     //    console.log('reader received: ' + data.Action);
