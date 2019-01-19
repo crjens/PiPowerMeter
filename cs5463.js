@@ -223,9 +223,7 @@ var Reset = function () {
             sleep(500);
     } while (!(s[0] & 0x80));
 
-
     write("5EFFFFFF", "clear status");
-
 
     read(18, 'read Mode register');
     // 60 = 0110 0000  => High-Pass filters enabled on both current and voltage channels
@@ -271,6 +269,8 @@ var exports = {
             console.log("Error opening cs5463: " + err);
             result = 0;
         }
+        cs5463.Close();
+
         console.log("result: " + result);
         return result & 0xFFFFFF;
     },
@@ -466,8 +466,6 @@ var exports = {
             cs5463.Close();
             cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
             //cs5463.Open("/dev/spidev0.0", 1200000);  // banana pi
-
-            
 
             _DeviceOpen = true;
             console.log("Device opened: Hardware version: " + HardwareVersion);
