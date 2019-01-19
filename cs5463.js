@@ -90,7 +90,7 @@ var read = function (register, desc) {
 
         var result = cs5463.send(cmd);
 
-        console.log('cmd: ' + cmd + ' -> ' + result)
+        //console.log('cmd: ' + cmd + ' -> ' + result)
 
         var ret = new Buffer(result, 'hex').slice(1);
 
