@@ -13,21 +13,21 @@ var _DeviceOpen = false;
 var Samples60Hz = 0, Samples50Hz = 0;
 
 var InputPins = {
-    isr: 5         // Header 18 - GPIO5  (interrupt pin - connect to INT (20) on CS5463)
+    isr: 18         // Header 18 - GPIO5  (interrupt pin - connect to INT (20) on CS5463)
 };
 
 var OutputPins = {
-    channel0: 0,    // header 11 - GPIO0
-    channel1: 1,    // header 12 - GPIO1
-    channel2: 2,    // header 13 - GPIO2
-    channel3: 3,    // header 15 - GPIO3
-    board0: 4,      // header 16 - GPIO4
-    board1: 15,      // header 18 - TxD
-    board2: 9,      // header 22 - GPIO6
+    channel0: 11,    // header 11 - GPIO0
+    channel1: 12,    // header 12 - GPIO1
+    channel2: 13,    // header 13 - GPIO2
+    channel3: 15,    // header 15 - GPIO3
+    board0: 16,      // header 16 - GPIO4
+    board1: 8,      // header 8 - TxD
+    board2: 5,      // header 5 - GPIO9
     voltage0: 7,    // header 7  - GPIO7
-    voltage1: 16,    // header 10  - RxD
-    disable: 8,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
-    reset: 6        // header 22  - GPIO6
+    voltage1: 10,    // header 10  - RxD
+    disable: 3,     // header 3  - SDA0   (8 and 9 have internal pull-up resistors, use 15, 16 if that causes a problem)
+    reset: 22        // header 31  - GPIO6
 };
 
 var Registers = {

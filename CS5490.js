@@ -219,12 +219,27 @@ var Reset = function () {
     console.log('initialized');
 }
 
+// enable output gpio pins
+for (var pin in OutputPins) {
+    //console.log('pinmode(' + OutputPins[pin] + ') ' + pin);
+    cs5490.PinMode(OutputPins[pin], 1);
+}
 
 var exports = {
     // returns true if able to communicate with hardware
     Initialize: function() {
+        // HARD RESET CHIP
+        cs5490.DigitalPulse(OutputPins.reset, 0, 1, 200);
+
+        sleep(1000);
+
         cs5490.Open("/dev/serial0", 600);   // raspberry pi
-        var result = cs5490.ReadRegister(Registers.Config0[0], Registers.Config0[1]);
+        _DeviceOpen = true;
+
+        cs5490.Flush();
+        var result = 0;//cs5490.ReadRegister(Registers.Config0[0], Registers.Config0[1]);
+        cs5490.Close();
+        _DeviceOpen = false;
         return result & 0xFFFFFF;
     },
     // board should be 0-7
@@ -375,13 +390,6 @@ var exports = {
         Config = data.Config;
         
         if (cs5490 != null) {
-
-            // enable output gpio pins
-            for (var pin in OutputPins) {
-                //console.log('pinmode(' + OutputPins[pin] + ') ' + pin);
-                cs5490.PinMode(OutputPins[pin], 1);
-            }
-
             Reset();
             console.log("Device opened: Hardware version: " + HardwareVersion);
         }
