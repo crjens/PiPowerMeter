@@ -16,7 +16,7 @@
     "universal-analytics": ">=0.3.8",
     "mqtt": ">=1.4.1",
     "cs5463": "crjens/cs5463#8f3255e3964e98ec34b7f29bd45237af7f016c1b",
-    "CS5490": "crjens/CS5490#02eab731fe4ed0cb8391ea28592e5efc110b8610"
+    "CS5490": "crjens/CS5490#5ccbc56205ed5f91231bcfdda0cf52abea13fb8d"
   },
     "config":{
         "unsafe-perm":true

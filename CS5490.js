@@ -78,7 +78,7 @@ var write = function (register, val, desc) {
     if (_DeviceOpen) {
         cs5490.WriteRegister(register[0], register[1], val)
         if (desc != null)
-            console.log('write: [' + register[0] + ', ' + register[1] + '] ' + desc + ' -> ' + val.toString('hex'));
+            console.log('write: [' + register[0] + ', ' + register[1] + '] ' + desc + ' -> ' + val.toString(16));
     }
 }
 
@@ -86,7 +86,7 @@ var read = function (register, desc) {
     if (_DeviceOpen) {
         var result = cs5490.ReadRegister(register[0], register[1]);
         if (desc != null)
-            console.log('read: [' + register[0] + ', ' + register[1] + '] ' + desc + ' -> ' + result.toString('hex'));
+            console.log('read: [' + register[0] + ', ' + register[1] + '] ' + desc + ' -> ' + result.toString(16));
 
         return result;
     } else {
@@ -148,13 +148,13 @@ var ResetIfNeeded = function () {
     //   POR, IOR, VOR, IOC, IC
     //   High-pass filters enabled
     if (status & 0x5508) {
-        console.log('Resetting due to incorrect status: ' + status.toString('hex'));
-        console.error('Resetting due to incorrect status: ' + status.toString('hex'));
+        console.log('Resetting due to incorrect status: ' + status.toString(16));
+        console.error('Resetting due to incorrect status: ' + status.toString(16));
         Reset();
     }
     else if (!(config & 0xA)) {
-        console.log('Resetting due to incorrect Config: ' + config.toString('hex'));
-        console.error('Resetting due to incorrect Config: ' + config.toString('hex'));
+        console.log('Resetting due to incorrect Config: ' + config.toString(16));
+        console.error('Resetting due to incorrect Config: ' + config.toString(16));
         Reset();
     } 
 }
@@ -163,33 +163,34 @@ var DumpRegisters = function () {
     console.log("Register dump:");
     for (var propertyName in Registers) {
         var val = Registers[propertyName];
-        console.log(val + ' - ' + propertyName + ': ' + read(val).toString('hex'));
+        console.log(val + ' - ' + propertyName + ': ' + read(val).toString(16));
     }
 }
 
 var Reset = function () {
 
     console.log('RESET');
-    DumpRegisters();
 
     // HARD RESET CHIP
     cs5490.DigitalPulse(OutputPins.reset, 0, 1, 100);
 
     sleep(500);
 
+    DumpRegisters();
+
     cs5490.Instruction(0x01); // software Reset
-    var s;
+    /*var s;
     do {
         if (!_DeviceOpen)
             return;
 
         s = read(Registers.Status0);
-        console.log('status: ' + s.toString('hex'));
+        console.log('status: ' + s.toString(16));
 
         if (!(s & 0x800000))
             sleep(500);
     } while (!(s & 0x800000));
-
+*/
     write(Registers.Status0, 0xE5557D, "clear status");
 
     var config2 = read(Registers.Config2, 'read Config2 register');
