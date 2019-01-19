@@ -5,8 +5,7 @@ var cs5490 = require("CS5490");
 var HardwareVersion = 0;
 var samples = 500;   // number of instantaneous voltage and current samples to collect for each measurement
 var bytesPerSample = 10;
-var OutputPins;
-var sampleBuffer = new Buffer(samples * bytesPerSample);
+var sampleBuffer = Buffer.alloc(samples * bytesPerSample);
 var _DeviceOpen = false;
 
 var Registers = {
@@ -66,6 +65,20 @@ var Registers = {
     Scale: [18, 63]
 };
 
+var OutputPins = {
+    channel0: 38,    
+    channel1: 37,    
+    channel2: 40,    
+    channel3: 35,    
+    board0: 22,      
+    board1: 29,      
+    board2: 33,      
+    voltage0: 32,    
+    voltage1: 31,    
+    disable: 36,     
+    reset: 15        
+};
+
 var sleep = function (delayMs) {
     var s = new Date().getTime();
     while ((new Date().getTime() - s) < delayMs) {
@@ -74,11 +87,16 @@ var sleep = function (delayMs) {
     }
 }
 
+var Pad16 = function(n)
+{
+  return n = "000000".substr(n.length) + n
+}
+
 var write = function (register, val, desc) {
     if (_DeviceOpen) {
         cs5490.WriteRegister(register[0], register[1], val)
         if (desc != null)
-            console.log('write: [' + register[0] + ', ' + register[1] + '] ' + desc + ' -> ' + val.toString(16));
+            console.log('wrote: [' + register[0] + ', ' + register[1] + '] -> ' + Pad16(val.toString(16)) + ' ' + desc);
     }
 }
 
@@ -86,7 +104,7 @@ var read = function (register, desc) {
     if (_DeviceOpen) {
         var result = cs5490.ReadRegister(register[0], register[1]);
         if (desc != null)
-            console.log('read: [' + register[0] + ', ' + register[1] + '] ' + desc + ' -> ' + result.toString(16));
+            console.log('read: [' + register[0] + ', ' + register[1] + '] -> ' + Pad16(result.toString(16)) + ' ' + desc);
 
         return result;
     } else {
@@ -163,39 +181,43 @@ var DumpRegisters = function () {
     console.log("Register dump:");
     for (var propertyName in Registers) {
         var val = Registers[propertyName];
-        console.log(val + ' - ' + propertyName + ': ' + read(val).toString(16));
+        console.log(val + ' - ' + propertyName + ': 0x' + read(val).toString(16));
     }
 }
 
 var Reset = function () {
 
-    console.log('RESET');
+    console.log('RESET: ' + OutputPins.reset);
 
     // HARD RESET CHIP
-    cs5490.DigitalPulse(OutputPins.reset, 0, 1, 100);
+    cs5490.DigitalPulse(OutputPins.reset, 0, 1, 200);
 
-    sleep(500);
+    sleep(1000);
 
-    DumpRegisters();
+    cs5490.Open("/dev/serial0", 600);   // raspberry pi
+    _DeviceOpen = true;
 
-    cs5490.Instruction(0x01); // software Reset
-    /*var s;
-    do {
-        if (!_DeviceOpen)
-            return;
+    cs5490.Flush();
+    //DumpRegisters();
+    
+    baud = 500000
+    BR = Math.ceil(baud * 524288 / 4096000);
+    write(Registers.SerialControl, (2 << 16) + BR); 
+    cs5490.Open("/dev/serial0", baud)
+    
+    cs5490.Flush();
+    //DumpRegisters();
 
-        s = read(Registers.Status0);
-        console.log('status: ' + s.toString(16));
+    //cs5490.Instruction(0x01); // software Reset
 
-        if (!(s & 0x800000))
-            sleep(500);
-    } while (!(s & 0x800000));
-*/
+    //read(Registers.Status0, "read status")
     write(Registers.Status0, 0xE5557D, "clear status");
+    //read(Registers.Status0, "read status")
 
     var config2 = read(Registers.Config2, 'read Config2 register');
     // A = 1010  => High-Pass filters enabled on both current and voltage channels
     write(Registers.Config2, config2 | 0xA)
+    //read(Registers.Config2, 'read Config2 register');
 
     console.log('initialized');
 }
@@ -356,27 +378,6 @@ var exports = {
         Config = data.Config;
         
         if (cs5490 != null) {
-            cs5490.Open("/dev/serial0", 600);   // raspberry pi
-
-            baud = 500000
-            BR = Math.ceil(baud * 524288 / 4096000);
-            write(Registers.SerialControl, (2 << 16) + BR); 
-            cs5490.Open("/dev/serial0", baud)
-
-            OutputPins = {
-                channel0: 38,    
-                channel1: 37,    
-                channel2: 40,    
-                channel3: 35,    
-                board0: 22,      
-                board1: 29,      
-                board2: 33,      
-                voltage0: 32,    
-                voltage1: 31,    
-                disable: 36,     
-                reset: 15        
-            }
-
 
             // enable output gpio pins
             for (var pin in OutputPins) {
@@ -384,10 +385,8 @@ var exports = {
                 cs5490.PinMode(OutputPins[pin], 1);
             }
 
-            _DeviceOpen = true;
-            console.log("Device opened: Hardware version: " + HardwareVersion);
-
             Reset();
+            console.log("Device opened: Hardware version: " + HardwareVersion);
         }
     }
 };
