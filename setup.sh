@@ -43,7 +43,7 @@ else
 fi
 
 echo '>>> PiPowerMeter is installed'
-if [ $ASK_TO_REBOOT -eq 1 ]; then
+if [ $ASK_TO_REBOOT -ne 0 ]; then
     sudo reboot
 fi
 
