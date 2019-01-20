@@ -1,8 +1,21 @@
 #!/bin/sh
 
+
+
+
+# install nodejs on armv6
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+nvm install --lts
+sudo cp -R $NVM_DIR/versions/node/$(nvm version)/* /usr/local/
+
 # install nodejs
-curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
-sudo apt install -y nodejs
+#curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
+#sudo apt install -y nodejs
+
+
 
 # install git
 sudo apt-get -y install git
@@ -34,3 +47,4 @@ sudo systemctl disable hciuart
 #sudo ./uart_control.sh gpio
 
 echo '>>> PiPowerMeter is installed.  Please reboot now.'
+sudo reboot
