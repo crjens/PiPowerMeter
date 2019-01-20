@@ -1,11 +1,5 @@
 #!/bin/sh
 
-# require root
-if [ $(id -u) -ne 0 ]; then
-  printf "Script must be run as root. Try 'sudo $0'\n"
-  exit 1
-fi
-
 # update OS
 echo '>>> Update OS Image'
 sudo apt-get update
