@@ -31,7 +31,7 @@ else
 fi
  
 # expand filesystem
-if sudo raspi-config nonint get_can_expand; then
+if [sudo raspi-config nonint get_can_expand -ne 0]; then
     echo '>>> Expand FileSystem'
     sudo raspi-config nonint do_expand_rootfs
 else
