@@ -19,16 +19,24 @@ echo '>>> Install Git'
 sudo apt-get -y install git
 
 # install and configure PiPowerMeter
-echo '>>> Install PiPowerMeter'
-git clone https://github.com/crjens/PiPowerMeter.git app
-cd app
-git checkout test
-git pull
-npm install
+if [ ! -d "app" ]; then
+    echo '>>> Install PiPowerMeter'
+    git clone https://github.com/crjens/PiPowerMeter.git app
+    cd app
+    git checkout test
+    git pull
+    npm install
+else
+    echo '>>> PiPowerMeter already installed'
+fi
  
 # expand filesystem
-echo '>>> Expand FileSystem'
-sudo raspi-config nonint do_expand_rootfs
+if sudo raspi-config nonint get_can_expand; then
+    echo '>>> Expand FileSystem'
+    sudo raspi-config nonint do_expand_rootfs
+else
+    echo '>>> FileSystem already expanded'
+fi
 
 echo '>>> PiPowerMeter is installed, restarting...'
 sudo reboot
