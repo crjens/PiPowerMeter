@@ -24,8 +24,13 @@ sudo raspi-config nonint do_spi 0
 
 # enable UART
 echo '>>> Enable UART'
-sudo raspi-config nonint do_serial 0
+sudo raspi-config nonint do_serial 2
+
+echo '>>> Disable bluetooth and enable PL011 uart'
+sudo raspi-config nonint set_config_var dtoverlay pi3-disable-bt /boot/config.txt
+sudo systemctl disable hciuart
 #wget -O uart_control.sh https://raw.githubusercontent.com/itemir/rpi_boat_utils/master/uart_control/uart_control
 #chmod +x uart_control.sh
 #sudo ./uart_control.sh gpio
 
+echo '>>> PiPowerMeter is installed.  Please reboot now.'
