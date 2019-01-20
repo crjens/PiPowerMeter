@@ -42,6 +42,7 @@ else
     echo '>>> FileSystem already expanded'
 fi
 
+echo "$ASK_TO_REBOOT"
 echo '>>> PiPowerMeter is installed'
 if [ $ASK_TO_REBOOT -ne 0 ]; then
     sudo reboot
