@@ -133,29 +133,26 @@ var convertInt = function(n, binPt, neg)
 }
 
 var convert = function (buffer, binPt, neg) {
-
     var power = binPt;
     var result = 0;
-    for (var i = 0; i < 3; i++) {
+  
+    for (var i = 2; i >=0; i--) {
         var byte = buffer[i];
         for (var j = 7; j >= 0; j--) {
             if (byte & (1 << j)) {
-
+  
                 var x;
-
-                if (neg && i == 0 && j == 7)
+                if (neg && i == 2 && j == 7)
                     x = -Math.pow(2, power);
                 else
                     x = Math.pow(2, power);
-
                 result += x;
             }
             power--;
         }
     }
-
     return result;
-}
+  }
 
 var ResetIfNeeded = function () {
 
