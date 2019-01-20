@@ -44,10 +44,7 @@ fi
 
 echo '>>> PiPowerMeter is installed'
 if [ $ASK_TO_REBOOT -eq 1 ]; then
-    whiptail --yesno "Would you like to reboot now?" 20 60 2
-    if [ $? -eq 0 ]; then # yes
-      sync
-      reboot
-    fi
+    [[ "$(read -e -p 'Restart? [y/n]> '; echo $REPLY)" == [Yy]* ]] && sudo reboot
 fi
+
 exit 0
