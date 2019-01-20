@@ -1,5 +1,7 @@
 #!/bin/sh
 
+ASK_TO_REBOOT=0
+
 # update OS
 echo '>>> Update OS Image'
 sudo apt-get update
@@ -26,17 +28,26 @@ if [ ! -d "app" ]; then
     git checkout test
     git pull
     npm install
+    ASK_TO_REBOOT=1
 else
     echo '>>> PiPowerMeter already installed'
 fi
  
 # expand filesystem
-if [sudo raspi-config nonint get_can_expand -ne 0]; then
+if [ $(sudo raspi-config nonint get_can_expand) -ne 1 ]; then
     echo '>>> Expand FileSystem'
     sudo raspi-config nonint do_expand_rootfs
+    ASK_TO_REBOOT=1
 else
     echo '>>> FileSystem already expanded'
 fi
 
-echo '>>> PiPowerMeter is installed, restarting...'
-sudo reboot
+echo '>>> PiPowerMeter is installed'
+if [ $ASK_TO_REBOOT -eq 1 ]; then
+    whiptail --yesno "Would you like to reboot now?" 20 60 2
+    if [ $? -eq 0 ]; then # yes
+      sync
+      reboot
+    fi
+fi
+exit 0
