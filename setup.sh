@@ -44,7 +44,7 @@ fi
 
 echo '>>> PiPowerMeter is installed'
 if [ $ASK_TO_REBOOT -eq 1 ]; then
-    [[ "$(read -e -p 'Restart? [y/n]> '; echo $REPLY)" == [Yy]* ]] && sudo reboot
+    sudo reboot
 fi
 
 exit 0
