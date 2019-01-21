@@ -33,15 +33,6 @@ else
     echo '>>> PiPowerMeter already installed'
 fi
  
-# expand filesystem
-if [ $(sudo raspi-config nonint get_can_expand) -ne 0 ]; then
-    echo '>>> Expand FileSystem'
-    ASK_TO_REBOOT=1
-    sudo raspi-config nonint do_expand_rootfs
-else
-    echo '>>> FileSystem already expanded'
-fi
-
 echo '>>> PiPowerMeter is installed'
 if [ $ASK_TO_REBOOT -ne 0 ]; then
     echo '>>> Restarting...'
