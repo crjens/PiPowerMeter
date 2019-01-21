@@ -4,10 +4,18 @@
 // reads samples until told to stop by the parent
 // read from hardware
 
-var driver = require('./cs5463');
-if (driver.Initialize() == 0)
-{
-    console.log("failed to open CS5463, trying CS5490");
+var driver = null;
+var spawn = require('child_process').spawnSync
+
+// Read pin 22 which is Reset on v3.* hardware
+// and has an external pull-up
+var pin22 = spawn("gpio", [ -1, "read", 22])
+
+if (pin22.stdout == 1) {
+    console.log("Loading CS5463");
+    driver = require('./cs5463');
+} else {
+    console.log("Loading CS5490");
     driver = require('./CS5490');
 }
 
