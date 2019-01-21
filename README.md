@@ -47,24 +47,9 @@ Install Instructions
 	1. the latest versions of Raspbian have ssh disabled.  You can enable ssh via raspi-config or just create an empty file named 'ssh' in the boot partition of the sd card.
 4. Install the PiPowerMeter software by running the following command:
 	1. wget -O - https://raw.githubusercontent.com/crjens/PiPowerMeter/test/setup.sh | bash
-5. Install/Update Nodejs (use one of the two methods below depending your model of Raspberry Pi)
-	1. For Raspberry Pi 2 or Raspberry Pi 3 (64 bit only)
-		1. curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
-		2. sudo apt install -y nodejs
-	2. For Raspberry Pi all versions (32 or 64 bit)
-		1. wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.4/install.sh | bash
-		2. nvm install --lts
-		3. sudo cp -R $NVM_DIR/versions/node/$(nvm version)/* /usr/local/
-6. Install PiPowerMeter software into app directory
-	1. (Raspbian-Lite only) If using Raspbian-Lite you'll need to first install git.  Raspbian-Full has git preinstalled so you can skip this step.
-		1. sudo apt-get -y install git
-	2. git clone https://github.com/crjens/PiPowerMeter.git app
-	3. cd app
-	4. npm install
-7. run 'sudo raspi-config' 
+5. run 'sudo raspi-config' 
 	1. set locale and timezone under Localisation options
-	2. enable SPI under Interfacing Options
-	3. expand filesystem under Advanced options
-	4. change user password (optional)
-	5. reboot when prompted after exiting raspi-config
-8. Open your browser to http://<Your Raspberry Pi's IP Address>:3000
+	2. expand filesystem under Advanced options
+	3. change user password (optional)
+	4. reboot when prompted after exiting raspi-config
+6. Open your browser to http://<Your Raspberry Pi's IP Address>:3000
