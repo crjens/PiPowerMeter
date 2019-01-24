@@ -481,7 +481,7 @@ app.post('/deleteProbe', function (req, res, next) {
 app.post('/update', function (req, res, next) {
     console.log('Updating source...');
     var exec = require('child_process').exec;
-    exec('git pull & npm install', function (error, stdout, stderr) {
+    exec('git pull & npm update & npm install', function (error, stdout, stderr) {
         if (error)
             next(error);
         else {

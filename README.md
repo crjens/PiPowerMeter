@@ -36,9 +36,22 @@ Additional Images
 - [Sensors](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/DSC_0002.JPG)
 - [Boards](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/DSC_0012.JPG)
 
+Hardware Installation
+---------------------
+1. The Raspberry Pi mounts directly to the 40-pin header on the control board and is powered from the control board's universal power supply.  Do not attempt to power the Raspberry Pi via its micro usb port or it may be damaged.
+2. The control board requires a direct connection to the AC power source that is being monitored.  This AC connection provides both the voltage reference for the energy calculations as well as the power source for the Raspberry Pi and supporting electronics.  The AC power source is connected via 5 pin terminal connector shown [here](https://raw.githubusercontent.com/crjens/PiPowerMeter/master/Documentation/ACIn.jpg) and supports 100-240VAC and 50/60Hz.  
 
-Install Instructions
---------------------
+	- For US 120/240V split phase connect Ground, Neutral, AC1 and AC2.
+	- For 240V single phase connect Ground, Neutral and AC1.
+	- For 3 phase connect Ground, Neutral, AC1, AC2 and AC3.
+3. Current sensors are connected to the input board via standard 3.5mm (1/8") audio plugs.  They must be current-type sensors without built-in sense resistors and must produce a full scale output of less than 50mA.  YHDC produces a full line of current sensors that are inexpensive and readily available. Popular models include:
+	- [YHDC-006 (20A)](http://en.yhdc.com/product1311.html?productId=612)
+	- [YHDC-013-000 (100A)](http://en.yhdc.com/product1311.html?productId=401)
+	- [YHDC-019 (200A)](http://en.yhdc.com/product1311.html?productId=380)
+
+
+Software Installation
+---------------------
 1. Any of the full size Raspberry Pi models with the 40 pin header are supported including: V1 A+, V1 B+, V2, V3 B and V3 B+.  The additional memory and computing power of the V2/V3 models is recommended.
 2. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_lite_latest
 	1. (verified with Raspbian Stretch 2018-11-13)
