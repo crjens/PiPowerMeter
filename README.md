@@ -44,10 +44,16 @@ Hardware Installation
 	- For US 120/240V split phase connect Ground, Neutral, AC1 and AC2.
 	- For 240V single phase connect Ground, Neutral and AC1.
 	- For 3 phase connect Ground, Neutral, AC1, AC2 and AC3.
-3. Current sensors are connected to the input board via standard 3.5mm (1/8") audio plugs.  They must be current-type sensors without built-in sense resistors and must produce a full scale output of less than 50mA.  YHDC produces a full line of current sensors that are inexpensive and readily available [online](https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=yhdc+sct013+sct006+sct019&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=yhdc+sct013+sctoo0+sct019&LH_TitleDesc=0). Popular models include:
+3. Current sensors are connected to the input board via standard 3.5mm (1/8") audio plugs.  They must be current-type sensors without built-in sense resistors and must produce a full scale output of less than 50mA.  YHDC produces a full line of split-core current sensors that are easy to use, inexpensive and readily available [online](https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=yhdc+sct013+sct006+sct019&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=yhdc+sct013+sctoo0+sct019&LH_TitleDesc=0). Popular models include:
 	- [YHDC-006 (20A)](http://en.yhdc.com/product1311.html?productId=612)
 	- [YHDC-013-000 (100A)](http://en.yhdc.com/product1311.html?productId=401)
 	- [YHDC-019 (200A)](http://en.yhdc.com/product1311.html?productId=380)
+4. Connect the current sensors so that the current polarity reads correctly (+) for ciruits the consume energy and (-) circuits that produce energy.  If the polarity is backwards just flip the current sensor and reinstall.
+5. Once the sensors are installed you'll need to configure the software to enable them.  This is done in the configuration page by adding a new circuit for each sensor and setting the probe (sensor) type, board, circuit and voltage phase.
+	- There are several preconfigured probes for common YHDC sensors and you can add additional types under the configuration tab. 
+	- Board should be set to the id of the current board that the probe is plugged into (0-7).
+	- Channel should be set to the current channel that the probe is plugged into (0-15).
+	- Set Phase to the voltage reference for the circuit.  If you aren't sure you can take a look at the current and voltage waveforms on the circuit page and experiment until you find the voltage reference that most closely matches the phase of the current waveform.
 
 
 Software Installation
