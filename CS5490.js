@@ -75,8 +75,16 @@ var OutputPins = {
     board2: 33,      
     voltage0: 32,    
     voltage1: 31,    
+    voltage2: 18,  
     disable: 36,     
     reset: 15        
+};
+
+var InputPins = {
+    version0: 11,    
+    version1: 12,    
+    version2: 16,
+    version3: 7
 };
 
 var sleep = function (delayMs) {
@@ -216,32 +224,12 @@ var Reset = function () {
     console.log('initialized');
 }
 
-// enable output gpio pins
-for (var pin in OutputPins) {
-    //console.log('pinmode(' + OutputPins[pin] + ') ' + pin);
-    cs5490.PinMode(OutputPins[pin], 1);
-}
+
 
 var exports = {
-    // returns true if able to communicate with hardware
-    Initialize: function() {
-        // HARD RESET CHIP
-        cs5490.DigitalPulse(OutputPins.reset, 0, 1, 200);
-
-        sleep(1000);
-
-        cs5490.Open("/dev/serial0", 600);   // raspberry pi
-        _DeviceOpen = true;
-
-        cs5490.Flush();
-        var result = 0;//cs5490.ReadRegister(Registers.Config0[0], Registers.Config0[1]);
-        cs5490.Close();
-        _DeviceOpen = false;
-        return result & 0xFFFFFF;
-    },
     // board should be 0-7
     // currentchannel should be 0-15
-    // voltagechannel should be 0-3
+    // voltagechannel should be 0-5
     SetCircuit: function (board, currentChannel, voltageChannel) {
         if (board < 0 || board > 8) {
             console.log('Invalid board: ' + board);
@@ -253,7 +241,7 @@ var exports = {
             return;
         }
 
-        if (voltageChannel < 0 || voltageChannel > 3) {
+        if (voltageChannel < 0 || voltageChannel > 5) {
             console.log('Invalid voltage channel: ' + voltageChannel);
             return;
         }
@@ -277,6 +265,7 @@ var exports = {
             // set voltage channel
             cs5490.DigitalWrite(OutputPins.voltage0, (voltageChannel & 0x1));
             cs5490.DigitalWrite(OutputPins.voltage1, (voltageChannel & 0x2));
+            cs5490.DigitalWrite(OutputPins.voltage2, (voltageChannel & 0x4));
 
             // enable
             cs5490.DigitalWrite(OutputPins.disable, 0);
@@ -382,11 +371,29 @@ var exports = {
             cs5490.Close();
     },
     Open: function (data) {
-        HardwareVersion = data.HardwareVersion;
         Mode = data.Mode;
         Config = data.Config;
-        
+       
         if (cs5490 != null) {
+
+            // enable input gpio pins
+            for (var pin in InputPins) {
+                cs5490.PinMode(InputPins[pin], 0);
+            }
+
+            // read hardware version
+            var ver0 = cs5490.DigitalRead(InputPins.version0);
+            var ver1 = cs5490.DigitalRead(InputPins.version1);
+            var ver2 = cs5490.DigitalRead(InputPins.version2);
+            var ver3 = cs5490.DigitalRead(InputPins.version3);
+
+            HardwareVersion = ver1 + ver2<<1 + ver2<<2 + ver3<<3;
+
+            // enable output gpio pins
+            for (var pin in OutputPins) {
+                cs5490.PinMode(OutputPins[pin], 1);
+            }
+
             Reset();
             console.log("Device opened: Hardware version: " + HardwareVersion);
         }

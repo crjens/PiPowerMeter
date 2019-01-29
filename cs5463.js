@@ -246,26 +246,6 @@ var Reset = function () {
 }
 
 var exports = {
-    // returns true if able to communicate with hardware
-    Initialize: function() {
-        var result = 0;
-        try {
-            cs5463.Open("/dev/spidev0.0", 2000000);   // raspberry pi
-            //cs5463.DigitalPulse(OutputPins.reset, 0, 1, 100);
-            sleep(500);
-            result = cs5463.send("00FFFFFF"); //read config
-            //result = 1
-        }
-        catch (err)
-        {
-            console.log("Error opening cs5463: " + err);
-            result = 0;
-        }
-        cs5463.Close();
-
-        console.log("result: " + result);
-        return result & 0xFFFFFF;
-    },
     // board should be 0-7
     // currentchannel should be 0-15
     // voltagechannel should be 0-3
