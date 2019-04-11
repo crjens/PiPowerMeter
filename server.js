@@ -70,7 +70,7 @@ if (ua != null)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(auth);
 app.use(logger);
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 1000000}))
 app.use(favicon(__dirname + '/public/images/favicon.png'));
 app.use(methodOverride('X-HTTP-Method-Override'));
 app.use(logErrors);
