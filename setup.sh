@@ -20,12 +20,6 @@ sudo cp -R $NVM_DIR/versions/node/$(nvm version)/* /usr/local/
 echo '>>> Install Git'
 sudo apt-get -y install git
 
-# install wiring pi
-cd /tmp
-wget https://project-downloads.drogon.net/wiringpi-latest.deb
-sudo dpkg -i wiringpi-latest.deb
-cd ~
-
 # install and configure PiPowerMeter
 if [ ! -d "app" ]; then
     echo '>>> Install PiPowerMeter'
