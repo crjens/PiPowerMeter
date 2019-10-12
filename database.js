@@ -50,7 +50,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
         //db.run('PRAGMA temp_store=memory', null, true);
         db.runSql('PRAGMA foreign_keys=on', null, true);
 
-        db.runSql("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=3), Breaker int, Alert Text, SourceType int);", function (err) {
+        db.runSql("create table if not exists Probes ( id INTEGER primary key, Type text, Board int check(Board>=0 and Board<=7), CurrentChannel int check(CurrentChannel>=0 and CurrentChannel<=15), VoltageChannel int check(VoltageChannel>=0 and VoltageChannel<=5), Breaker int, Alert Text, SourceType int);", function (err) {
             if (err) {
                 console.log("Error creating Probes table: " + err);
                 TableStates.Probes = "Error";
@@ -115,9 +115,9 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
                 db.runSql("Insert or ignore into Config Values('DeviceName', '');", null, true);
                 db.runSql("Insert or ignore into Config Values('Price', '0.1');", null, true);
                 db.runSql("Insert or ignore into Config Values('Region', 'en-US');", null, true);
-                db.runSql("Insert or ignore into Config Values('VoltageScale', '384');", null, true);
+                db.runSql("Insert or ignore into Config Values('VoltageScale', '354');", null, true);
 
-                db.runSql("Insert or ignore into Config Values('Probes', '[{''Name'':''SCT-006'',''Factor'':''40''},{''Name'':''SCT-010'',''Factor'':''152''},{''Name'':''SCT-013'',''Factor'':''101''},{''Name'':''SCT-016'',''Factor'':''152''},{''Name'':''SCT-019'',''Factor'':''295''}]');", null, true);
+                db.runSql("Insert or ignore into Config Values('Probes', '[{''Name'':''SCT-006'',''Factor'':''40''},{''Name'':''SCT-010'',''Factor'':''150''},{''Name'':''SCT-013'',''Factor'':''100''},{''Name'':''SCT-016'',''Factor'':''150''},{''Name'':''SCT-019'',''Factor'':''300''}]');", null, true);
 
                 console.log('Config table ready');
                 TableStates.Config = true;

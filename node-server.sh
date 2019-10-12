@@ -9,29 +9,20 @@
 # Default-Stop:      0 1 6
 ### END INIT INFO
 
-# change this to wherever your node app lives #
-path_to_node_app=/home/pi/app/server.js
-APP_DIR=/home/pi/app
-SERVER_JS_FILE=/home/pi/app/server.js
-FOREVER=forever
-USER=pi
-OUT=/home/pi
-NODE=/usr/bin/node
+USER=ReplaceWithUser
 
 # Carry out specific functions when asked to by the system
 case "$1" in
   start)
     echo "* starting node-server * "
     echo "* starting node-server * [`date`]" >> /var/log/node-server.log
-    cd /home/pi/app
-#	sudo $NODE $SERVER_JS_FILE >> /dev/null 2>&1&
-    sudo $FOREVER start --workingDir $APP_DIR -a -o /dev/null -e $OUT/nodejs.err.log --killSignal=SIGTERM $SERVER_JS_FILE
+    cd /home/$USER/app
+    sudo forever start --workingDir /home/$USER/app -a -o /dev/null -e /home/$USER/nodejs.err.log --killSignal=SIGTERM /home/$USER/app/server.js
     ;;
   stop)
     echo "* stopping node-server * "
     echo "* stopping node-server * [`date`]" >> /var/log/node-server.log
-#	killall $NODE
-    sudo $FOREVER stop --killSignal=SIGTERM $SERVER_JS_FILE 
+    sudo forever stop --killSignal=SIGTERM /home/$USER/app/server.js
     ;;
   *)
     echo "Usage: /etc/init.d/node-server {start|stop}"

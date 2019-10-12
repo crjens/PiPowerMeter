@@ -1,7 +1,7 @@
 {
     "name": "PiPowerMeter",
     "version": "1.0.1",
-    "description": "raspberry pi power meter using CS5463 chip dependencies",
+    "description": "raspberry pi power meter",
     "author": "Craig Jensen",
     "license": "BSD",
   "dependencies": {
@@ -15,7 +15,9 @@
     "basic-auth": ">=1.0.0",
     "universal-analytics": ">=0.3.8",
     "mqtt": ">=1.4.1",
-    "cs5463": "crjens/cs5463#4f3d415db6a7f61ef044d9d6ff74de67bc4d7658"
+    "cs5463": "crjens/cs5463",
+    "CS5490": "crjens/CS5490",
+    "child-process": "^1.0.2"
   },
     "config":{
         "unsafe-perm":true
