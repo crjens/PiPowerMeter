@@ -68,7 +68,7 @@ Software Installation
 3. login to Pi with Putty or other 
 	1. the latest versions of Raspbian have ssh disabled.  You can enable ssh via raspi-config or just create an empty file named 'ssh' in the boot partition of the sd card.
 4. Install the PiPowerMeter software by running the following command (you must install with root privileges such as the built-in pi account):
-	1. wget -O - https://raw.githubusercontent.com/crjens/PiPowerMeter/setup.sh | bash
+	1. wget -O - https://raw.githubusercontent.com/crjens/PiPowerMeter/master/setup.sh | bash
 5. run 'sudo raspi-config' 
 	1. set locale and timezone under Localisation options
 	2. expand filesystem under Advanced options
