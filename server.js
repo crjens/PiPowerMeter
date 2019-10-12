@@ -3,7 +3,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var favicon = require('serve-favicon');
 var methodOverride = require('method-override');
-var power = require('./cs5463');
+var power = require('./driver');
 var db = require('./database');
 var onFinished = require('on-finished')
 var basicAuth = require('basic-auth');
@@ -70,7 +70,7 @@ if (ua != null)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(auth);
 app.use(logger);
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 1000000}))
 app.use(favicon(__dirname + '/public/images/favicon.png'));
 app.use(methodOverride('X-HTTP-Method-Override'));
 app.use(logErrors);
@@ -481,7 +481,7 @@ app.post('/deleteProbe', function (req, res, next) {
 app.post('/update', function (req, res, next) {
     console.log('Updating source...');
     var exec = require('child_process').exec;
-    exec('git pull & npm install', function (error, stdout, stderr) {
+    exec('git pull & npm update & npm install', function (error, stdout, stderr) {
         if (error)
             next(error);
         else {

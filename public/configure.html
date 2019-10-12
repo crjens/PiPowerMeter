@@ -1,9 +1,9 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
-    <title>Power Meter</title> 
+    <title>Power Meter</title>
     <link rel="stylesheet" href="powermeter.css">
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
 
@@ -13,47 +13,43 @@
 
     <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/globalize.min.js"></script>
     <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/cultures/globalize.cultures.js"></script>
-    
+
     <script type="text/javascript">
 
         var templates = {}, Configuration = {}, HttpPort = 0;
 
-        var openFile = function(event) {
-          var input = event.target;
+        var openFile = function (event) {
+            var input = event.target;
 
-          var reader = new FileReader();
-          reader.onload = function(){
-            var text = reader.result;
-//            $("#configJson").val(text);
-	    ImportConfig(text);
-          };
-          reader.readAsText(input.files[0]);
+            var reader = new FileReader();
+            reader.onload = function () {
+                var text = reader.result;
+                //            $("#configJson").val(text);
+                ImportConfig(text);
+            };
+            reader.readAsText(input.files[0]);
         };
 
-	var ImportConfig = function(configText) {
-		// validate
-                if (configText == null || configText.length == 0) {
-		     alert("Please paste the configuration you want to restore into the text area and try again.");
-		     return;
-	        }
+        var ImportConfig = function (configText) {
+            // validate
+            if (configText == null || configText.length == 0) {
+                alert("Please paste the configuration you want to restore into the text area and try again.");
+                return;
+            }
 
-	     var json= JSON.parse(configText);
-	     var config = { PiPowerMeterConfig: { Date: (new Date()).toString(), Configuration: json}};
-             if (config.PiPowerMeterConfig == null || config.PiPowerMeterConfig.Configuration == null || config.PiPowerMeterConfig.Configuration.Probes == null || config.PiPowerMeterConfig.Configuration.Circuits == null) {
-		   alert("Invalid configuration.");
-		   return;
-              }
-		         
-	      
+            var json = JSON.parse(configText);
+            var config = { PiPowerMeterConfig: { Date: (new Date()).toString(), Configuration: json } };
+            if (config.PiPowerMeterConfig == null || config.PiPowerMeterConfig.Configuration == null || config.PiPowerMeterConfig.Configuration.Probes == null || config.PiPowerMeterConfig.Configuration.Circuits == null) {
+                alert("Invalid configuration.");
+                return;
+            }
 
-              var url = '/restoreconfig';
-              $.post(url, config, function (result) {
-                  load();
-                 //alert('configuration update succeded');
-              });
-	}
-
-
+            var url = '/restoreconfig';
+            $.post(url, config, function (result) {
+                load();
+                //alert('configuration update succeded');
+            });
+        }
 
         var load = function () {
             $('#content').empty();
@@ -68,8 +64,8 @@
 
                     result.Regions = [];
                     for (var culture in Globalize.cultures) {
-			if (culture != "default")
-	                        result.Regions.push(Globalize.cultures[culture]);
+                        if (culture != "default")
+                            result.Regions.push(Globalize.cultures[culture]);
                     }
 
                     result.Regions.sort(function (a, b) {
@@ -78,11 +74,11 @@
                         return 0;
                     });
 
-		    HttpPort = result["Port"];
+                    HttpPort = result["Port"];
                     Configuration.DefinedProbes = result.Probes;
                     Configuration.HardwareVersion = result.HardwareVersion;
 
-		    $('.header').text(result.DeviceName + " Power Meter Configuration");
+                    $('.header').text(result.DeviceName + " Power Meter Configuration");
 
                     for (var i = 0; i < result.Circuits.length; i++) {
                         for (var j = 0; j < result.Circuits[i].Probes.length; j++) {
@@ -100,10 +96,9 @@
 
                     $(templates.probedeftable(result)).appendTo($('#probedefs'));
 
-	            if (location.search.indexOf("advanced")  == -1) {
-			$('.advanced').closest('tr').hide();
-		    }
-		    
+                    if (location.search.indexOf("advanced") == -1) {
+                        $('.advanced').closest('tr').hide();
+                    }
                 }
             });
         }
@@ -111,8 +106,8 @@
         $(function () {
 
             $('.header').click(function () {
-                    window.location.href = "/usage.html";
-                });
+                window.location.href = "/usage.html";
+            });
 
             window.Handlebars.registerHelper('select', function (value, options) {
                 var $el = $('<select />').html(options.fn(this));
@@ -129,117 +124,117 @@
             Handlebars.registerPartial("probe", $('#probe-partial').html());
             Handlebars.registerPartial("probedef", $('#probedef-partial').html());
 
-	    var area = document.getElementById('configJson');
-if (area != null) {
-	    if (area.addEventListener) {
-		 area.addEventListener('input', function() {
-		   // event handling code for sane browsers
-		   var e= $('#configfile');
-                   e.wrap('<form>').closest('form').get(0).reset();
-		   e.unwrap();
-		 }, false);
-	    } else if (area.attachEvent) {
-		area.attachEvent('onpropertychange', function() {
-		   // IE-specific event handling code
-		   var e= $('#configfile');
-                   e.wrap('<form>').closest('form').get(0).reset();
-		   e.unwrap();
+            var area = document.getElementById('configJson');
+            if (area != null) {
+                if (area.addEventListener) {
+                    area.addEventListener('input', function () {
+                        // event handling code for sane browsers
+                        var e = $('#configfile');
+                        e.wrap('<form>').closest('form').get(0).reset();
+                        e.unwrap();
+                    }, false);
+                } else if (area.attachEvent) {
+                    area.attachEvent('onpropertychange', function () {
+                        // IE-specific event handling code
+                        var e = $('#configfile');
+                        e.wrap('<form>').closest('form').get(0).reset();
+                        e.unwrap();
 
-		});
+                    });
+                }
             }
-}
 
             $("#save")
-                  .button()
-                  .click(function () {
-                      var config = readConfig();
+                .button()
+                .click(function () {
+                    var config = readConfig();
 
-                      var url = '/config';
-                      $.post(url, { config: config }, function (result) {
-                          load();
-                          //alert('configuration update succeded');
-                      });
-                  });
+                    var url = '/config';
+                    $.post(url, { config: config }, function (result) {
+                        load();
+                        //alert('configuration update succeded');
+                    });
+                });
 
             $("#refresh")
-                  .button()
-                  .click(function () {
-                      load();
-                  });
+                .button()
+                .click(function () {
+                    load();
+                });
 
             $("#saveProbeDefs")
-                  .button()
-                  .click(function () {
-                      var config = readProbeConfig();
+                .button()
+                .click(function () {
+                    var config = readProbeConfig();
 
-                      var url = '/probeDef';
-                      $.post(url, { config: config }, function (result) {
-			  if (config.Port != HttpPort){
-                              var loc = window.location;
-                              var port = "";
-			      if (config.Port != "80")
-                                 port = ":" + config.Port;
-                              window.location = loc.protocol + "//" + loc.hostname + port + loc.pathname
-			  }
-			else {
-                          load();
-                        } 
-                          //alert('configuration update succeded');
-                      });
-                  });
+                    var url = '/probeDef';
+                    $.post(url, { config: config }, function (result) {
+                        if (config.Port != HttpPort) {
+                            var loc = window.location;
+                            var port = "";
+                            if (config.Port != "80")
+                                port = ":" + config.Port;
+                            window.location = loc.protocol + "//" + loc.hostname + port + loc.pathname
+                        }
+                        else {
+                            load();
+                        }
+                        //alert('configuration update succeded');
+                    });
+                });
 
             $("#restart")
-                  .button()
-                  .click(function () {
-                      var url = '/restart';
-                      $.post(url, {}, function (result) {
-                          //alert('configuration update succeded');
-                          load();
-                      });
-                  });
+                .button()
+                .click(function () {
+                    var url = '/restart';
+                    $.post(url, {}, function (result) {
+                        //alert('configuration update succeded');
+                        load();
+                    });
+                });
 
             $("#exportConfigFile")
-                  .button()
-                  .click(function () {
-			window.location = "/config?file=1";
-                  });
+                .button()
+                .click(function () {
+                    window.location = "/config?file=1";
+                });
             $("#exportConfigText")
-                  .button()
-                  .click(function () {
-                      $.ajax({
-                	url: '/config?file=1',
-	                type: 'get',
-        	        dataType: 'json',
-                	cache: false,
-	                success: function (json) {
-			    var config = { PiPowerMeterConfig: { Date: (new Date()).toString(), Configuration: json}}; 
-			    $("#configJson").val(JSON.stringify(config)).select();
-        	        }
-	            });
-                  });
+                .button()
+                .click(function () {
+                    $.ajax({
+                        url: '/config?file=1',
+                        type: 'get',
+                        dataType: 'json',
+                        cache: false,
+                        success: function (json) {
+                            var config = { PiPowerMeterConfig: { Date: (new Date()).toString(), Configuration: json } };
+                            $("#configJson").val(JSON.stringify(config)).select();
+                        }
+                    });
+                });
 
-	    $("#importConfigText")
-                  .button()
-                  .click(function () {
-                      var configText = $('#configJson').val();
+            $("#importConfigText")
+                .button()
+                .click(function () {
+                    var configText = $('#configJson').val();
 
-                      ImportConfig(configText);
-                  });
+                    ImportConfig(configText);
+                });
 
-	    var updating = false;
-	    $( document ).on( "click", "#updateSource", function() {
-		if (updating == false) {
-  		   updating = true;
-  		   var url = '/update';
-                   $.post(url, {}, function (result) {
-                      alert("Source updated.  Wait a few seconds and refresh browser");
-		      updating = false;
-                   });
-		}
-	    });
+            var updating = false;
+            $(document).on("click", "#updateSource", function () {
+                if (updating == false) {
+                    updating = true;
+                    var url = '/update';
+                    $.post(url, {}, function (result) {
+                        alert("Source updated.  Wait a few seconds and refresh browser");
+                        updating = false;
+                    });
+                }
+            });
 
             load();
-	   
+
             $("#accordion").accordion({ heightStyle: "fill", collapsible: true });
 
         });
@@ -343,12 +338,10 @@ if (area != null) {
                     sensor.Probes.push(probe);
                 });
 
-
                 config.push(sensor);
             });
 
             return config;
-
         }
 
 
@@ -382,16 +375,19 @@ if (area != null) {
     </script>
 
 </head>
+
 <body>
-<!-- Google Tag Manager -->
-<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-57V732');</script>
-<!-- End Google Tag Manager -->
+    <!-- Google Tag Manager -->
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+            })(window, document, 'script', 'dataLayer', 'GTM-57V732');</script>
+    <!-- End Google Tag Manager -->
     <div class='header'></div>
     <div id='accordion'>
         <h3>Circuits</h3>
@@ -408,14 +404,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <div id='probedefs'></div>
             <div class='buttons2'>
                 <button id='saveProbeDefs'>Save</button>
-	        <button id='restart'>Restart Device</button>
+                <button id='restart'>Restart Device</button>
             </div>
         </div>
         <h3>Import/Export Configuration</h3>
         <div>
-	    <div class='xbuttons'> 
-                Export: <button id='exportConfigFile'>Export</button><br/><br/>
-		Import: <input id='configfile' type="file" onchange='openFile(event)' />
+            <div class='xbuttons'>
+                Export: <button id='exportConfigFile'>Export</button><br /><br />
+                Import: <input id='configfile' type="file" onchange='openFile(event)' />
             </div>
             <!--<div class='buttons2'>Export to: 
                 <button id='exportConfigText'>Text</button>
@@ -474,7 +470,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         
         <table id='probeDefTable'>
             <tr>
-                <th>Probe</th>
+                <th>Sensor</th>
                 <th>Scale</th>
                 <th><img src='images/add.jpg' class='size18x18' onClick='addProbeDef()'></th>
             </tr>
@@ -498,9 +494,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </tr>
           
     </script>
-    
-    
-    
+
+
+
     <script id="configtable-template" type="text/x-handlebars-template">
         <div id="config" border=1>
         <table id='circuitsTable'>
@@ -510,7 +506,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 <th>Description</th>
                 <th>Main</th>
                 <th>Enabled</th>
-                <th>Probe, Board, Channel, Phase, Type, Breaker, Alert (mins, watts)</th>
+                <th>Sensor, Board, Channel, Voltage, Type, Breaker, Alert (mins, watts)</th>
                 <th><img src='images/add.jpg' class='size18x18' onClick='addCircuit()'></th>
             </tr>
             {{#each Result.Circuits}}
@@ -602,10 +598,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <td>
                 <select id="voltagechannel" >
                     {{#select VoltageChannel}}
-                        <option value='0'>V1</option>
-                        <option value='1'>V2</option>
-                        <option value='2'>V3</option>
-                        <option value='3'>V1+V2</option>
+                        <option value='0'>V1-N</option>
+                        <option value='1'>V2-N</option>
+                        <option value='2'>V3-N</option>
+                        <option value='3'>V1-V2</option>
+                        <option value='4'>V1-V3</option>
+                        <option value='5'>V2-V3</option>
                     {{/select}}
                 </select>
             </td>
@@ -621,10 +619,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             <td>
                 <select id="breaker" >
                     {{#select Breaker}}
-                        
+                        <option value='6'>6 Amp</option>
                         <option value='10'>10 Amp</option>
-			<option value='15'>15 Amp</option>
-			<option value='16'>16 Amp</option>
+                        <option value='15'>15 Amp</option>
+                        <option value='16'>16 Amp</option>
                         <option value='20'>20 Amp</option>
                         <option value='30'>30 Amp</option>
                         <option value='40'>40 Amp</option>
@@ -641,8 +639,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </tr>
           
     </script>
-
-  
-
 </body>
+
 </html>
