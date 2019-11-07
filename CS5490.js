@@ -168,7 +168,7 @@ var ResetIfNeeded = function () {
     var status = read(Registers.Status0);
     var sampleCount = read(Registers.SampleCount);
     
-    if (sampleCount != parseInt(CycleCount)) {
+    if (sampleCount != parseInt(CycleCount, 16)) {
         console.log('Resetting due to SampleCount: ' + sampleCount)
         Reset();
     }
