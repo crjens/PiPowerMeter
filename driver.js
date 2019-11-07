@@ -111,6 +111,7 @@ var loadConfiguration = function (callback) {
         } else {
             Mode = data.Mode;
             Config = data.Config;
+	    CycleCount = data.CycleCount;
             vFactor = data.VoltageScale;
             HardwareVersion = data.HardwareVersion;
             configuration.Probes = data.Probes;
@@ -442,7 +443,7 @@ var Start = function () {
         if (err) {
             console.log('unable to load configuration: ' + err);
         } else {
-            reader.send({ Action: "Start", HardwareVersion: HardwareVersion, Mode: Mode, Config: Config });
+            reader.send({ Action: "Start", HardwareVersion: HardwareVersion, Mode: Mode, Config: Config, CycleCount: CycleCount });
             ReadNext();
         }
     });
