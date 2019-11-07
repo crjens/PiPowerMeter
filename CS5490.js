@@ -166,6 +166,12 @@ var ResetIfNeeded = function () {
 
     var config = read(Registers.Config2);
     var status = read(Registers.Status0);
+    var sampleCount = read(Registers.SampleCount);
+    
+    if (sampleCount != parseInt(CycleCount)) {
+        console.log('Resetting due to SampleCount: ' + sampleCount)
+        Reset();
+    }
 
     // Check status of:
     //   POR, IOR, VOR, IOC, IC
@@ -220,6 +226,10 @@ var Reset = function () {
     var config2 = read(Registers.Config2, 'read Config2 register');
     // A = 1010  => High-Pass filters enabled on both current and voltage channels
     write(Registers.Config2, config2 | 0xA)
+    
+    var sampleCount = parseInt(CycleCount, 16);
+    if (sampleCount >= 100)
+        write(Registers.SampleCount, sampleCount);
 
     console.log('initialized');
 }
@@ -373,6 +383,7 @@ var exports = {
     Open: function (data) {
         Mode = data.Mode;
         Config = data.Config;
+        CycleCount = data.CycleCount;
        
         if (cs5490 != null) {
 
