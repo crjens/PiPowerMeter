@@ -16,7 +16,7 @@
 
     <script type="text/javascript">
 
-        var templates = {}, Configuration = {}, HttpPort = 0;
+        var templates = {}, Configuration = {};
 
         var openFile = function (event) {
             var input = event.target;
@@ -74,11 +74,10 @@
                         return 0;
                     });
 
-                    HttpPort = result["Port"];
+                    Configuration = result.Configuration;
                     Configuration.DefinedProbes = result.Probes;
-                    Configuration.HardwareVersion = result.HardwareVersion;
 
-                    $('.header').text(result.DeviceName + " Power Meter Configuration");
+                    $('.header').text(Configuration.DeviceName + " Power Meter Configuration");
 
                     for (var i = 0; i < result.Circuits.length; i++) {
                         for (var j = 0; j < result.Circuits[i].Probes.length; j++) {
@@ -86,7 +85,7 @@
                         }
                     }
 
-                    $(templates.configtable({ Result: result })).appendTo($('#content'));
+                    $(templates.configtable({ Result: result.Configuration })).appendTo($('#content'));
 
                     // hide delete button for any circuits with only one probe
                     $("table#probetable").filter(function () {
@@ -169,7 +168,7 @@
 
                     var url = '/probeDef';
                     $.post(url, { config: config }, function (result) {
-                        if (config.Port != HttpPort) {
+                        if (config.Port != Configuration.Port) {
                             var loc = window.location;
                             var port = "";
                             if (config.Port != "80")
@@ -433,8 +432,8 @@
             <!--<tr><td>Mode:</td><td><input type="text" name="Mode" id="Mode" value="{{Mode}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Config:</td><td><input type="text" name="Config" id="Config" value="{{Config}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>-->
             <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
-	    <tr><td>SampleTime (sec):</td><td><input type="text" name="SampleTime" id="SampleTime" value="{{SampleTime}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-	    <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>SampleTime (sec):</td><td><input type="text" name="SampleTime" id="SampleTime" value="{{SampleTime}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Frequency</td><td>{{Frequency}}</td></tr>
             <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
             <tr>
