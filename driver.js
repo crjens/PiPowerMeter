@@ -734,6 +734,7 @@ var exports = {
         return 0;
     },
     ReplaceConfiguration: function (callback, config) {
+        console.log("ReplaceConfiguration")
         db.updateCircuits(config, function (err) {
             //loadConfiguration();
             console.log("calling stop")
