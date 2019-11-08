@@ -121,27 +121,27 @@ var loadConfiguration = function (callback) {
                 // set probe factors
                 for (var j = 0; j < data.Circuits[i].Probes.length; j++) {
                     data.Circuits[i].Probes[j].iFactor = FindProbeFactor(data.Circuits[i].Probes[j].Type);
-                    data.Circuits[i].Probes[j].vFactor = vFactor;
+                    data.Circuits[i].Probes[j].vFactor = data.Configuration.VoltageScale;
                 }
             }
             configuration.Circuits = data.Circuits;
-            deviceName = data.DeviceName;
+            deviceName = data.Configuration.DeviceName;
 
             //console.log("configuration: " + JSON.stringify(configuration));
             //console.log("configuration.Circuits: " + JSON.stringify(configuration.Circuits));
 
-            var port = data.Port;
-            netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName, port);
+            var port = data.Configuration.Port;
+            netUtils.InitializeTwilio(data.Configuration.Text, data.Configuration.Twilio, data.Configuration.TwilioSID, data.Configuration.TwilioAuthToken, deviceName, port);
 
-            console.log('mqtt: ' + data.MqttServer);
+            console.log('mqtt: ' + data.Configuration.MqttServer);
             if (data.MqttServer != null) {
                 try{
                     mqtt = require('mqtt');
-                    mqttClient = mqtt.connect(data.MqttServer);
+                    mqttClient = mqtt.connect(data.Configuration.MqttServer);
                 }
                 catch (err) {
                     mqttClient = null;
-                    console.error("Error initializing MQTT server: " +  data.MqttServer + ".  Error: " + err);
+                    console.error("Error initializing MQTT server: " +  data.Configuration.MqttServer + ".  Error: " + err);
                 }
             } else {
                 mqttClient = null;
@@ -732,27 +732,6 @@ var exports = {
     Reset: function () {
         Reset();
         return 0;
-    },
-    GetConfiguration: function (callback) {
-        db.getConfiguration(function (err, config) {
-
-            if (config != null) {
-
-                if (config.DeviceName != null)
-                    deviceName = config.DeviceName;
-
-                for (index = 0; index < config.length; ++index) {
-                    config[index].HardwareVersion = HardwareVersion;
-                    config[index].Probes = probes;
-                }
-
-                callback(err, config);
-            } else {
-                callback(err);
-            }
-
-
-        });
     },
     ReplaceConfiguration: function (callback, config) {
         db.updateCircuits(config, function (err) {
