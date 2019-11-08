@@ -132,7 +132,7 @@ var StartServer = function () {
             if (server == null) {
                 server = listen(port);
             }
-            else if (port != httpPort) {
+            else /*if (port != httpPort) */{
 
                 console.log("closing server because port changed from " + httpPort + " to " + port);
                 server.close(function () {
