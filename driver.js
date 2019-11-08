@@ -458,7 +458,7 @@ var Stop = function (callback) {
 
     var exec = require('child_process').exec;
     exec('sudo kill -9 ' + reader.pid, function (error, stdout, stderr) {
-        if (err)
+        if (error)
             console.log('failed to kill reader');
         else
             console.log('killed reader');
