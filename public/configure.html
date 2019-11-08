@@ -441,7 +441,7 @@
                 <td class="twocol">
                     <input type="text" name="Price" id="Price" value="{{Configuration.Price}}" class="text ui-widget-content ui-corner-all">
                     <select id="Region" class="text ui-widget-content ui-corner-all">
-                        {{#select Region}}
+                        {{#select Configuration.Region}}
                         {{#each Regions}}
                         <option value='{{this.name}}'>{{this.englishName}}</option>
                         {{/each}}
