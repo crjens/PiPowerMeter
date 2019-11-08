@@ -2,12 +2,13 @@ var cs5463 = null;
 // comment below line for WebMatrix testing
 var cs5463 = require("cs5463");
 
-var HardwareVersion = 0;
 var samples = 500;   // number of instantaneous voltage and current samples to collect for each measurement
 var bytesPerSample = 10;
 var sampleBuffer = Buffer.alloc(samples * bytesPerSample);
-var Mode, Config;
-var Epsilon60Hz = "01eb85", Epsilon50Hz = "01999a";
+var Mode = "000060";  // Enable hpf on current and voltage channels
+var Config = "001001"; // set interrupt High-Low
+var Epsilon60Hz = "01eb85";
+var Epsilon50Hz = "01999a";
 var Epsilon = Epsilon60Hz;  // default to 60Hz
 var _DeviceOpen = false;
 var Samples60Hz = 0, Samples50Hz = 0;
@@ -78,6 +79,17 @@ var write = function (cmd, desc) {
         cs5463.send(cmd);
         if (desc != null)
             console.log('write: ' + desc + '(' + cmd + ')')
+    }
+}
+
+var writeRegister = function (register, data, desc) {
+    if (_DeviceOpen) {
+        while (data.length < 6)
+            data = '0' + data;
+        while (register.length < 2)
+            register = '0' + register;
+        var cmd = (40 + (register << 1)).toString(16) + data
+        write(cmd, desc);
     }
 }
 
@@ -160,6 +172,7 @@ var ResetIfNeeded = function () {
     var mode = read(Registers.Mode);
     var config = read(Registers.Config);
     var status = read(Registers.Status);
+    var cycleCount = read(Registers.CycleCount);
 
     // Check status of:
     //   IOR and VOR
@@ -181,7 +194,12 @@ var ResetIfNeeded = function () {
     else if (config.toString('hex') != Config) {
         console.log('Resetting due to incorrect Config: ' + config.toString('hex') + ' expected: ' + Config);
         Reset();
-    } else {
+    }
+    else if (cycleCount.toString('hex') != Configuration.SampleTime*4000) {
+        console.log('Resetting due to incorrect CycleCount: ' + cycleCount.toString('hex') + ' expected: ' + Configuration.SampleTime*4000);
+        Reset();
+    } 
+    else {
         //Reset();
         //console.log('Reset not needed:' + epsilon.toString('hex') + " " + mode.toString('hex') + " " + config.toString('hex'));
     }
@@ -224,23 +242,29 @@ var Reset = function () {
 
     write("5EFFFFFF", "clear status");
 
-    read(18, 'read Mode register');
+    read(Registers.Mode, 'read Mode register');
     // 60 = 0110 0000  => High-Pass filters enabled on both current and voltage channels
     // E0 = 1110 0000  => one sample of current channel delay, High-Pass filters enabled on both current and voltage channels
     // E1 = 1110 0001  => one sample of current channel delay, High-Pass filters enabled on both current and voltage channels, auto line frequency measurement enabled
-    write('64' + Mode, 'hpf on with current phase compensation');
-    read(18, 'read Mode register');
+    //write('64' + Mode, 'hpf on with current phase compensation');
+    writeRegister(Registers.Mode, Mode, 'hpf on with current phase compensation');
+    read(Registers.Mode, 'read Mode register');
 
-    read(0, 'read configuration register');
-    write('40' + Config, 'interrupts set to high to low pulse with phase comp');
+    read(Registers.Config, 'read configuration register');
+    //write('40' + Config, 'interrupts set to high to low pulse with phase comp');
+    writeRegister(Registers.Config, Config, 'interrupts set to high to low pulse with phase comp');
     // C0 = 1100 0000 => first 7 bits set delay in voltage channel relative to current channel (00-7F), 1100000 => 
     // 10 = 0001 0000 => set interrupts to high to low pulse
     // 01 = 0000 0001 => set clock divider to 1 (default)
-    read(0, 'read configuration register');
+    read(Registers.Config, 'read configuration register');
 
     console.log('epsilon before: ' + convert(read(13), 0, true));
-    write('5A' + Epsilon, 'set epsilon to ' + Epsilon);
+    //write('5A' + Epsilon, 'set epsilon to ' + Epsilon);
+    writeRegister(Registers.Epsilon, Epsilon, 'set epsilon to ' + Epsilon);
     console.log('epsilon after: ' + convert(read(13), 0, true));
+
+    var cycleCount = (Configuration.SampleTime*4000).toString('hex');
+    writeRegister(Registers.CycleCount, cycleCount, 'CycleCount to ' + cycleCount);
 
     console.log('initialized');
 }
@@ -421,6 +445,9 @@ var exports = {
         else
             return "Unknown";
     },
+    SetConfig: function (configuration) {
+        Configuration = configuration;
+    },
     Close: function () {
         console.log("reader closed 1");
         _DeviceOpen = false;
@@ -430,9 +457,7 @@ var exports = {
         console.log("reader closed 2");
     },
     Open: function (data) {
-        HardwareVersion = data.HardwareVersion;
-        Mode = data.Mode;
-        Config = data.Config;
+        Configuration = configuration;
 
         if (cs5463 != null) {
             // enable output gpio pins
@@ -446,7 +471,7 @@ var exports = {
             //cs5463.Open("/dev/spidev0.0", 1200000);  // banana pi
 
             _DeviceOpen = true;
-            console.log("Device opened: Hardware version: " + HardwareVersion);
+            console.log("Device opened");
 
             Reset();
 
