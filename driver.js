@@ -463,8 +463,8 @@ var Stop = function (callback) {
         else
             console.log('killed reader');
 
-        if (callback)
-            callback(err)
+        if (callback!=null)
+            callback(error)
     });
 }
 
