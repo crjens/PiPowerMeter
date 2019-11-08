@@ -456,7 +456,10 @@ var Stop = function (callback) {
     reader.send({ Action: "Stop"});
     console.log('running: sudo kill -9 ' + reader.pid);
 
-    var exec = require('child_process').exec;
+    if (callback!=null)
+            callback()
+
+    /*var exec = require('child_process').exec;
     exec('sudo kill -9 ' + reader.pid, function (error, stdout, stderr) {
         if (error)
             console.log('failed to kill reader');
@@ -466,6 +469,7 @@ var Stop = function (callback) {
         if (callback!=null)
             callback(error)
     });
+    */
 }
 
 
