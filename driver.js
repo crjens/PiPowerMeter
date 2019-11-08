@@ -450,7 +450,7 @@ var Start = function () {
     
 }
 
-var Stop = function () {
+var Stop = function (callback) {
     _running = false;
     console.log('sending Stop to reader...');
     reader.send({ Action: "Stop"});
@@ -462,6 +462,9 @@ var Stop = function () {
             console.log('failed to kill reader');
         else
             console.log('killed reader');
+
+        if (callback)
+            callback(err)
     });
 }
 
@@ -758,7 +761,6 @@ var exports = {
             array.push({ name: name, value: config[name] });
         }
 
-
         var setVal = function (index) {
             if (index < array.length) {
                 var name = array[index].name;
@@ -781,6 +783,11 @@ var exports = {
             }
         }
         setVal(0);
+
+        Stop(function(err) {
+            Start();
+        });
+        
     },
     Stop: function () {
         Stop();
