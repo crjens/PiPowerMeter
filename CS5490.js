@@ -178,11 +178,15 @@ var ResetIfNeeded = function () {
     //   POR, IOR, VOR, IOC, IC
     //   High-pass filters enabled
     if (status & 0x5508) {
+        if (status==null)
+            status = 0;
         console.log('Resetting due to incorrect status: ' + status.toString(16));
         console.error('Resetting due to incorrect status: ' + status.toString(16));
         Reset();
     }
     else if (!(config & 0xA)) {
+        if (config==null)
+        config = 0;
         console.log('Resetting due to incorrect Config: ' + config.toString(16));
         console.error('Resetting due to incorrect Config: ' + config.toString(16));
         Reset();
