@@ -736,6 +736,8 @@ var exports = {
     ReplaceConfiguration: function (callback, config) {
         db.updateCircuits(config, function (err) {
             loadConfiguration();
+            Stop();
+            Start();
             callback(err);
         });
     },
