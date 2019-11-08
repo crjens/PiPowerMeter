@@ -85,7 +85,7 @@
                         }
                     }
 
-                    $(templates.configtable({ Result: result.Configuration })).appendTo($('#content'));
+                    $(templates.configtable({ Result: result })).appendTo($('#content'));
 
                     // hide delete button for any circuits with only one probe
                     $("table#probetable").filter(function () {
@@ -93,7 +93,7 @@
                         return len == 1;
                     }).find('img').addClass('hidden');
 
-                    $(templates.probedeftable(result)).appendTo($('#probedefs'));
+                    $(templates.probedeftable(result.Configuration)).appendTo($('#probedefs'));
 
                     if (location.search.indexOf("advanced") == -1) {
                         $('.advanced').closest('tr').hide();
