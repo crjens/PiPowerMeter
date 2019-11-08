@@ -1,5 +1,5 @@
 var rollupTimeHr = 16;  // hour at which rollups are sent 16 == 4pm UTC which is 9 am PST
-var _circuit = 0, Mode, Config;
+var _circuit = 0;
 var costPerKWH = 0.0, deviceName="", region="en-US";
 var configuration={};
 var rollupEvent = null, runInterval = null;
@@ -109,11 +109,11 @@ var loadConfiguration = function (callback) {
         if (err) {
             console.log(err);
         } else {
-            Mode = data.Mode;
+            /*Mode = data.Mode;
             Config = data.Config;
-	    CycleCount = data.CycleCount;
+	        CycleCount = data.CycleCount;
             vFactor = data.VoltageScale;
-            HardwareVersion = data.HardwareVersion;
+            HardwareVersion = data.HardwareVersion;*/
             configuration.Probes = data.Probes;
             for (var i = 0; i < data.Circuits.length; i++) {
                 data.Circuits[i].InstantEnabled = data.Circuits[i].Enabled;
@@ -149,8 +149,7 @@ var loadConfiguration = function (callback) {
         }
 
         if (callback != null)
-            callback(err);
-
+            callback(err, data.Configuration);
     });
 }
 
@@ -439,11 +438,11 @@ var Start = function () {
     _running = true;
 
     // Kick off the main read loop
-    loadConfiguration(function (err) {
+    loadConfiguration(function (err, config) {
         if (err) {
             console.log('unable to load configuration: ' + err);
         } else {
-            reader.send({ Action: "Start", HardwareVersion: HardwareVersion, Mode: Mode, Config: Config, CycleCount: CycleCount });
+            reader.send({ Action: "Start", Configuration: config/*, HardwareVersion: HardwareVersion, Mode: Mode, Config: Config, CycleCount: CycleCount*/ });
             ReadNext();
         }
     });

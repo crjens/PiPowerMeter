@@ -7,6 +7,7 @@ var samples = 500;   // number of instantaneous voltage and current samples to c
 var bytesPerSample = 10;
 var sampleBuffer = Buffer.alloc(samples * bytesPerSample);
 var _DeviceOpen = false;
+var Configuration = null;
 
 var Registers = {
     Config0: [0, 0],
@@ -166,9 +167,9 @@ var ResetIfNeeded = function () {
 
     var config = read(Registers.Config2);
     var status = read(Registers.Status0);
-    var sampleCount = read(Registers.SampleCount);
+    var sampleCount = Configuration.SampleTime * 4000;
     
-    if (sampleCount != parseInt(CycleCount, 16)) {
+    if (sampleCount >= 100 && read(Registers.SampleCount) != sampleCount) {
         console.log('Resetting due to SampleCount: ' + sampleCount)
         Reset();
     }
@@ -227,7 +228,7 @@ var Reset = function () {
     // A = 1010  => High-Pass filters enabled on both current and voltage channels
     write(Registers.Config2, config2 | 0xA)
     
-    var sampleCount = parseInt(CycleCount, 16);
+    var sampleCount = Configuration.SampleTime * 4000;
     if (sampleCount >= 100)
         write(Registers.SampleCount, sampleCount);
 
@@ -381,9 +382,10 @@ var exports = {
             cs5490.Close();
     },
     Open: function (data) {
-        Mode = data.Mode;
+        /*Mode = data.Mode;
         Config = data.Config;
-        CycleCount = data.CycleCount;
+        CycleCount = data.CycleCount;*/
+        Configuration = data.Configuration;
        
         if (cs5490 != null) {
 
