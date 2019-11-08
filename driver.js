@@ -109,11 +109,6 @@ var loadConfiguration = function (callback) {
         if (err) {
             console.log(err);
         } else {
-            /*Mode = data.Mode;
-            Config = data.Config;
-	        CycleCount = data.CycleCount;
-            vFactor = data.VoltageScale;
-            HardwareVersion = data.HardwareVersion;*/
             configuration.Probes = data.Probes;
             for (var i = 0; i < data.Circuits.length; i++) {
                 data.Circuits[i].InstantEnabled = data.Circuits[i].Enabled;
@@ -146,6 +141,9 @@ var loadConfiguration = function (callback) {
             } else {
                 mqttClient = null;
             }
+
+            // update config in reader
+            reader.send({ Action: "SetConfig", Config: data.Configuration });
         }
 
         if (callback != null)
@@ -442,34 +440,25 @@ var Start = function () {
         if (err) {
             console.log('unable to load configuration: ' + err);
         } else {
-            reader.send({ Action: "Start", Configuration: config/*, HardwareVersion: HardwareVersion, Mode: Mode, Config: Config, CycleCount: CycleCount*/ });
+            reader.send({ Action: "Start", Configuration: config });
             ReadNext();
         }
     });
-
-    
 }
 
-var Stop = function (callback) {
+var Stop = function () {
     _running = false;
     console.log('sending Stop to reader...');
     reader.send({ Action: "Stop"});
     console.log('running: sudo kill -9 ' + reader.pid);
 
-    if (callback!=null)
-            callback()
-
-    /*var exec = require('child_process').exec;
+    var exec = require('child_process').exec;
     exec('sudo kill -9 ' + reader.pid, function (error, stdout, stderr) {
         if (error)
             console.log('failed to kill reader');
         else
             console.log('killed reader');
-
-        if (callback!=null)
-            callback(error)
     });
-    */
 }
 
 
@@ -787,11 +776,6 @@ var exports = {
             }
         }
         setVal(0);
-
-        Stop(function(err) {
-            Start();
-        });
-        
     },
     Stop: function () {
         Stop();

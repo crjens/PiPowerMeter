@@ -380,15 +380,15 @@ var exports = {
         var epsilon = read(Registers.Epsilon);
         return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
     },
+    SetConfig: function (configuration) {
+        Configuration = configuration;
+    },
     Close: function () {
         _DeviceOpen = false;
         if (cs5490 != null)
             cs5490.Close();
     },
     Open: function (data) {
-        /*Mode = data.Mode;
-        Config = data.Config;
-        CycleCount = data.CycleCount;*/
         Configuration = data.Configuration;
        
         if (cs5490 != null) {
