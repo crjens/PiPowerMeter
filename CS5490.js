@@ -119,7 +119,7 @@ var Pad16 = function(n)
 
 var write = function (register, val, desc) {
     if (_DeviceOpen) {
-        cs5490.WriteRegister(register[0], register[1], val)
+        cs5490.WriteRegister(register[0], register[1], parseInt(val))
         if (desc != null)
             console.log('wrote: [' + register[0] + ', ' + register[1] + '] -> ' + Pad16(val.toString(16)) + ' ' + desc);
     }
