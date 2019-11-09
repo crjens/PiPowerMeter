@@ -182,7 +182,7 @@ var convert = function (buffer, binPt, neg) {
 var ResetIfNeeded = function () {
 
     RegisterValues.forEach(element => {
-        var existing = Read(element.Key);
+        var existing = read(element.Key);
         if (existing != element.Expected) {
             console.log('Resetting due to incorrect ' + element.Name + ', existing: ' + existing + ', expected: ' + element.Expected);
             Reset();
