@@ -93,15 +93,15 @@ var InputPins = {
 var RegisterValues = [
 
     // A = 1010  => High-Pass filters enabled on both current and voltage channels
-    { Name: "Config2", Key: Registers.Config2, Compare: function (val) { return !(val & 0xA)}, Reset: 0xA }, 
+    { Name: "Config2", Key: Registers.Config2, Compare: function (val) { return !(val & 0xA)}, Reset: function() { return 0xA} }, 
 
     // Check status of:
     //   POR, IOR, VOR, IOC, IC
     //   High-pass filters enabled
-    { Name: "Status0", Key: Registers.Status0, Compare: function(val) { return val & 0x5508}, Reset: 0xE5557D },
+    { Name: "Status0", Key: Registers.Status0, Compare: function(val) { return val & 0x5508}, Reset: function() { return 0xE5557D} },
 
     // default to 4000
-    { Name: "SampleCount", Key: Registers.SampleCount, Compare: function(val) { return val != 0xFA0}, Reset: 0xFA0 }, 
+    { Name: "SampleCount", Key: Registers.SampleCount, Compare: function(val) { return val != Configuration.SampleTime * 4000}, Reset: function() { return Configuration.SampleTime * 4000 }}, 
 ]
 
 var sleep = function (delayMs) {
@@ -254,7 +254,7 @@ var Reset = function () {
     //cs5490.Instruction(0x01); // software Reset
 
     RegisterValues.forEach(element => {
-        write(element.Key, element.Reset, element.Name)
+        write(element.Key, element.Reset(), element.Name)
     });
 
     /*
