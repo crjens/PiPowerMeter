@@ -184,7 +184,7 @@ var ResetIfNeeded = function () {
     RegisterValues.forEach(element => {
         var existing = read(element.Key);
         if (element.Compare(existing)) {
-            console.log('Resetting due to incorrect ' + element.Name + ', existing: ' + existing.toString(16) + ', expected: ' + element.Expected.toString(16));
+            console.log('Resetting due to incorrect ' + element.Name + ' -> ' + existing.toString(16));
             Reset();
             return;
         }
