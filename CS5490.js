@@ -275,7 +275,8 @@ var Reset = function () {
     });
 
     // set ZXnum based on SampleTime
-    write(Registers.ZXNum, 90*Configuration.SampleTime, "ZXnum");
+    var zxnum = Math.max(1, 90*Configuration.SampleTime);
+    write(Registers.ZXNum, zxnum, "ZXnum");
 
     /*
     write(Registers.Status0, 0xE5557D, "clear status");
