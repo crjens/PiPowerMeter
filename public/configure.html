@@ -220,12 +220,6 @@
                     ImportConfig(configText);
                 });
 
-            $("#updateFrequency")
-                .button()
-                .click(function () {
-                    UpdateFrequency();
-                });
-
             var updating = false;
             $(document).on("click", "#updateSource", function () {
                 if (updating == false) {
@@ -440,7 +434,7 @@
             <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{Configuration.DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>SampleTime (sec):</td><td><input type="text" name="SampleTime" id="SampleTime" value="{{Configuration.SampleTime}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Configuration.Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Frequency</td><td>{{Frequency}}  <button id='updateFrequency'>Update</button></td></tr>
+            <tr><td>Frequency</td><td>{{Frequency}}</td></tr>
             <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
             <tr>
                 <td>Cost per KWh:</td>

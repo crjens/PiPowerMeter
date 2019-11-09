@@ -89,6 +89,18 @@ var InputPins = {
     version3: 7
 };
 
+var GetSampleCount = function() {
+    if (Configuration == null)
+        return 4000; // default to 4000 (1sec)
+
+    var tmp = Configuration.SampleTime * 4000;
+    if (tmp < 100)
+        return 100; // CS5490 docs say not to use < 100
+    if (tmp > 4000*60*5)
+        return 4000*60*5; // 5 min seems long enough
+    return tmp;
+}
+
 
 var RegisterValues = [
 
@@ -100,8 +112,8 @@ var RegisterValues = [
     //   High-pass filters enabled
     { Name: "Status0", Key: Registers.Status0, Compare: function(val) { return val & 0x5508}, Reset: function() { return 0xE5557D} },
 
-    // default to 4000
-    { Name: "SampleCount", Key: Registers.SampleCount, Compare: function(val) { return val != Configuration.SampleTime * 4000}, Reset: function() { return Configuration.SampleTime * 4000 }}, 
+    // set sample count based on sample time
+    { Name: "SampleCount", Key: Registers.SampleCount, Compare: function(val) { return val != GetSampleCount()}, Reset: function() { return GetSampleCount() }}, 
 ]
 
 var sleep = function (delayMs) {
@@ -111,6 +123,10 @@ var sleep = function (delayMs) {
         //console.log('sleeping');
     }
 }
+
+Number.prototype.round = function (decimals) {
+    return Number(Math.round(this + 'e' + decimals) + 'e-' + decimals).toFixed(decimals);
+};
 
 var Pad16 = function(n)
 {
@@ -414,11 +430,7 @@ var exports = {
     },
     Frequency: function () {
         var epsilon = read(Registers.Epsilon);
-        return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
-    },
-    UpdateFrequency: function () {
-        var epsilon = read(Registers.Epsilon);
-        return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
+        return (4000.0 * convertInt(epsilon, 0, true)).round(2) + " Hz";
     },
     SetConfig: function (configuration) {
         Configuration = configuration;
