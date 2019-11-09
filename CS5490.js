@@ -92,8 +92,8 @@ var InputPins = {
 
 var RegisterValues = [
 
-    // A = 1010  => High-Pass filters enabled on both current and voltage channels
-    { Name: "Config2", Key: Registers.Config2, Compare: function (val) { return !(val & 0xA)}, Reset: function() { return 0xA} }, 
+    // A = 1010  => High-Pass filters enabled on both current and voltage channels and AFC enabled
+    { Name: "Config2", Key: Registers.Config2, Compare: function (val) { return !(val & 0x20A)}, Reset: function() { return 0x20A} }, 
 
     // Check status of:
     //   POR, IOR, VOR, IOC, IC
@@ -256,6 +256,9 @@ var Reset = function () {
     RegisterValues.forEach(element => {
         write(element.Key, element.Reset(), element.Name)
     });
+
+    // set ZXnum based on SampleTime
+    write(Registers.ZXNum, 90*Configuration.SampleTime);
 
     /*
     write(Registers.Status0, 0xE5557D, "clear status");
