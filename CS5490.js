@@ -184,7 +184,7 @@ var ResetIfNeeded = function () {
     RegisterValues.forEach(element => {
         var existing = read(element.Key);
         if (existing != element.Expected) {
-            console.log('Resetting due to incorrect ' + element.Name + ', existing: ' + existing + ', expected: ' + element.Expected);
+            console.log('Resetting due to incorrect ' + element.Name + ', existing: ' + existing.toString(16) + ', expected: ' + element.Expected.toString(16));
             Reset();
             return;
         }
@@ -254,7 +254,7 @@ var Reset = function () {
     //cs5490.Instruction(0x01); // software Reset
 
     RegisterValues.forEach(element => {
-        write(element.Key, element.Reset, "Setting " + element.Name + " to " + element.Reset)
+        write(element.Key, element.Reset, element.Name)
     });
 
     /*
