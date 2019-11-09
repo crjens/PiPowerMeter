@@ -8,6 +8,21 @@ var bytesPerSample = 10;
 var sampleBuffer = Buffer.alloc(samples * bytesPerSample);
 var _DeviceOpen = false;
 var Configuration = null;
+var AFCEnabled = false;  // Automatic frequency measurement
+
+var RegisterValues = [
+
+    // A = 1010  => High-Pass filters enabled on both current and voltage channels
+    { Name: "Config2", Key: Registers.Config2, Expected: 0xA, Reset: 0xA }, 
+
+    // Check status of:
+    //   POR, IOR, VOR, IOC, IC
+    //   High-pass filters enabled
+    { Name: "Status0", Key: Registers.Status0, Expected: 0x5508, Reset: 0xE5557D },
+
+    // default to 4000
+    { Name: "SampleCount", Key: Registers.SampleCount, Expected: 0xFA0, Reset: 0xFA0 }, 
+]
 
 var Registers = {
     Config0: [0, 0],
@@ -165,8 +180,19 @@ var convert = function (buffer, binPt, neg) {
 
 var ResetIfNeeded = function () {
 
-    var config = read(Registers.Config2);
-    var status = read(Registers.Status0);
+    RegisterValues.forEach(element => {
+        var existing = Read(element.Key);
+        if (existing != element.Expected) {
+            console.log('Resetting due to incorrect ' + element.Name + ', existing: ' + existing + ', expected: ' + element.Expected);
+            Reset();
+            return;
+        }
+    });
+
+    /*
+
+    var config2 = read(Registers.Config2);
+    var status0 = read(Registers.Status0);
     var sampleCount = Configuration.SampleTime * 4000;
     
     if (sampleCount >= 100 && read(Registers.SampleCount) != sampleCount) {
@@ -177,20 +203,20 @@ var ResetIfNeeded = function () {
     // Check status of:
     //   POR, IOR, VOR, IOC, IC
     //   High-pass filters enabled
-    if (status & 0x5508) {
-        if (status==null)
-            status = 0;
-        console.log('Resetting due to incorrect status: ' + status.toString(16));
-        console.error('Resetting due to incorrect status: ' + status.toString(16));
+    if (status0 & 0x5508) {
+        if (status0==null)
+            status0 = 0;
+        console.log('Resetting due to incorrect status: ' + status0.toString(16));
+        console.error('Resetting due to incorrect status: ' + status0.toString(16));
         Reset();
     }
-    else if (!(config & 0xA)) {
-        if (config==null)
-        config = 0;
-        console.log('Resetting due to incorrect Config: ' + config.toString(16));
-        console.error('Resetting due to incorrect Config: ' + config.toString(16));
+    else if (!(config2 & expectedConfig2)) {
+        if (config2==null)
+            config2 = 0;
+        console.log('Resetting due to incorrect Config: ' + config2.toString(16));
+        console.error('Resetting due to incorrect Config: ' + config2.toString(16));
         Reset();
-    } 
+    } */
 }
 
 var DumpRegisters = function () {
@@ -226,6 +252,11 @@ var Reset = function () {
 
     //cs5490.Instruction(0x01); // software Reset
 
+    RegisterValues.forEach(element => {
+        write(element.Key, element.Reset, "Setting " + element.Name + " to " + element.Reset)
+    });
+
+    /*
     write(Registers.Status0, 0xE5557D, "clear status");
 
     var config2 = read(Registers.Config2, 'read Config2 register');
@@ -235,7 +266,7 @@ var Reset = function () {
     var sampleCount = Configuration.SampleTime * 4000;
     if (sampleCount >= 100)
         write(Registers.SampleCount, sampleCount);
-
+*/
     console.log('initialized');
 }
 
@@ -377,6 +408,10 @@ var exports = {
         return result;
     },
     Frequency: function () {
+        var epsilon = read(Registers.Epsilon);
+        return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
+    },
+    UpdateFrequency: function () {
         var epsilon = read(Registers.Epsilon);
         return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
     },

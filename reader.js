@@ -54,7 +54,7 @@ process.on('message', function (data) {
             }
             
             probe.Result = result;
-            data.Frequency = driver.Frequency();
+            data.Frequency = driver.Frequency().round(3);
         }
 
         process.send(data);

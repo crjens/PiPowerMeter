@@ -220,6 +220,12 @@
                     ImportConfig(configText);
                 });
 
+            $("#updateFrequency")
+                .button()
+                .click(function () {
+                    UpdateFrequency();
+                });
+
             var updating = false;
             $(document).on("click", "#updateSource", function () {
                 if (updating == false) {
@@ -434,18 +440,18 @@
             <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{Configuration.DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>SampleTime (sec):</td><td><input type="text" name="SampleTime" id="SampleTime" value="{{Configuration.SampleTime}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Configuration.Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Frequency</td><td>{{Frequency}}</td></tr>
+            <tr><td>Frequency</td><td>{{Frequency}}  <button id='updateFrequency'>Update</button></td></tr>
             <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
             <tr>
                 <td>Cost per KWh:</td>
                 <td class="twocol">
                     <input type="text" name="Price" id="Price" value="{{Configuration.Price}}" class="text ui-widget-content ui-corner-all">
                     <select id="Region" class="text ui-widget-content ui-corner-all">
-                        {{#select Configuration.Region}}
-                        {{#each Regions}}
+                    {{#select Configuration.Region}}
+                    {{#each Regions}}
                         <option value='{{this.name}}'>{{this.englishName}}</option>
-                        {{/each}}
-                        {{/select}}
+                    {{/each}}
+                    {{/select}}
                     </select>
                 </td>
             </tr>
@@ -463,7 +469,7 @@
             <tr><td>Database rows:</td><td>{{DatabaseRows}}</td></tr>
             <tr><td>Software timestamp:</td><td>{{SoftwareVersion.Installed.Timestamp}}</td></tr>
             {{#if SoftwareVersion.UpdateRequired}}
-  		<tr><td>Latest software:</td><td>{{SoftwareVersion.Latest.Timestamp}} <button id='updateSource'>Update Now</button></td></tr>
+  		        <tr><td>Latest software:</td><td>{{SoftwareVersion.Latest.Timestamp}} <button id='updateSource'>Update Now</button></td></tr>
             {{/if}}
         </table>
 
