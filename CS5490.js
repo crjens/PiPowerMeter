@@ -10,20 +10,6 @@ var _DeviceOpen = false;
 var Configuration = null;
 var AFCEnabled = false;  // Automatic frequency measurement
 
-var RegisterValues = [
-
-    // A = 1010  => High-Pass filters enabled on both current and voltage channels
-    { Name: "Config2", Key: Registers.Config2, Expected: 0xA, Reset: 0xA }, 
-
-    // Check status of:
-    //   POR, IOR, VOR, IOC, IC
-    //   High-pass filters enabled
-    { Name: "Status0", Key: Registers.Status0, Expected: 0x5508, Reset: 0xE5557D },
-
-    // default to 4000
-    { Name: "SampleCount", Key: Registers.SampleCount, Expected: 0xFA0, Reset: 0xFA0 }, 
-]
-
 var Registers = {
     Config0: [0, 0],
     Config1: [0, 1],
@@ -102,6 +88,21 @@ var InputPins = {
     version2: 16,
     version3: 7
 };
+
+
+var RegisterValues = [
+
+    // A = 1010  => High-Pass filters enabled on both current and voltage channels
+    { Name: "Config2", Key: Registers.Config2, Expected: 0xA, Reset: 0xA }, 
+
+    // Check status of:
+    //   POR, IOR, VOR, IOC, IC
+    //   High-pass filters enabled
+    { Name: "Status0", Key: Registers.Status0, Expected: 0x5508, Reset: 0xE5557D },
+
+    // default to 4000
+    { Name: "SampleCount", Key: Registers.SampleCount, Expected: 0xFA0, Reset: 0xFA0 }, 
+]
 
 var sleep = function (delayMs) {
     var s = new Date().getTime();
