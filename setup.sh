@@ -31,8 +31,6 @@ if [ ! -d "app" ]; then
     echo '>>> Install PiPowerMeter'
     git clone https://github.com/crjens/PiPowerMeter.git app
     cd app
-    git checkout test
-    git pull
     npm install
     ASK_TO_REBOOT=1
 else
