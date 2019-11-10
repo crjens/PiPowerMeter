@@ -165,21 +165,23 @@
                 .button()
                 .click(function () {
                     var config = readProbeConfig();
+                    if (validateProbeConfig(config)) {
 
-                    var url = '/probeDef';
-                    $.post(url, { config: config }, function (result) {
-                        if (config.Port != Configuration.Port) {
-                            var loc = window.location;
-                            var port = "";
-                            if (config.Port != "80")
-                                port = ":" + config.Port;
-                            window.location = loc.protocol + "//" + loc.hostname + port + loc.pathname
-                        }
-                        else {
-                            load();
-                        }
-                        //alert('configuration update succeded');
-                    });
+                        var url = '/probeDef';
+                        $.post(url, { config: config }, function (result) {
+                            if (config.Port != Configuration.Port) {
+                                var loc = window.location;
+                                var port = "";
+                                if (config.Port != "80")
+                                    port = ":" + config.Port;
+                                window.location = loc.protocol + "//" + loc.hostname + port + loc.pathname
+                            }
+                            else {
+                                load();
+                            }
+                            //alert('configuration update succeded');
+                        });
+                    }
                 });
 
             $("#restart")
@@ -343,6 +345,39 @@
             return config;
         }
 
+        var validateProbeConfig = function (config) {
+
+            var sampleTime = config.SampleTime;
+            if (sampleTime == '' || isNaN(sampleTime) || parseFloat(sampleTime) < .05 || parseFloat(sampleTime) > 60) {
+                window.alert("SampleTime must be between 0.05 and 60");
+                $('#configTable').find('#SampleTime').addClass('error').focus();
+                return false;
+            }
+
+            var port = config.Port;
+            if (port == '' || isNaN(port) || parseInt(port) < 1 || parseInt(port) > 65535) {
+                alert("Http Port must be between 1 and 65535");
+                $('#configTable').find('#Port').addClass('error').focus();
+                return false;
+            }
+
+            var vScale = config.VoltageScale;
+            if (vScale == '' || isNaN(vScale) || parseFloat(vScale) <= 0.0) {
+                alert("Voltage Scale must be > 0.0");
+                $('#configTable').find('#VoltageScale').addClass('error').focus();
+                return false;
+            }
+
+            var cost = config.Price;
+            if (cost == '' || isNaN(cost) || parseFloat(cost) <= 0.0) {
+                alert("Cost per KWh must be > 0.0");
+                $('#configTable').find('#Price').addClass('error').focus();
+                return false;
+            }
+
+            return true;
+        }
+
 
         var readProbeConfig = function () {
             var config = {};
@@ -377,14 +412,15 @@
 
 <body>
     <!-- Google Tag Manager -->
-    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
     <script>(function (w, d, s, l, i) {
-            w[l] = w[l] || []; w[l].push({
-                'gtm.start':
-                    new Date().getTime(), event: 'gtm.js'
-            }); var f = d.getElementsByTagName(s)[0],
-                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
-                    '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                w[l] = w[l] || []; w[l].push({
+                    'gtm.start':
+                        new Date().getTime(), event: 'gtm.js'
+                }); var f = d.getElementsByTagName(s)[0],
+                    j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                        '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
             })(window, document, 'script', 'dataLayer', 'GTM-57V732');</script>
     <!-- End Google Tag Manager -->
     <div class='header'></div>
