@@ -1,6 +1,7 @@
 var cs5490 = null;
 // comment below line for WebMatrix testing
 var cs5490 = require("CS5490");
+var common = require("./common");
 
 var HardwareVersion = 0;
 var samples = 500;   // number of instantaneous voltage and current samples to collect for each measurement
@@ -8,7 +9,6 @@ var bytesPerSample = 10;
 var sampleBuffer = Buffer.alloc(samples * bytesPerSample);
 var _DeviceOpen = false;
 var Configuration = null;
-var AFCEnabled = false;  // Automatic frequency measurement
 
 var Registers = {
     Config0: [0, 0],
@@ -123,10 +123,6 @@ var sleep = function (delayMs) {
         //console.log('sleeping');
     }
 }
-
-Number.prototype.round = function (decimals) {
-    return Number(Math.round(this + 'e' + decimals) + 'e-' + decimals).toFixed(decimals);
-};
 
 var Pad16 = function(n)
 {
