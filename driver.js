@@ -1,5 +1,5 @@
 var rollupTimeHr = 16;  // hour at which rollups are sent 16 == 4pm UTC which is 9 am PST
-var _circuit = 0, Mode, Config;
+var _circuit = 0;
 var costPerKWH = 0.0, deviceName="", region="en-US";
 var configuration={};
 var rollupEvent = null, runInterval = null;
@@ -109,11 +109,6 @@ var loadConfiguration = function (callback) {
         if (err) {
             console.log(err);
         } else {
-            Mode = data.Mode;
-            Config = data.Config;
-	    CycleCount = data.CycleCount;
-            vFactor = data.VoltageScale;
-            HardwareVersion = data.HardwareVersion;
             configuration.Probes = data.Probes;
             for (var i = 0; i < data.Circuits.length; i++) {
                 data.Circuits[i].InstantEnabled = data.Circuits[i].Enabled;
@@ -121,36 +116,38 @@ var loadConfiguration = function (callback) {
                 // set probe factors
                 for (var j = 0; j < data.Circuits[i].Probes.length; j++) {
                     data.Circuits[i].Probes[j].iFactor = FindProbeFactor(data.Circuits[i].Probes[j].Type);
-                    data.Circuits[i].Probes[j].vFactor = vFactor;
+                    data.Circuits[i].Probes[j].vFactor = data.Configuration.VoltageScale;
                 }
             }
             configuration.Circuits = data.Circuits;
-            deviceName = data.DeviceName;
+            deviceName = data.Configuration.DeviceName;
 
             //console.log("configuration: " + JSON.stringify(configuration));
             //console.log("configuration.Circuits: " + JSON.stringify(configuration.Circuits));
 
-            var port = data.Port;
-            netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName, port);
+            var port = data.Configuration.Port;
+            netUtils.InitializeTwilio(data.Configuration.Text, data.Configuration.Twilio, data.Configuration.TwilioSID, data.Configuration.TwilioAuthToken, deviceName, port);
 
-            console.log('mqtt: ' + data.MqttServer);
+            console.log('mqtt: ' + data.Configuration.MqttServer);
             if (data.MqttServer != null) {
                 try{
                     mqtt = require('mqtt');
-                    mqttClient = mqtt.connect(data.MqttServer);
+                    mqttClient = mqtt.connect(data.Configuration.MqttServer);
                 }
                 catch (err) {
                     mqttClient = null;
-                    console.error("Error initializing MQTT server: " +  data.MqttServer + ".  Error: " + err);
+                    console.error("Error initializing MQTT server: " +  data.Configuration.MqttServer + ".  Error: " + err);
                 }
             } else {
                 mqttClient = null;
             }
+
+            // update config in reader
+            reader.send({ Action: "SetConfig", Config: data.Configuration });
         }
 
         if (callback != null)
-            callback(err);
-
+            callback(err, data.Configuration);
     });
 }
 
@@ -439,16 +436,14 @@ var Start = function () {
     _running = true;
 
     // Kick off the main read loop
-    loadConfiguration(function (err) {
+    loadConfiguration(function (err, config) {
         if (err) {
             console.log('unable to load configuration: ' + err);
         } else {
-            reader.send({ Action: "Start", HardwareVersion: HardwareVersion, Mode: Mode, Config: Config, CycleCount: CycleCount });
+            reader.send({ Action: "Start", Configuration: config });
             ReadNext();
         }
     });
-
-    
 }
 
 var Stop = function () {
@@ -459,7 +454,7 @@ var Stop = function () {
 
     var exec = require('child_process').exec;
     exec('sudo kill -9 ' + reader.pid, function (error, stdout, stderr) {
-        if (err)
+        if (error)
             console.log('failed to kill reader');
         else
             console.log('killed reader');
@@ -734,27 +729,6 @@ var exports = {
         Reset();
         return 0;
     },
-    GetConfiguration: function (callback) {
-        db.getConfiguration(function (err, config) {
-
-            if (config != null) {
-
-                if (config.DeviceName != null)
-                    deviceName = config.DeviceName;
-
-                for (index = 0; index < config.length; ++index) {
-                    config[index].HardwareVersion = HardwareVersion;
-                    config[index].Probes = probes;
-                }
-
-                callback(err, config);
-            } else {
-                callback(err);
-            }
-
-
-        });
-    },
     ReplaceConfiguration: function (callback, config) {
         db.updateCircuits(config, function (err) {
             loadConfiguration();
@@ -779,7 +753,6 @@ var exports = {
         for (var name in config) {
             array.push({ name: name, value: config[name] });
         }
-
 
         var setVal = function (index) {
             if (index < array.length) {

@@ -28,6 +28,10 @@ process.on('message', function (data) {
         console.log("reader received stop");
         driver.Close();
     }
+    else if (data.Action == "SetConfig") {
+        console.log("reader received SetConfig");
+        driver.SetConfig(data.Config);
+    }
     else if (data.Action == "Read") {
         //console.log("reader: Read");
         //console.log(JSON.stringify(data));
