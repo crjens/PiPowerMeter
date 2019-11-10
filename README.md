@@ -56,6 +56,7 @@ Hardware Installation
 	- Board should be set to the id of the current board that the sensor is plugged into (0-7).
 	- Channel should be set to the id that the sensor is plugged into (0-15).
 	- Set Voltage to the voltage reference for the circuit.  If you aren't sure you can take a look at the current and voltage waveforms on the circuit page and experiment until you find the voltage reference that most closely matches the phase of the current waveform.
+	- SampleTime sets the amount of time in seconds that the input current and voltage are sampled for each calculation.  Decreasing the SampleTime allows faster sampling but may adversly affect the accuracy of the calculations.  Valid values are between 0.05 and 60 seconds.  
 	- Incorrect software settings won't cause any damage so you can experiment until you get them right.
 
 
