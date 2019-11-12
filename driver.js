@@ -661,15 +661,15 @@ var exports = {
     GetCircuits: function (callback, strip) {
         db.getCircuits(function (err, _config) {
             if (_config != null) {
-                costPerKWH = _config.Price;
+                costPerKWH = _config.Configuration.Price;
                 if (costPerKWH <= 0)
                     costPerKWH = 0.1; // default to 10 / KWh
 
-                region = _config.Region;
+                region = _config.Configuration.Region;
                 if (region == null || region == "")
                     region = "en-US"; // default
 
-                if (_config.DeviceName != null)
+                if (_config.Configuration.DeviceName != null)
                     deviceName = _config.DeviceName;
 
                 if (softwareVersion != null)
