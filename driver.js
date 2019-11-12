@@ -670,7 +670,7 @@ var exports = {
                     region = "en-US"; // default
 
                 if (_config.Configuration.DeviceName != null)
-                    deviceName = _config.DeviceName;
+                    deviceName = _config.Configuration.DeviceName;
 
                 if (softwareVersion != null)
                     _config.SoftwareVersion = softwareVersion;

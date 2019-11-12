@@ -36,7 +36,7 @@ var InitializeGraph = function (channel, timespan, start, end, callback) {
         dataType: 'json',
         cache: false,
         success: function (data) {
-            Region = data.Region;
+            Region = data.Configuration.Region;
             if (Region == null || Region == "")
                 Region = "en-US";
 	        data = data.Circuits;
