@@ -66,7 +66,7 @@ Software Installation
 2. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_lite_latest
 	1. (verified with Raspbian Buster 2019-09-26)
 	2. It's recommended that you use the Lite version because it's smaller and installs faster but you can use either.
-3. login to Pi with Putty or other 
+3. login to Pi with Putty or other ssh client
 	1. the latest versions of Raspbian have ssh disabled.  You can enable ssh via raspi-config or just create an empty file named 'ssh' in the boot partition of the sd card.
 4. Install the PiPowerMeter software by running the following command (you must install with root privileges such as the built-in pi account):
 	1. wget -O - https://raw.githubusercontent.com/crjens/PiPowerMeter/master/setup.sh | bash
