@@ -453,7 +453,7 @@ var exports = {
             var ver2 = cs5490.DigitalRead(InputPins.version2);
             var ver3 = cs5490.DigitalRead(InputPins.version3);
 
-            HardwareVersion = ver1 + ver2<<1 + ver2<<2 + ver3<<3;
+            HardwareVersion = ver3.toString() + ver2.toString() + ver1.toString() + ver0.toString();
 
             // enable output gpio pins
             for (var pin in OutputPins) {
@@ -462,6 +462,8 @@ var exports = {
 
             Reset();
             console.log("Device opened: Hardware version: " + HardwareVersion);
+
+            return { "DriverVersion": cs5490.DriverVersion(), "HardwareVersion": HardwareVersion};
         }
     }
 };

@@ -9,7 +9,7 @@ var spawn = require('child_process').spawnSync
 
 // Read pin 22 which is Reset on v3.* hardware
 // and has an external pull-up
-var pin22 = spawn("gpio", [ -1, "read", 22])
+var pin22 = spawn("gpio", [-1, "read", 22])
 
 if (pin22.stdout == 1) {
     console.log("Loading CS5463");
@@ -22,7 +22,8 @@ if (pin22.stdout == 1) {
 process.on('message', function (data) {
     //    console.log('reader received: ' + data.Action);
     if (data.Action == "Start") {
-        driver.Open(data);
+        var version = driver.Open(data);
+        process.send({ "Version": version });
     }
     else if (data.Action == "Stop") {
         console.log("reader received stop");
@@ -42,21 +43,21 @@ process.on('message', function (data) {
             driver.SetCircuit(probe.Board, probe.CurrentChannel, probe.VoltageChannel);
 
             var result = driver.ReadPower(probe.iFactor, probe.vFactor);
-            if (result == null || result.freq > 70 || result.freq < 40) 
+            if (result == null || result.freq > 70 || result.freq < 40)
                 result = null;
             else if ((probe.SourceType == 1 && result.pAve < 0.0) || // load cannot generate 
-                     (probe.SourceType == 2 && result.pAve > 0.0)) { // source cannot consume
+                (probe.SourceType == 2 && result.pAve > 0.0)) { // source cannot consume
                 result.iRms = 0.0;
                 result.pAve = 0.0;
                 result.qAve = 0.0;
                 result.pf = 1.0;
                 result.iPeak = 0.0;
             }
-            
+
             probe.Result = result;
             data.Frequency = driver.Frequency();
         }
 
-        process.send(data);
+        process.send({ "Data": data });
     }
 });

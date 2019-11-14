@@ -465,6 +465,8 @@ var exports = {
                 var noResistor = 0, pullDownResistor = 1, pullUpResistor = 2;
                 cs5463.InitializeISR(InputPins.isr, pullUpResistor, intFallingEdge);
             }
+
+            return { "DriverVersion": cs5463.DriverVersion(), "HardwareVersion": "1.0"};
         }
     }
 };

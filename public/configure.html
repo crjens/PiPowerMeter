@@ -495,6 +495,8 @@
             <tr><td>Backup Database:</td><td><input type="text" name="BackupDB" id="BackupDB" value="{{Configuration.BackupDB}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Database size:</td><td>{{DatabaseSize}}</td></tr>
             <tr><td>Database rows:</td><td>{{DatabaseRows}}</td></tr>
+            <tr><td>Hardware version:</td><td>{{Configuration.HardwareVersion}}</td></tr>
+            <tr><td>Driver version:</td><td>{{Configuration.DriverVersion}}</td></tr>
             <tr><td>Software timestamp:</td><td>{{SoftwareVersion.Installed.Timestamp}}</td></tr>
             {{#if SoftwareVersion.UpdateRequired}}
   		        <tr><td>Latest software:</td><td>{{SoftwareVersion.Latest.Timestamp}} <button id='updateSource'>Update Now</button></td></tr>

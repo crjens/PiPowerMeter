@@ -1,9 +1,9 @@
-﻿var http = require('http'); 
+﻿var http = require('http');
 var express = require('express');
 var bodyParser = require('body-parser');
 var favicon = require('serve-favicon');
 var methodOverride = require('method-override');
-var power = require('./driver');
+var driver = require('./driver');
 var db = require('./database');
 var onFinished = require('on-finished')
 var basicAuth = require('basic-auth');
@@ -43,7 +43,7 @@ var auth = function (req, res, next) {
         res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
         return res.sendStatus(401);
     };
-    
+
     // bypass auth for local devices or empty username/password
     if ((username == "" && password == "") || req.ip.indexOf("127.0.0.") == 0)
         return next();
@@ -70,7 +70,7 @@ if (ua != null)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(auth);
 app.use(logger);
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 1000000}))
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 1000000 }))
 app.use(favicon(__dirname + '/public/images/favicon.png'));
 app.use(methodOverride('X-HTTP-Method-Override'));
 app.use(logErrors);
@@ -92,7 +92,7 @@ var StartServer = function () {
         var httpServer = app.listen(app.get('port'), function () {
             console.log('App Server running at port ' + app.get('port'));
         });
-        
+
         connections = {};
         httpServer.on('connection', function (conn) {
             var key = conn.remoteAddress + ':' + conn.remotePort;
@@ -124,7 +124,7 @@ var StartServer = function () {
 
             var port = parseInt(results["Port"], 10);
 
-            if (isNaN(port))  {
+            if (isNaN(port)) {
                 console.log("Invalid Port: (" + results["Port"] + ") using " + httpPort + " instead");
                 port = httpPort;
             }
@@ -139,13 +139,13 @@ var StartServer = function () {
                     console.log("server closed  - restarting on port " + port);
                     server = listen(port);
                 });
-            
+
                 // closing the server only disables new connections so we also need to close existing connections
                 server.closeconnections();
                 console.log('closed all existing connections');
-            } 
+            }
 
-            
+
         }
     });
 };
@@ -154,7 +154,7 @@ function logger(req, res, next) {
     var start = (new Date()).getTime();
     res._startTime = start;
     console.log('start: ' + req.method + " " + req.url);
-   
+
     onFinished(res, function (err) {
         var duration = (new Date()).getTime() - res._startTime;
         console.log('end: ' + req.method + " " + req.url + " " + duration + " ms");
@@ -164,28 +164,28 @@ function logger(req, res, next) {
             req.visitor.timing(req.method, req.url, duration).send();
     })
 
-  next();
+    next();
 }
 
 function logErrors(err, req, res, next) {
-  console.log(err);
-  console.error(err.stack);
-  if (req.visitor != null)
-    req.visitor.exception(err.message + "\r\n" + err.stack).send();
-  next(err);
+    console.log(err);
+    console.error(err.stack);
+    if (req.visitor != null)
+        req.visitor.exception(err.message + "\r\n" + err.stack).send();
+    next(err);
 }
 
 function clientErrorHandler(err, req, res, next) {
-  if (req.xhr) {
-    res.send(500, { error: 'Server error' });
-  } else {
-    next(err);
-  }
+    if (req.xhr) {
+        res.send(500, { error: 'Server error' });
+    } else {
+        next(err);
+    }
 }
 
 function errorHandler(err, req, res, next) {
-  res.status(500);
-  res.render('error', { error: err });
+    res.status(500);
+    res.render('error', { error: err });
 }
 
 function isNumber(n) {
@@ -208,9 +208,9 @@ app.get('/powermeter.db', function (req, res) {
     db.lockWrites(true);
     res.sendFile(fileName, options, function (err) {
         db.lockWrites(false);
-        if (err) 
+        if (err)
             next(err);
-        else 
+        else
             console.log('Sent:', fileName);
     });
 });
@@ -218,10 +218,10 @@ app.get('/powermeter.db', function (req, res) {
 app.get('/waveform', function (req, res) {
     var circuitId = req.query.circuitId;
     console.log("waveform(" + circuitId + ')');
-    res.send(power.ReadCircuit(circuitId));
+    res.send(driver.ReadCircuit(circuitId));
 });
 app.get('/instant', function (req, res) {
-    res.send(power.Readings());
+    res.send(driver.Readings());
 });
 app.get('/power', function (req, res, next) {
     var circuitId = req.query.circuitId;
@@ -229,10 +229,10 @@ app.get('/power', function (req, res, next) {
     var end = req.query.end;
     var groupBy = req.query.groupBy;
     var offset = req.query.offset;
-    
+
     console.log("power(" + circuitId + ', ' + start + ', ' + end + ', ' + groupBy + ', ' + offset + ')');
     var telemetry = [];
-    power.ReadPower(circuitId, new Date(Number(start)), new Date(Number(end)), groupBy, offset, telemetry, function (err, result) {
+    driver.ReadPower(circuitId, new Date(Number(start)), new Date(Number(end)), groupBy, offset, telemetry, function (err, result) {
 
         if (err)
             next(err);
@@ -244,9 +244,9 @@ app.get('/power', function (req, res, next) {
 });
 app.get('/state', function (req, res, next) {
     var circuitId = req.query.circuitId;
-    
+
     console.log("state(" + circuitId + ')');
-    res.send(power.ReadState(circuitId));
+    res.send(driver.ReadState(circuitId));
 });
 app.get('/cumulative', function (req, res, next) {
     var start = req.query.start;
@@ -264,7 +264,7 @@ app.get('/cumulative', function (req, res, next) {
 
     var telemetry = [];
 
-    power.Cumulative(startDate, endDate, order, telemetry, function (err, result) {
+    driver.Cumulative(startDate, endDate, order, telemetry, function (err, result) {
         if (err) {
             next(err);
         }
@@ -276,7 +276,7 @@ app.get('/cumulative', function (req, res, next) {
 });
 app.get('/config', function (req, res, next) {
     var sendFile = req.query.file;
-    power.GetCircuits(function (err, result) {
+    driver.GetCircuits(function (err, result) {
         if (err)
             next(err);
         else {
@@ -284,7 +284,7 @@ app.get('/config', function (req, res, next) {
                 res.set({ "Content-Disposition": "attachment; filename=config.json" });
             }
             res.send(result);
-            
+
         }
     }, true);
 });
@@ -319,7 +319,7 @@ app.post('/restart', function (req, res, next) {
 //    else
 //        endDate = new Date(end);
 
-    
+
 //    db.compact(startDate, endDate, function (err) {
 //        compactRunning = false;
 //        if (err) {
@@ -329,7 +329,7 @@ app.post('/restart', function (req, res, next) {
 //            res.send("compacted in: " + elapsed + " seconds");
 //        }
 //    });
-    
+
 //});
 app.get('/count', function (req, res, next) {
     var start = req.query.start;
@@ -372,7 +372,7 @@ app.post('/enabled', function (req, res, next) {
         res.send('error');
     } else {
         console.log('circuit: ' + config.circuit + "   enabled: " + config.enabled);
-        power.UpdateCircuitEnabled(config.circuit, config.enabled);
+        driver.UpdateCircuitEnabled(config.circuit, config.enabled);
         res.send('success');
     }
 });
@@ -384,7 +384,7 @@ app.post('/config', function (req, res, next) {
         next("Invalid configuration");
         res.send('error');
     } else {
-        power.ReplaceConfiguration(function (err) {
+        driver.ReplaceConfiguration(function (err) {
             if (err)
                 res.send('error');
             else {
@@ -403,7 +403,7 @@ app.post('/restoreconfig', function (req, res, next) {
         res.send('error');
     } else {
         config = config.PiPowerMeterConfig.Configuration;
-        power.ReplaceConfiguration(function (err) {
+        driver.ReplaceConfiguration(function (err) {
             if (err)
                 res.send('error');
             else {
@@ -415,7 +415,7 @@ app.post('/restoreconfig', function (req, res, next) {
                 delete config.Uptime;
                 delete config.VoltageFactor;
 
-                power.ReplaceProbeDefConfiguration(function (err) {
+                driver.ReplaceProbeDefConfiguration(function (err) {
                     if (err)
                         next(err);
                     else
@@ -436,7 +436,7 @@ app.post('/probeDef', function (req, res, next) {
         console.log("invalid post config value= " + config);
         next("Invalid configuration");
     } else {
-        power.ReplaceProbeDefConfiguration(function (err) {
+        driver.ReplaceProbeDefConfiguration(function (err) {
             if (err)
                 next(err);
             else
@@ -444,7 +444,7 @@ app.post('/probeDef', function (req, res, next) {
 
             // reload config in case username/password changed
             StartServer();
-            
+
         }, config);
     }
 });
@@ -455,7 +455,7 @@ app.post('/deleteCircuit', function (req, res, next) {
         console.log("invalid circuitId value= " + circuitId);
         next("Invalid circuitId");
     } else {
-        power.DeleteCircuit(function (err) { 
+        driver.DeleteCircuit(function (err) {
             if (err)
                 next(err);
             else
@@ -470,7 +470,7 @@ app.post('/deleteProbe', function (req, res, next) {
         console.log("invalid probeId value= " + probeId);
         next("Invalid probeId");
     } else {
-        power.DeleteProbe(function (err) { 
+        driver.DeleteProbe(function (err) {
             if (err)
                 next(err);
             else
@@ -526,20 +526,20 @@ app.get('/', function (req, res, next) {
 
     var fileName = "usage.html";
     res.sendFile(fileName, options, function (err) {
-        if (err) 
+        if (err)
             next(err);
-        else 
+        else
             console.log('Sent:', fileName);
     });
 
 });
 // Express route for any other unrecognised incoming requests 
-app.get('*', function(req, res){ 
-	res.send(404, 'Unrecognized API call'); 
-}); 
+app.get('*', function (req, res) {
+    res.send(404, 'Unrecognized API call');
+});
 
 
-power.Start();
+driver.Start();
 StartServer();
 
 
@@ -547,7 +547,7 @@ StartServer();
 // i.e. wait for existing connections
 var gracefulShutdown = function () {
     console.log("Received kill signal, shutting down gracefully.");
-    power.Stop();
+    driver.Stop();
     if (server != null) {
         server.close(function () {
             console.log("Closed out remaining connections.");
