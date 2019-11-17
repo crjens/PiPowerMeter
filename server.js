@@ -6,7 +6,6 @@ var methodOverride = require('method-override');
 var power = require('./driver');
 var db = require('./database');
 var onFinished = require('on-finished')
-var basicAuth = require('basic-auth');
 var path = require('path');
 
 var ua;
@@ -19,7 +18,7 @@ try {
     ua = null;
 }
 
-var username = "", password = "", compactRunning = false;
+var password = "", compactRunning = false;
 
 var app = express(), server = null, httpPort = 3000;
 
@@ -39,30 +38,24 @@ var app = express(), server = null, httpPort = 3000;
 })(console);
 
 var auth = function (req, res, next) {
-    function unauthorized(res) {
-        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-        return res.sendStatus(401);
-    };
-    
-    // bypass auth for local devices or empty username/password
-    if ((username == "" && password == "") || req.ip.indexOf("127.0.0.") == 0)
+
+    // bypass auth for local devices or empty password
+    if (!password || req.ip.indexOf("127.0.0.") == 0)
         return next();
 
-    var user = basicAuth(req);
+    // parse login and password from headers
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || ''
+    const strauth = Buffer.from(b64auth, 'base64').toString()
+    const reqPassword = strauth.substring(strauth.indexOf(':') + 1)
 
-    if (!user || !user.name || !user.pass) {
-        return unauthorized(res);
-    };
+    // Verify password is set and correct
+    if (reqPassword && reqPassword === password) 
+        return next()
 
-    if (user.name === username && user.pass === password) {
-        return next();
-    } else {
-        console.warn('login failure: [' + user.name + '][' + user.pass + ']');
-        return unauthorized(res);
-    };
+    // Access denied...
+    res.set('WWW-Authenticate', 'Basic realm="401"') // change this
+    res.status(401).send('Authentication required.') // custom message
 };
-
-
 
 app.set('port', httpPort);
 if (ua != null)
@@ -114,13 +107,12 @@ var StartServer = function () {
 
     db.readConfig(function (err, results) {
         if (err) {
-            console.log('failed to read username and password from config: ' + err);
+            console.log('failed to read from config: ' + err);
         } else {
-            if (results["UserName"] != null && results["Password"] != null) {
-                username = results["UserName"];
+            if (results["Password"] != null) {
                 password = results["Password"];
             }
-            console.log('username: ' + username + "    password: " + password);
+            console.log("password: " + password);
 
             var port = parseInt(results["Port"], 10);
 
@@ -143,9 +135,8 @@ var StartServer = function () {
                 // closing the server only disables new connections so we also need to close existing connections
                 server.closeconnections();
                 console.log('closed all existing connections');
-            } 
 
-            
+            }
         }
     });
 };
@@ -421,7 +412,7 @@ app.post('/restoreconfig', function (req, res, next) {
                     else
                         res.send('success');
 
-                    // reload config in case username/password changed
+                    // reload config in case password changed
                     StartServer();
 
                 }, config);
@@ -442,7 +433,7 @@ app.post('/probeDef', function (req, res, next) {
             else
                 res.send('success');
 
-            // reload config in case username/password changed
+            // reload config in case password changed
             StartServer();
             
         }, config);
