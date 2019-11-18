@@ -16,7 +16,7 @@ var digest = auth.digest({
 		realm: Realm
 	}, (username, callback) => {
         // ignore username
-        var data = ":" + Realm + ":" + password;
+        var data = username + ":" + Realm + ":" + password;
     	callback(crypto.createHash('md5').update(data).digest("hex"));
 	}
 );
