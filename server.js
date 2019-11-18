@@ -9,13 +9,12 @@ var onFinished = require('on-finished')
 var path = require('path');
 const crypto = require('crypto');
 
-// Authentication module.
 var Realm = "PiPowerMeter";
 var httpauth = require('http-auth');
 var digest = httpauth.digest({
 		realm: Realm
 	}, (username, callback) => {
-        // ignore username
+        // any username will work
         var data = username + ":" + Realm + ":" + password;
     	callback(crypto.createHash('md5').update(data).digest("hex"));
 	}
@@ -63,19 +62,6 @@ var auth = function (req, res, next) {
             next();
         }
     });
-
-    /*// parse login and password from headers
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || ''
-    const strauth = Buffer.from(b64auth, 'base64').toString()
-    const reqPassword = strauth.substring(strauth.indexOf(':') + 1)
-
-    // Verify password is set and correct
-    if (reqPassword && reqPassword === password) 
-        return next()
-
-    // Access denied...
-    res.set('WWW-Authenticate', 'Digest realm="401"') // change this
-    res.status(401).send('Authentication required.') // custom message*/
 };
 
 app.set('port', httpPort);
@@ -83,7 +69,6 @@ if (ua != null)
     app.use(ua.middleware("UA-64954808-1", { cookieName: '_ga' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(auth);
-//app.use(httpauth.connect(digest));
 app.use(logger);
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 1000000}))
 app.use(favicon(__dirname + '/public/images/favicon.png'));
