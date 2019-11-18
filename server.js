@@ -56,7 +56,13 @@ var auth = function (req, res, next) {
     if (!password || req.ip.indexOf("127.0.0.") == 0)
         return next();
 
-    httpauth.connect(digest);
+    digest.check(req, res, (req, res, err) => {
+        if (err) {
+            next(err);
+        } else {
+            next();
+        }
+    });
 
     /*// parse login and password from headers
     const b64auth = (req.headers.authorization || '').split(' ')[1] || ''
@@ -68,7 +74,7 @@ var auth = function (req, res, next) {
         return next()
 
     // Access denied...
-    res.set('WWW-Authenticate', 'Basic realm="401"') // change this
+    res.set('WWW-Authenticate', 'Digest realm="401"') // change this
     res.status(401).send('Authentication required.') // custom message*/
 };
 
