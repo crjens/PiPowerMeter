@@ -10,7 +10,7 @@ var path = require('path');
 
 // Authentication module.
 var Realm = "PiPowerMeter";
-var auth = require('../src/http-auth');
+var auth = require('http-auth');
 var digest = auth.digest({
 		realm: Realm
 	}, (username, callback) => {
