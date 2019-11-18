@@ -8,6 +8,21 @@ var db = require('./database');
 var onFinished = require('on-finished')
 var path = require('path');
 
+// Authentication module.
+var Realm = "PiPowerMeter";
+var auth = require('../src/http-auth');
+var digest = auth.digest({
+		realm: Realm
+	}, (username, callback) => {
+		// Expecting md5(username:realm:password) in callback.
+		if (password) {
+			callback(utils.md5(":" + Realm + ":" + password));
+		} else {
+			callback();			
+		}
+	}
+);
+
 var ua;
 
 try {
@@ -61,7 +76,8 @@ app.set('port', httpPort);
 if (ua != null)
     app.use(ua.middleware("UA-64954808-1", { cookieName: '_ga' }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(auth);
+//app.use(auth);
+app.use(auth.connect(digest));
 app.use(logger);
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 1000000}))
 app.use(favicon(__dirname + '/public/images/favicon.png'));
