@@ -15,14 +15,9 @@ var auth = require('http-auth');
 var digest = auth.digest({
 		realm: Realm
 	}, (username, callback) => {
-        console.log("in digest: " + username);
-		// Expecting md5(username:realm:password) in callback.
-		if (password) {
-            var data = ":" + Realm + ":" + password;
-			callback(crypto.createHash('md5').update(data).digest("hex"));
-		} else {
-			callback();			
-		}
+        // ignore username
+        var data = ":" + Realm + ":" + password;
+    	callback(crypto.createHash('md5').update(data).digest("hex"));
 	}
 );
 
@@ -55,31 +50,10 @@ var app = express(), server = null, httpPort = 3000;
     o.__ts__ = true;
 })(console);
 
-/*var auth = function (req, res, next) {
-
-    // bypass auth for local devices or empty password
-    if (!password || req.ip.indexOf("127.0.0.") == 0)
-        return next();
-
-    // parse login and password from headers
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || ''
-    const strauth = Buffer.from(b64auth, 'base64').toString()
-    const reqPassword = strauth.substring(strauth.indexOf(':') + 1)
-
-    // Verify password is set and correct
-    if (reqPassword && reqPassword === password) 
-        return next()
-
-    // Access denied...
-    res.set('WWW-Authenticate', 'Basic realm="401"') // change this
-    res.status(401).send('Authentication required.') // custom message
-};*/
-
 app.set('port', httpPort);
 if (ua != null)
     app.use(ua.middleware("UA-64954808-1", { cookieName: '_ga' }));
 app.use(express.static(path.join(__dirname, 'public')));
-//app.use(auth);
 app.use(auth.connect(digest));
 app.use(logger);
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true, parameterLimit: 1000000}))
