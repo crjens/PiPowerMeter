@@ -7,6 +7,7 @@ var power = require('./driver');
 var db = require('./database');
 var onFinished = require('on-finished')
 var path = require('path');
+const crypto = require('crypto');
 
 // Authentication module.
 var Realm = "PiPowerMeter";
@@ -14,9 +15,11 @@ var auth = require('http-auth');
 var digest = auth.digest({
 		realm: Realm
 	}, (username, callback) => {
+        console.log("in digest: " + username);
 		// Expecting md5(username:realm:password) in callback.
 		if (password) {
-			callback(utils.md5(":" + Realm + ":" + password));
+            var data = ":" + Realm + ":" + password;
+			callback(crypto.createHash('md5').update(data).digest("hex"));
 		} else {
 			callback();			
 		}
