@@ -52,7 +52,7 @@ var app = express(), server = null, httpPort = 3000;
     o.__ts__ = true;
 })(console);
 
-var auth = function (req, res, next) {
+/*var auth = function (req, res, next) {
 
     // bypass auth for local devices or empty password
     if (!password || req.ip.indexOf("127.0.0.") == 0)
@@ -70,7 +70,7 @@ var auth = function (req, res, next) {
     // Access denied...
     res.set('WWW-Authenticate', 'Basic realm="401"') // change this
     res.status(401).send('Authentication required.') // custom message
-};
+};*/
 
 app.set('port', httpPort);
 if (ua != null)
