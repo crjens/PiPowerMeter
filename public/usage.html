@@ -1,206 +1,120 @@
-﻿
-<!DOCTYPE html> 
-<html lang="en"> 
-    <head> 
-        <meta charset="utf-8" /> 
-        <title>Power Meter</title>
-        <link rel="stylesheet" href="powermeter.css">
-        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.css">
+<!DOCTYPE html>
+<html lang="en">
 
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
-        
-        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.js"></script> 
-        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-sliderAccess.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.pie.min.js"></script>
-        
-        <script src="//cdn.jsdelivr.net/raphael/2.1.2/raphael-min.js"></script>
-        <script src="//cdn.jsdelivr.net/justgage/1.0.1/justgage.min.js"></script>
-        
-        <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/globalize.min.js"></script>
-        <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/cultures/globalize.cultures.js"></script>
+<head>
+    <meta charset="utf-8" />
+    <title>Power Meter</title>
+    <link rel="stylesheet" href="powermeter.css">
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
 
-        <script src="usage.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
 
-        <script type="text/javascript"> 
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.pie.min.js"></script>
 
-            var selectTimespanOption = function (timespan) {
-                if (timespan != null) {
-                    $('#Timespan option')
-                        .filter(function (index) { return $(this).text() === timespan; })
-                        .prop('selected', true);
-                }
-            }
+    <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/globalize.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/cultures/globalize.cultures.js"></script>
 
-            function getParameterByName(name) {
-                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-                var regex = new RegExp("[\\?&#]" + name + "=([^&#]*)"),
-                    results = regex.exec(location.search == "" ? location.hash : location.search);
-                return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-            }
+    <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
-            var ResizeContent = function () {
-                var windowHeight = $(window).height();
-                var headerHeight = $('.header').outerHeight(true);
-                var footerHeight = $('.footer').outerHeight(true);
+    <script src="usage.js"></script>
+    <script src="timepicker.js"></script>
 
-                $(".content").css({ maxHeight: (windowHeight - (headerHeight + footerHeight)) + 'px' });
-                //                $('.header').text(windowHeight + " : " + headerHeight + " : " + footerHeight + " :: " + (windowHeight - (headerHeight + footerHeight)));
-                RedrawComparisonGraph();
-            }
+    <script type="text/javascript">
 
-            $(function () {
+        function getParameterByName(name, _default) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&#]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search == "" ? location.hash : location.search);
+            return results == null ? _default : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
 
-                $('.settingsiconright').click(function () {
-                    window.location.href = "/configure.html";
-                });
+        var ResizeContent = function () {
+            var windowHeight = $(window).height();
+            var headerHeight = $('.header').outerHeight(true);
+            var footerHeight = $('.footer').outerHeight(true);
 
-                $('.settingsiconleft').click(function () {
-                    window.location.href = "/realtime.html";
-                });
+            $(".content").css({ maxHeight: (windowHeight - (headerHeight + footerHeight)) + 'px' });
+            //                $('.header').text(windowHeight + " : " + headerHeight + " : " + footerHeight + " :: " + (windowHeight - (headerHeight + footerHeight)));
+            RedrawComparisonGraph();
+        }
 
-                var startDateTextBox = $('#start');
-		var endDateTextBox = $('#end');
+        var refresh = function () {
 
-		$.timepicker.datetimeRange(
-			startDateTextBox,
-			endDateTextBox,
-			{
-				minInterval: (1000*60*60), // 1hr
-				dateFormat: 'm/d/yy', 
-				timeFormat: 'h:mm tt',
-				start: {}, // start picker options
-				end: {} // end picker options					
-			}
-		);
+            var dateTime = GetDateTime();
+            var order = $('input[name=order]:checked').val();
 
-                $("#start").change(function () {
-		    if ($(this).hasClass('dontSelectCustom') == false)
-                       selectTimespanOption("Custom");
-                });
+            var hash = "timespan=" + dateTime.timespan + "&order=" + order;
+            if (timespan == "Custom")
+                hash += "&start=" + dateTime.Start.toISOString() + "&end=" + dateTime.End.toISOString();
 
-                $("#end").change(function () {
-		    if ($(this).hasClass('dontSelectCustom') == false)
-                       selectTimespanOption("Custom");
-                });
+            location.hash = hash;
 
-                //alert('ready');
-                $('#refresh1').click(function () {
+            RefreshComparisonGraph(dateTime.Start, dateTime.End);
+        }
 
-                    var timespan = $('#Timespan option:selected').val();
-                    var timespanDate = GetTimespanDate(timespan);
-                    var order = $('input[name=order]:checked').val();
+        $(function () {
 
-                    var hash = "timespan=" + timespan + "&order=" + order;
-                    if (timespan == "Custom")
-                        hash += "&start=" + timespanDate.Start.toISOString() + "&end=" + timespanDate.End.toISOString();
-
-                    location.hash = hash;
-
-                    RefreshComparisonGraph(timespanDate.Start, timespanDate.End);
-                });
-
-                $(window).resize(function () {
-                    ResizeContent();
-                });
-
-
-                var order = getParameterByName('order');
-                var timespan = getParameterByName('timespan');
-                var timespanDate = GetTimespanDate(timespan);
-                var start = getParameterByName('start');
-                var end = getParameterByName('end');
-
-                selectTimespanOption(timespan);
-
-                if (order != null) {
-                    $('input[name=order]')
-                        .filter(function (index) { return $(this).val() === order; })
-                        .prop('checked', true);
-                }
-
-                if (timespan == "Custom") {
-                    if (start != null && end != null && start != "" && end != "") {
-                        
-
-                        // set start and end time
-                        $("#start").addClass('dontSelectCustom').datetimepicker('setDate', new Date(start)).removeClass('dontSelectCustom');
-                        $("#end").addClass('dontSelectCustom').datetimepicker('setDate', new Date(end)).removeClass('dontSelectCustom');
-                    } else {
-                        $('#Timespan option')
-                            .filter(function (index) { return $(this).text() === "Hour"; })
-                            .prop('selected', true);
-                    }
-                }
-
-                timespan = $('#Timespan option:selected').val();
-                timespanDate = GetTimespanDate(timespan);
-
-                RefreshComparisonGraph(timespanDate.Start, timespanDate.End, function () {
-                    ResizeContent();
-                });
-                
-                timespanChanged(false);
-                
+            $('.settingsiconright').click(function () {
+                window.location.href = "/configure.html";
             });
 
-            var timespanChanged = function (redraw) {
-                var timespan = $('select option:selected').val();
-                if (redraw && timespan != 'Custom') {
-                     setTimeout(function () {
-                         $('#refresh1').click();
-                     }, 100);
-                } 
+            $('.settingsiconleft').click(function () {
+                window.location.href = "/realtime.html";
+            });
+
+            $('#refresh1').click(refresh);
+
+            $(window).resize(function () {
+                ResizeContent();
+            });
+
+            var order = getParameterByName('order', null);
+            var timespan = getParameterByName('timespan', 'Instant');
+            var start = getParameterByName('start', '');
+            var end = getParameterByName('end','');
+
+            InitializeDateTime(start, end, timespan)
+
+            if (order != null) {
+                $('input[name=order]')
+                    .filter(function (index) { return $(this).val() === order; })
+                    .prop('checked', true);
             }
+        });
 
-	</script>
+    </script>
 
-    </head> 
-    <body> 
+</head>
 
-<!-- Google Tag Manager -->
-<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-57V732');</script>
-<!-- End Google Tag Manager -->
-        
-        
-            <div class='header'></div>
-            <div id="image">
-                <img src='images/settings.png' class='settingsiconright' alt='1'/>
-                <img src='images/table.png' class='settingsiconleft' alt='1' />
+<body>
+
+    <div class='header'></div>
+    <div id="image">
+        <img src='images/settings.png' class='settingsiconright' alt='1' />
+        <img src='images/table.png' class='settingsiconleft' alt='1' />
+    </div>
+    <div class="demo-container content">
+        <div id="placeholder3" class="placeholder100"></div>
+    </div>
+    <div class="footer">
+        <div id="table"></div>
+        <div id='buttons'>
+            <button id='refresh1'>Refresh</button>
+            <input type="radio" name="order" value="Min">Leeches
+            <input type="radio" name="order" value="Watts" checked>Usage
+            <input type="radio" name="order" value="Max">Hogs
+            <div id="reportrange">
+                <i class="fa fa-calendar"></i>&nbsp;
+                <span></span> 
+                <i class="fa fa-caret-down"></i>
             </div>
-		    <div class="demo-container content">
-			    <div id="placeholder3" class="placeholder100"></div>
-		    </div>
-            <div class="footer">
-                <div id="table" ></div>
-                <div id='buttons'>
-                    <button id='refresh1'>Refresh</button>
-                    <select id="Timespan" onchange='timespanChanged(true)'>
-                        <option value='Instant'>Instant</option>
-                        <option value='Hour'>Hour</option>
-                        <option value='Day'>Day</option>
-                        <option value='Week'>Week</option>
-                        <option value='Month'>Month</option>
-                        <option value='Year'>Year</option>
-                        <option value='Custom'>Custom</option>
-                    </select>
-                    <input type="radio" name="order" value="Min">Leeches
-                    <input type="radio" name="order" value="Watts" checked>Usage
-                    <input type="radio" name="order" value="Max">Hogs
-                    <div id='customtimespan'>
-                        Start:<input type="text" name="start" id='start' size="25" value="" />
-                        End:<input type="text" name="end" id='end' size="25" value=""/>
-                    </div>
-                </div>
-            </div>
-    	
-    </body> 
+        </div>
+    </div>
+
+</body>
+
 </html>
