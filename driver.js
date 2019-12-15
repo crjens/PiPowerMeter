@@ -208,7 +208,7 @@ function getFilesizeInBytes(filename) {
 }
 
 // schedule rollup message
-scheduleNextRollupMessage();
+//scheduleNextRollupMessage();
 
 
 var NextCircuit = function () {
