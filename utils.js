@@ -68,8 +68,7 @@ exports.InitializeTwilio = function (to, from, sid, token, deviceName, port) {
         twilioAuthToken = token.toString();
         if (deviceName != null)
             hostName = deviceName;
-        client = new twilio.RestClient(twilioSID, twilioAuthToken);
-
+        client = new twilio(twilioSID, twilioAuthToken);
 
         if (!ipSent) {
             ipSent = true;
@@ -88,10 +87,7 @@ exports.InitializeTwilio = function (to, from, sid, token, deviceName, port) {
 
         //exports.sendText("Twilio initialized");
     }
-
 }
-
-
 
 exports.sendText = function (msg) {
 
@@ -100,7 +96,7 @@ exports.sendText = function (msg) {
 
     } else {
 
-        client.sms.messages.create({
+        client.messages.create({
             to: toText,
             from: fromText,
             body: hostName + " " + msg

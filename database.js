@@ -109,8 +109,7 @@ var powerDb = new sqlite3.Database(databaseFile, function (err) {
             } else {
 
                 db.runSql("Insert or ignore into Config Values('Port', '3000');", null, true);
-                db.runSql("Insert or ignore into Config Values('Mode', '000060');", null, true);
-                db.runSql("Insert or ignore into Config Values('Config', '001001');", null, true);
+                db.runSql("Insert or ignore into Config Values('SampleTime', '1');", null, true);
                 db.runSql("Insert or ignore into Config Values('DeviceName', '');", null, true);
                 db.runSql("Insert or ignore into Config Values('Price', '0.1');", null, true);
                 db.runSql("Insert or ignore into Config Values('Region', 'en-US');", null, true);
@@ -835,6 +834,7 @@ var db =
                             db.all(sql, function (err, configs) {
                                 //console.log('config: ' + JSON.stringify(config));
                                 result = {};
+                                result.Configuration = {};
 
                                 for (var i = 0; i < configs.length; i++) {
                                     var x = configs[i];
@@ -848,11 +848,11 @@ var db =
                                     } else {
 
                                         console.log('read: ' + x.Name + "->" + x.Value);
-                                        result[x.Name] = x.Value;
+                                        result.Configuration[x.Name] = x.Value;
                                     }
                                 }
 
-                                result["HardwareVersion"] = "2.2";
+                                //result["HardwareVersion"] = "2.2";
 
                                 //console.log(JSON.stringify(result));
                                 result.Circuits = circuits;

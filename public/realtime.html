@@ -1,6 +1,6 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title>Power Meter</title>
@@ -16,7 +16,7 @@
 
     <script type="text/javascript">
 
-        var templates = {}, Configuration = {}, latestTimestamp = "", region = 'en_US';
+        var templates = {}, Configuration = {}, latestTimestamp = "", region = 'en_US', CurrentIndex = -1;
 
         var load = function () {
 
@@ -28,7 +28,7 @@
                 success: function (result) {
 
                     var lastTimestamp = latestTimestamp;
-                    
+
                     $.each(result.Readings, function (index, value) {
                         if (lastTimestamp != "" && value.timestamp > lastTimestamp)
                             value.display = 'updatedreading';
@@ -37,6 +37,18 @@
                             latestTimestamp = value.timestamp;
 
                         region = value.region;
+
+                        if (CurrentIndex >= 0 && value.id == Configuration.Circuits[CurrentIndex].id && value.watts > 10) {
+                            $.post('/enabled', { config: { circuit: Configuration.Circuits[CurrentIndex].id, enabled: 0 } }, function (result) { });
+                            CurrentIndex++;
+                            if (CurrentIndex >= Configuration.Circuits.length) {
+                                CurrentIndex = -1;
+                                $.post('/enabled', { config: { circuit: 'all', enabled: 1 } }, function (result) { });
+                            }
+                            else {
+                                $.post('/enabled', { config: { circuit: Configuration.Circuits[CurrentIndex].id, enabled: 1 } }, function (result) { });
+                            }
+                        }
                     });
 
                     $('.header').text(result.DeviceName + " Power Meter Readings");
@@ -91,8 +103,8 @@
                 return Globalize().format(context, 'c', region);
             };
             function formatPercent(context, options) {
-		var fixed = options.hash.fixed || 2;
-		return Globalize().format(context, 'p' + fixed, region);
+                var fixed = options.hash.fixed || 2;
+                return Globalize().format(context, 'p' + fixed, region);
             };
             function formatDate(context, options) {
                 return Globalize().format(new Date(context), 'h:mm:ss', region);
@@ -102,20 +114,37 @@
                 return Globalize().format(context, 'n' + fixed, region);
             };
 
-            load();
+            if (location.search.indexOf("advanced") == -1) {
+                $('.advanced').hide();
+            }
 
+            $.get('/config', function (result) {
+                Configuration = result;
+
+                load();
+            });
+
+            $("#test")
+                .button()
+                .click(function () {
+                    CurrentIndex = 0;
+                    $.post('/enabled', { config: { circuit: 'all', enabled: 0 } }, function (result) { });
+                    $.post('/enabled', { config: { circuit: Configuration.Circuits[0].id, enabled: 1 } }, function (result) { });
+                });
 
             $("#reset")
-                      .button()
-                      .click(function () {
-                          $.post('/enabled', { config: { circuit: 'all', enabled: 1 } }, function (result) { });
-                      });
+                .button()
+                .click(function () {
+                    CurrentIndex = -1;
+                    $.post('/enabled', { config: { circuit: 'all', enabled: 1 } }, function (result) { });
+                });
 
             $("#clear")
-                      .button()
-                      .click(function () {
-                          $.post('/enabled', { config: { circuit: 'all', enabled: 0 } }, function (result) { });
-                      });
+                .button()
+                .click(function () {
+                    CurrentIndex = -1;
+                    $.post('/enabled', { config: { circuit: 'all', enabled: 0 } }, function (result) { });
+                });
         });
 
 
@@ -123,21 +152,22 @@
     </script>
 
 </head>
+
 <body>
     <!-- Google Tag Manager -->
     <noscript>
-        <iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732"
-                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        <iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe>
     </noscript>
     <script>
-(function (w, d, s, l, i) {
-w[l] = w[l] || []; w[l].push({
-'gtm.start':
-new Date().getTime(), event: 'gtm.js'
-}); var f = d.getElementsByTagName(s)[0],
-j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
-'//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
-})(window, document, 'script', 'dataLayer', 'GTM-57V732');</script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-57V732');</script>
     <!-- End Google Tag Manager -->
     <div class='header'></div>
     <div id='content' class="config-table">
@@ -145,6 +175,7 @@ j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; 
     <div class='buttons'>
         <button id='reset'>Reset</button>
         <button id='clear'>Clear All</button>
+        <button id='test' class='advanced'>Test</button>
     </div>
 
     <script id="configtable-template" type="text/x-handlebars-template">
@@ -188,9 +219,7 @@ j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; 
             <td><div id='load'>{{#each load}}{{#if @index}}<br />{{/if}}{{format this type='percent' fixed='0'}}{{/each}}</div></td>
             <td><div id='timestamp'>{{#each timestamp}}{{#if @index}}<br />{{/if}}{{format this type='date'}}{{/each}}</div></td>
         </tr>
-
     </script>
-
-
 </body>
+
 </html>

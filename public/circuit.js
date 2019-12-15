@@ -36,7 +36,7 @@ var InitializeGraph = function (channel, timespan, start, end, callback) {
         dataType: 'json',
         cache: false,
         success: function (data) {
-            Region = data.Region;
+            Region = data.Configuration.Region;
             if (Region == null || Region == "")
                 Region = "en-US";
 	        data = data.Circuits;
@@ -91,8 +91,7 @@ var RefreshGraph = function (circuitId, timespanDate, groupBy, callback) {
     var elapsed = timespanDate.End - timespanDate.Start;
 
     if (elapsed == 0) {
-        currentScale = 40;
-        RefreshWaveformGraph(circuitId, currentScale, callback);
+        RefreshWaveformGraph(circuitId, callback);
     } else  {
         if (lastTimespan == "Instant") {
             $(window).trigger('resize');
@@ -369,7 +368,7 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
     });
 }
 
-var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
+var RefreshWaveformGraph = function (circuitId, callback) {
 
     options = {
         series: {
@@ -379,7 +378,7 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
         },
         xaxis: { min: 0, tickFormatter: function (val, axis) { return val + " ms"; } },
         yaxes: [{ /*min: -200, max: 200,*/tickFormatter: function (val, axis) { return val + " V"; } },
-                    { position: 0, min: -currentScale, max: currentScale, tickFormatter: function (val, axis) { return val + " A"; } }],
+                    { position: 0, min: -40, max: 40, tickFormatter: function (val, axis) { return val + " A"; } }],
         //yaxis: { min: -200, max: 200 }, //, zoomRange: [400, 400] },
         selection: { mode: "x" },
         crosshair: { mode: "x" },
@@ -400,10 +399,14 @@ var RefreshWaveformGraph = function (circuitId, currentScale, callback) {
                 $('.header').text(result.DeviceName + " Power Meter");
             else
                 $('.header').text("Power Meter");
-
           
             data = [];
             if (result != null && result.Samples != null && result.Samples.length > 0) {
+		    
+   	        currentScale = Math.max(result.Probes[0].Breaker, Math.abs(result.Samples[0].iPeak));
+                options.yaxes[1].min = -currentScale;
+                options.yaxes[1].max = currentScale;
+
                 //for (var i = 0; i < result.Samples[0].tsInst.length; i++) {
                 //    var now = result.Samples[0].tsInst[i];
                 //    if (result.Samples[0].vInst.length >= i)

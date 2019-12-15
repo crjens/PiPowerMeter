@@ -16,7 +16,7 @@
 
     <script type="text/javascript">
 
-        var templates = {}, Configuration = {}, HttpPort = 0;
+        var templates = {}, Configuration = {};
 
         var openFile = function (event) {
             var input = event.target;
@@ -74,11 +74,10 @@
                         return 0;
                     });
 
-                    HttpPort = result["Port"];
+                    Configuration = result.Configuration;
                     Configuration.DefinedProbes = result.Probes;
-                    Configuration.HardwareVersion = result.HardwareVersion;
 
-                    $('.header').text(result.DeviceName + " Power Meter Configuration");
+                    $('.header').text(Configuration.DeviceName + " Power Meter Configuration");
 
                     for (var i = 0; i < result.Circuits.length; i++) {
                         for (var j = 0; j < result.Circuits[i].Probes.length; j++) {
@@ -166,21 +165,23 @@
                 .button()
                 .click(function () {
                     var config = readProbeConfig();
+                    if (validateProbeConfig(config)) {
 
-                    var url = '/probeDef';
-                    $.post(url, { config: config }, function (result) {
-                        if (config.Port != HttpPort) {
-                            var loc = window.location;
-                            var port = "";
-                            if (config.Port != "80")
-                                port = ":" + config.Port;
-                            window.location = loc.protocol + "//" + loc.hostname + port + loc.pathname
-                        }
-                        else {
-                            load();
-                        }
-                        //alert('configuration update succeded');
-                    });
+                        var url = '/probeDef';
+                        $.post(url, { config: config }, function (result) {
+                            if (config.Port != Configuration.Port) {
+                                var loc = window.location;
+                                var port = "";
+                                if (config.Port != "80")
+                                    port = ":" + config.Port;
+                                window.location = loc.protocol + "//" + loc.hostname + port + loc.pathname
+                            }
+                            else {
+                                load();
+                            }
+                            //alert('configuration update succeded');
+                        });
+                    }
                 });
 
             $("#restart")
@@ -344,6 +345,39 @@
             return config;
         }
 
+        var validateProbeConfig = function (config) {
+
+            var sampleTime = config.SampleTime;
+            if (sampleTime == '' || isNaN(sampleTime) || parseFloat(sampleTime) < .05 || parseFloat(sampleTime) > 60) {
+                window.alert("SampleTime must be between 0.05 and 60");
+                $('#configTable').find('#SampleTime').addClass('error').focus();
+                return false;
+            }
+
+            var port = config.Port;
+            if (port == '' || isNaN(port) || parseInt(port) < 1 || parseInt(port) > 65535) {
+                alert("Http Port must be between 1 and 65535");
+                $('#configTable').find('#Port').addClass('error').focus();
+                return false;
+            }
+
+            var vScale = config.VoltageScale;
+            if (vScale == '' || isNaN(vScale) || parseFloat(vScale) <= 0.0) {
+                alert("Voltage Scale must be > 0.0");
+                $('#configTable').find('#VoltageScale').addClass('error').focus();
+                return false;
+            }
+
+            var cost = config.Price;
+            if (cost == '' || isNaN(cost) || parseFloat(cost) <= 0.0) {
+                alert("Cost per KWh must be > 0.0");
+                $('#configTable').find('#Price').addClass('error').focus();
+                return false;
+            }
+
+            return true;
+        }
+
 
         var readProbeConfig = function () {
             var config = {};
@@ -378,14 +412,15 @@
 
 <body>
     <!-- Google Tag Manager -->
-    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
     <script>(function (w, d, s, l, i) {
-            w[l] = w[l] || []; w[l].push({
-                'gtm.start':
-                    new Date().getTime(), event: 'gtm.js'
-            }); var f = d.getElementsByTagName(s)[0],
-                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
-                    '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                w[l] = w[l] || []; w[l].push({
+                    'gtm.start':
+                        new Date().getTime(), event: 'gtm.js'
+                }); var f = d.getElementsByTagName(s)[0],
+                    j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                        '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
             })(window, document, 'script', 'dataLayer', 'GTM-57V732');</script>
     <!-- End Google Tag Manager -->
     <div class='header'></div>
@@ -430,40 +465,41 @@
     <script id="probedeftable-template" type="text/x-handlebars-template">
         <table id='configTable'>
             <tr><th>Name</th><th>Value</th></tr>
-            <tr><td>Mode:</td><td><input type="text" name="Mode" id="Mode" value="{{Mode}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-            <tr><td>Config:</td><td><input type="text" name="Config" id="Config" value="{{Config}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-            <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Device Name</td><td><input type="text" name="DeviceName" id="DeviceName" value="{{Configuration.DeviceName}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>SampleTime (sec):</td><td><input type="text" name="SampleTime" id="SampleTime" value="{{Configuration.SampleTime}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Http Port</td><td><input type="text" name="Port" id="Port" value="{{Configuration.Port}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <tr><td>Frequency</td><td>{{Frequency}}</td></tr>
             <tr><td>Uptime</td><td>{{Uptime}}</td></tr>
             <tr>
                 <td>Cost per KWh:</td>
                 <td class="twocol">
-                    <input type="text" name="Price" id="Price" value="{{Price}}" class="text ui-widget-content ui-corner-all">
+                    <input type="text" name="Price" id="Price" value="{{Configuration.Price}}" class="text ui-widget-content ui-corner-all">
                     <select id="Region" class="text ui-widget-content ui-corner-all">
-                        {{#select Region}}
-                        {{#each Regions}}
+                    {{#select Configuration.Region}}
+                    {{#each Regions}}
                         <option value='{{this.name}}'>{{this.englishName}}</option>
-                        {{/each}}
-                        {{/select}}
+                    {{/each}}
+                    {{/select}}
                     </select>
                 </td>
             </tr>
-            <tr><td>Voltage Scale:</td><td><input type="text" name="VoltageScale" id="VoltageScale" value="{{VoltageScale}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>User Name:</td><td><input type="text" name="UserName" id="UserName" value="{{UserName}}" class="text ui-widget-content ui-corner-all"></td></tr>
-            <tr><td>Password:</td><td><input type="text" name="Password" id="Password" value="{{Password}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Voltage Scale:</td><td><input type="text" name="VoltageScale" id="VoltageScale" value="{{Configuration.VoltageScale}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>User Name:</td><td><input type="text" name="UserName" id="UserName" value="{{Configuration.UserName}}" class="text ui-widget-content ui-corner-all"></td></tr>
+            <tr><td>Password:</td><td><input type="text" name="Password" id="Password" value="{{Configuration.Password}}" class="text ui-widget-content ui-corner-all"></td></tr>
             <!--<tr><td>Hardware Version:</td><td><input type="text" name="HardwareVersion" id="HardwareVersion" value="{{HardwareVersion}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>-->
-            <tr><td>MQTT Server:</td><td><input type="text" name="MqttServer" id="MqttServer" value="{{MqttServer}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-            <tr><td>Text Number:</td><td><input type="text" name="Text" id="Text" value="{{Text}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-            <tr><td>Twilio Number:</td><td><input type="text" name="Twilio" id="Twilio" value="{{Twilio}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-            <tr><td>Twilio SID:</td><td><input type="text" name="TwilioSID" id="TwilioSID" value="{{TwilioSID}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-            <tr><td>Twilio Auth Token:</td><td><input type="text" name="TwilioAuthToken" id="TwilioAuthToken" value="{{TwilioAuthToken}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
-            <tr><td>Backup Database:</td><td><input type="text" name="BackupDB" id="BackupDB" value="{{BackupDB}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>MQTT Server:</td><td><input type="text" name="MqttServer" id="MqttServer" value="{{Configuration.MqttServer}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Text Number:</td><td><input type="text" name="Text" id="Text" value="{{Configuration.Text}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Twilio Number:</td><td><input type="text" name="Twilio" id="Twilio" value="{{Configuration.Twilio}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Twilio SID:</td><td><input type="text" name="TwilioSID" id="TwilioSID" value="{{Configuration.TwilioSID}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Twilio Auth Token:</td><td><input type="text" name="TwilioAuthToken" id="TwilioAuthToken" value="{{Configuration.TwilioAuthToken}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
+            <tr><td>Backup Database:</td><td><input type="text" name="BackupDB" id="BackupDB" value="{{Configuration.BackupDB}}" class="text ui-widget-content ui-corner-all advanced"></td></tr>
             <tr><td>Database size:</td><td>{{DatabaseSize}}</td></tr>
             <tr><td>Database rows:</td><td>{{DatabaseRows}}</td></tr>
+            <tr><td>Hardware version:</td><td>{{Configuration.HardwareVersion}}</td></tr>
+            <tr><td>Driver version:</td><td>{{Configuration.DriverVersion}}</td></tr>
             <tr><td>Software timestamp:</td><td>{{SoftwareVersion.Installed.Timestamp}}</td></tr>
             {{#if SoftwareVersion.UpdateRequired}}
-  		<tr><td>Latest software:</td><td>{{SoftwareVersion.Latest.Timestamp}} <button id='updateSource'>Update Now</button></td></tr>
+  		        <tr><td>Latest software:</td><td>{{SoftwareVersion.Latest.Timestamp}} <button id='updateSource'>Update Now</button></td></tr>
             {{/if}}
         </table>
 

@@ -1,20 +1,15 @@
 var rollupTimeHr = 16;  // hour at which rollups are sent 16 == 4pm UTC which is 9 am PST
-var _circuit = 0, Mode, Config;
-var costPerKWH = 0.0, deviceName="", region="en-US";
-var configuration={};
+var _circuit = 0;
+var costPerKWH = 0.0, deviceName = "", region = "en-US";
+var configuration = {};
 var rollupEvent = null, runInterval = null;
 var bootTime = new Date();
 
 var db = require('./database');
 var netUtils = require('./utils.js');
 var fs = require("fs");
+var common = require("./common");
 var mqtt = null, mqttClient = null;
-
-
-Number.prototype.round = function (decimals) {
-    return Number(Math.round(this + 'e' + decimals) + 'e-' + decimals).toFixed(decimals);
-};
-
 
 // load currently installed software version and check for updates every hour
 var exec = require('child_process').exec, softwareVersion = null;
@@ -31,7 +26,7 @@ var exec = require('child_process').exec, softwareVersion = null;
 
                     console.log('currentSha: ' + currentSha);
                     console.log('currentDate: ' + currentDate);
-            
+
                     var obj = { Installed: { Sha: currentSha, Timestamp: currentDate } };
 
                     // get latest commit from github
@@ -63,8 +58,7 @@ var exec = require('child_process').exec, softwareVersion = null;
 
                                                 obj.Latest = { Sha: json.sha, Timestamp: json.author.date };
                                                 obj.UpdateRequired = true;
-                                            } catch (err)
-                                            {
+                                            } catch (err) {
                                                 console.error("Error checking for updates during latest commit proceesing: " + err);
                                             }
                                         }
@@ -109,10 +103,6 @@ var loadConfiguration = function (callback) {
         if (err) {
             console.log(err);
         } else {
-            Mode = data.Mode;
-            Config = data.Config;
-            vFactor = data.VoltageScale;
-            HardwareVersion = data.HardwareVersion;
             configuration.Probes = data.Probes;
             for (var i = 0; i < data.Circuits.length; i++) {
                 data.Circuits[i].InstantEnabled = data.Circuits[i].Enabled;
@@ -120,36 +110,38 @@ var loadConfiguration = function (callback) {
                 // set probe factors
                 for (var j = 0; j < data.Circuits[i].Probes.length; j++) {
                     data.Circuits[i].Probes[j].iFactor = FindProbeFactor(data.Circuits[i].Probes[j].Type);
-                    data.Circuits[i].Probes[j].vFactor = vFactor;
+                    data.Circuits[i].Probes[j].vFactor = data.Configuration.VoltageScale;
                 }
             }
             configuration.Circuits = data.Circuits;
-            deviceName = data.DeviceName;
+            deviceName = data.Configuration.DeviceName;
 
             //console.log("configuration: " + JSON.stringify(configuration));
             //console.log("configuration.Circuits: " + JSON.stringify(configuration.Circuits));
 
-            var port = data.Port;
-            netUtils.InitializeTwilio(data.Text, data.Twilio, data.TwilioSID, data.TwilioAuthToken, deviceName, port);
+            var port = data.Configuration.Port;
+            netUtils.InitializeTwilio(data.Configuration.Text, data.Configuration.Twilio, data.Configuration.TwilioSID, data.Configuration.TwilioAuthToken, deviceName, port);
 
-            console.log('mqtt: ' + data.MqttServer);
+            console.log('mqtt: ' + data.Configuration.MqttServer);
             if (data.MqttServer != null) {
-                try{
+                try {
                     mqtt = require('mqtt');
-                    mqttClient = mqtt.connect(data.MqttServer);
+                    mqttClient = mqtt.connect(data.Configuration.MqttServer);
                 }
                 catch (err) {
                     mqttClient = null;
-                    console.error("Error initializing MQTT server: " +  data.MqttServer + ".  Error: " + err);
+                    console.error("Error initializing MQTT server: " + data.Configuration.MqttServer + ".  Error: " + err);
                 }
             } else {
                 mqttClient = null;
             }
+
+            // update config in reader
+            reader.send({ Action: "SetConfig", Config: data.Configuration });
         }
 
         if (callback != null)
-            callback(err);
-
+            callback(err, data.Configuration);
     });
 }
 
@@ -160,19 +152,19 @@ var scheduleNextRollupMessage = function () {
 
     if (ms < 0)
         ms += 86400000; // it's after time wait till tomorrow.
-	//ms += 3600000; // it's after time wait till next hour
+    //ms += 3600000; // it's after time wait till next hour
 
     console.log("next rollup in: " + ms);
 
     if (rollupEvent != null)
-	clearTimeout(rollupEvent);
+        clearTimeout(rollupEvent);
 
-    rollupEvent = setTimeout(function() {
-	 rollupEvent=null;
-         sendRollupText(function() {
-		scheduleNextRollupMessage();
-	 });
-	
+    rollupEvent = setTimeout(function () {
+        rollupEvent = null;
+        sendRollupText(function () {
+            scheduleNextRollupMessage();
+        });
+
     }, ms);
 }
 
@@ -188,8 +180,8 @@ var sendRollupText = function (callback) {
     db.rollup(function (err, data) {
         var message = "Rollup for " + curr_month + "/" + curr_date + "/" + curr_year;
         if (err) {
-		console.log('error sending rollup: ' + err);
-	} else {
+            console.log('error sending rollup: ' + err);
+        } else {
 
             console.log(JSON.stringify(data));
 
@@ -200,18 +192,18 @@ var sendRollupText = function (callback) {
             console.log('rollup: ' + message);
 
             netUtils.sendText(message);
-	}
-	
-	if (callback)
-		callback();
+        }
+
+        if (callback)
+            callback();
     });
 }
 
 
 function getFilesizeInBytes(filename) {
     var stats = fs.statSync(filename);
-     var fileSizeInBytes = stats["size"];
-     return fileSizeInBytes;
+    var fileSizeInBytes = stats["size"];
+    return fileSizeInBytes;
 }
 
 // schedule rollup message
@@ -291,7 +283,7 @@ var GetProbeAlertThreshold = function (probe) {
 
     var index = probe.Alert.indexOf(",");
 
-    return Number(probe.Alert.substring(index+1));
+    return Number(probe.Alert.substring(index + 1));
 }
 
 // create reader process
@@ -300,112 +292,123 @@ console.log('spawned reader with pid: ' + reader.pid);
 var frequency = "unknown";
 
 // Process read results from child process
-reader.on('message', function (data) {
+reader.on('message', function (msg) {
 
-    // copy out frequency
-    frequency = data.Frequency;
+    if (msg.Data != null) {
 
-    // find circuit
-    var circuit = FindCircuit(data.CircuitId);
+        var data = msg.Data;
 
-    if (circuit != null) {
-        circuit.Samples = [];
-        var pTotal=0, qTotal=0, overloadMsg = null;
-        for (var i = 0; i < data.Probes.length; i++) {
+        // copy out frequency
+        frequency = data.Frequency;
 
-            // update each probe
-            var probe = data.Probes[i];
+        // find circuit
+        var circuit = FindCircuit(data.CircuitId);
 
-            if (probe.Result != null) {
-                var offset = FindProbeOffset(circuit, probe.id);
+        if (circuit != null) {
+            circuit.Samples = [];
+            var pTotal = 0, qTotal = 0, overloadMsg = null;
+            for (var i = 0; i < data.Probes.length; i++) {
 
-                if (offset != null) {
-                    circuit.Samples[offset] = probe.Result;
-                    pTotal += probe.Result.pAve;
-                    qTotal += probe.Result.qAve;
-                }
+                // update each probe
+                var probe = data.Probes[i];
 
-                // check for overload
-                if (probe.Breaker > 0 && probe.Result.iRms > probe.Breaker && (circuit.OverloadWarningSent == null || ((new Date()) - circuit.OverloadWarningSent) > 1000 * 60 * 60)) {
-                    if (overloadMsg == null) overloadMsg = "";
-                    overloadMsg += " [Probe: " + i + ": iRms = " + probe.Result.iRms.round(1) + " amps / breaker = " + probe.Breaker + " amps]";
-                }
+                if (probe.Result != null) {
+                    var offset = FindProbeOffset(circuit, probe.id);
 
-                // check for alert
-                var alertTime = GetProbeAlertTime(probe);
-                if (alertTime >= 0) {
-                    if (circuit.AlertLevelExceeded == null) {
-                        circuit.AlertLevelExceeded = new Date();
-                        circuit.AlertTotalWatts = 0;
-                        circuit.AlertTotalSamples = 0;
+                    if (offset != null) {
+                        circuit.Samples[offset] = probe.Result;
+                        pTotal += probe.Result.pAve;
+                        qTotal += probe.Result.qAve;
                     }
 
-                    if (probe.Result.pAve < GetProbeAlertThreshold(probe)) {
-                        circuit.AlertLevelExceeded = new Date();
-                        circuit.AlertTotalWatts = 0;
-                        circuit.AlertTotalSamples = 0;
-                    } else {
+                    // check for overload
+                    if (probe.Breaker > 0 && probe.Result.iRms > probe.Breaker && (circuit.OverloadWarningSent == null || ((new Date()) - circuit.OverloadWarningSent) > 1000 * 60 * 60)) {
+                        if (overloadMsg == null) overloadMsg = "";
+                        overloadMsg += " [Probe: " + i + ": iRms = " + probe.Result.iRms.round(1) + " amps / breaker = " + probe.Breaker + " amps]";
+                    }
 
-                        circuit.AlertTotalWatts += probe.Result.pAve;
-                        circuit.AlertTotalSamples++;
+                    // check for alert
+                    var alertTime = GetProbeAlertTime(probe);
+                    if (alertTime >= 0) {
+                        if (circuit.AlertLevelExceeded == null) {
+                            circuit.AlertLevelExceeded = new Date();
+                            circuit.AlertTotalWatts = 0;
+                            circuit.AlertTotalSamples = 0;
+                        }
 
-                        if ((circuit.AlertWarningSent == null || ((new Date()) - circuit.AlertWarningSent) > 1000 * 60 * alertTime)) {// && ((new Date()) - circuit.AlertLevelExceeded) > 1000 * 60 * alertTime) {
-                            var elapsed = ((new Date()) - circuit.AlertLevelExceeded) / (1000 * 60);
-                            var avgWatts = circuit.AlertTotalWatts / circuit.AlertTotalSamples;
-                            //var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.round(0) + " minutes";
-                            var msg = "Alert: Threshold exceeded on " + circuit.Name + " averaged " + avgWatts.round(1) + " watts for " + elapsed.round(0) + " minutes";
-                            console.log(msg);
-                            netUtils.sendText(msg);
-                            circuit.AlertWarningSent = new Date();
+                        if (probe.Result.pAve < GetProbeAlertThreshold(probe)) {
+                            circuit.AlertLevelExceeded = new Date();
+                            circuit.AlertTotalWatts = 0;
+                            circuit.AlertTotalSamples = 0;
+                        } else {
+
+                            circuit.AlertTotalWatts += probe.Result.pAve;
+                            circuit.AlertTotalSamples++;
+
+                            if ((circuit.AlertWarningSent == null || ((new Date()) - circuit.AlertWarningSent) > 1000 * 60 * alertTime)) {// && ((new Date()) - circuit.AlertLevelExceeded) > 1000 * 60 * alertTime) {
+                                var elapsed = ((new Date()) - circuit.AlertLevelExceeded) / (1000 * 60);
+                                var avgWatts = circuit.AlertTotalWatts / circuit.AlertTotalSamples;
+                                //var msg = "Alert: " + circuit.Name + " has exceeded the threshold of " + GetProbeAlertThreshold(probe) + " watts for " + elapsed.round(0) + " minutes";
+                                var msg = "Alert: Threshold exceeded on " + circuit.Name + " averaged " + avgWatts.round(1) + " watts for " + elapsed.round(0) + " minutes";
+                                console.log(msg);
+                                netUtils.sendText(msg);
+                                circuit.AlertWarningSent = new Date();
+                            }
                         }
                     }
                 }
             }
-        }
 
-        circuit.pTotal = Number(pTotal);
-        circuit.qTotal = Number(qTotal);
+            circuit.pTotal = Number(pTotal);
+            circuit.qTotal = Number(qTotal);
 
-        // send text if overloaded
-        if (overloadMsg != null) {
-            circuit.OverloadWarningSent = new Date();
-            var msg = "Overload on " + circuit.Name + overloadMsg;
-            console.log(msg);
-            netUtils.sendText(msg);
-        }
-        
-        if (circuit.Samples.length > 0) {
-            //console.log(JSON.stringify(circuit.Samples[0]));
-            db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts), circuit.Samples[0].CalculatedFrequency);
-            console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.round(1) + '  I= ' + circuit.Samples[0].iRms.round(1) + '  P= ' + pTotal.round(1) + '  Q= ' + qTotal.round(1) + '  PF= ' + circuit.Samples[0].pf.round(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.round(3) + '  F2= ' + circuit.Samples[0].freq.round(3) + ' (' + circuit.Samples[0].tsInst.length + ' samples in ' + circuit.Samples[0].tsInst[circuit.Samples[0].tsInst.length-1] + 'ms)'); 
-
-            if (mqttClient != null) {
-                try {
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.round(2));
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.round(1));
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.round(1));
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.round(4));
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
-                    mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.round(3));
-                    if (circuit.LastDayKwh != null)
-                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.round(1));
-                }
-                catch (err) {
-                    console.error("Error writing to MQTT server: " + data.MqttServer + ".  Error: " + err);
-                }
+            // send text if overloaded
+            if (overloadMsg != null) {
+                circuit.OverloadWarningSent = new Date();
+                var msg = "Overload on " + circuit.Name + overloadMsg;
+                console.log(msg);
+                netUtils.sendText(msg);
             }
-        } else {
-            console.log(circuit.Name + ' ********* Read operation failed *******');
+
+            if (circuit.Samples.length > 0) {
+                //console.log(JSON.stringify(circuit.Samples[0]));
+                db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts), circuit.Samples[0].CalculatedFrequency);
+                console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.round(1) + '  I= ' + circuit.Samples[0].iRms.round(1) + '  P= ' + pTotal.round(1) + '  Q= ' + qTotal.round(1) + '  PF= ' + circuit.Samples[0].pf.round(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.round(3) + '  F2= ' + circuit.Samples[0].freq.round(3) + ' (' + circuit.Samples[0].tsInst.length + ' samples in ' + circuit.Samples[0].tsInst[circuit.Samples[0].tsInst.length - 1] + 'ms)');
+
+                if (mqttClient != null) {
+                    try {
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/Current', circuit.Samples[0].iRms.round(2));
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/Watts', pTotal.round(1));
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/Vars', qTotal.round(1));
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/PowerFactor', circuit.Samples[0].pf.round(4));
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/Timestamp', circuit.Samples[0].ts);
+                        mqttClient.publish('PiPowerMeter/' + circuit.id + '/Frequency', circuit.Samples[0].CalculatedFrequency.round(3));
+                        if (circuit.LastDayKwh != null)
+                            mqttClient.publish('PiPowerMeter/' + circuit.id + '/LastDayKwh', circuit.LastDayKwh.round(1));
+                    }
+                    catch (err) {
+                        console.error("Error writing to MQTT server: " + data.MqttServer + ".  Error: " + err);
+                    }
+                }
+            } else {
+                console.log(circuit.Name + ' ********* Read operation failed *******');
+            }
         }
+
+        // start next read
+        ReadNext();
+
+        // keep 24hr avg up to date
+        updateState();
+    } 
+
+    if (msg.Version != null) {
+        db.setConfig("HardwareVersion", msg.Version.HardwareVersion.toString(), function(err) {
+          db.setConfig("DriverVersion", msg.Version.DriverVersion.toString());
+        });
     }
-
-    // start next read
-    ReadNext();
-
-    // keep 24hr avg up to date
-    updateState();
 });
 
 
@@ -438,27 +441,25 @@ var Start = function () {
     _running = true;
 
     // Kick off the main read loop
-    loadConfiguration(function (err) {
+    loadConfiguration(function (err, config) {
         if (err) {
             console.log('unable to load configuration: ' + err);
         } else {
-            reader.send({ Action: "Start", HardwareVersion: HardwareVersion, Mode: Mode, Config: Config });
+            reader.send({ Action: "Start", Configuration: config });
             ReadNext();
         }
     });
-
-    
 }
 
 var Stop = function () {
     _running = false;
     console.log('sending Stop to reader...');
-    reader.send({ Action: "Stop"});
+    reader.send({ Action: "Stop" });
     console.log('running: sudo kill -9 ' + reader.pid);
 
     var exec = require('child_process').exec;
     exec('sudo kill -9 ' + reader.pid, function (error, stdout, stderr) {
-        if (err)
+        if (error)
             console.log('failed to kill reader');
         else
             console.log('killed reader');
@@ -518,8 +519,7 @@ var updateState = function () {
 
         var start = new Date(now - (msPerHour * 24)); // 24hr ago
         var telemetry = [];
-        var CalcLastDayKwh = function(id)
-        {
+        var CalcLastDayKwh = function (id) {
             db.minmaxavg(id, start, now, telemetry, function (err, result) {
                 if (result) {
                     var circuit = FindCircuit(id);
@@ -561,12 +561,12 @@ var exports = {
 
         var circuit = FindCircuit(circuitId);
         if (circuit != null) {
-            
+
             var res = { current: circuit.pTotal, last24Kwh: circuit.LastDayKwh };
             console.log("returning : " + JSON.stringify(res));
             return res;
         }
-        
+
         return null;
     },
     UpdateCircuitEnabled: function (circuitId, enabled) {
@@ -586,7 +586,7 @@ var exports = {
             }
             ResetRealtimeTimer();
         }
-        
+
     },
     Readings: function () {
 
@@ -598,7 +598,7 @@ var exports = {
 
             if (ckt.Samples != null && ckt.Samples.length > 0) {
 
-                var w = [], a = [], v = [], q = [], pf = [], l = [], ts = [], probe = [], breaker=[], f=[];
+                var w = [], a = [], v = [], q = [], pf = [], l = [], ts = [], probe = [], breaker = [], f = [];
                 for (var p = 0; p < ckt.Probes.length; p++) {
                     w.push(Number(ckt.Samples[p].pAve));
                     a.push(Number(ckt.Samples[p].iRms));
@@ -632,11 +632,11 @@ var exports = {
                     timestamp: ts,
                     f: f,
                     load: l,
-		            region: region
+                    region: region
                 });
             }
         }
-        return { Readings: result, DeviceName: deviceName } ;
+        return { Readings: result, DeviceName: deviceName };
     },
     ReadPower: function (circuitId, start, end, groupBy, timeOffset, telemetry, callback) {
         db.read(circuitId, start, end, groupBy, timeOffset, telemetry, function (err, result) {
@@ -665,16 +665,16 @@ var exports = {
     GetCircuits: function (callback, strip) {
         db.getCircuits(function (err, _config) {
             if (_config != null) {
-                costPerKWH = _config.Price;
+                costPerKWH = _config.Configuration.Price;
                 if (costPerKWH <= 0)
                     costPerKWH = 0.1; // default to 10 / KWh
 
-                region = _config.Region;
+                region = _config.Configuration.Region;
                 if (region == null || region == "")
                     region = "en-US"; // default
 
-                if (_config.DeviceName != null)
-                    deviceName = _config.DeviceName;
+                if (_config.Configuration.DeviceName != null)
+                    deviceName = _config.Configuration.DeviceName;
 
                 if (softwareVersion != null)
                     _config.SoftwareVersion = softwareVersion;
@@ -707,7 +707,7 @@ var exports = {
                     results.AvgWatts = 0.0;
                     results.MinWatts = 0.0;
                 }
-                    
+
 
                 if (costPerKWH == 0) {
                     db.getCostPerKWh(function (err, cost, _region) {
@@ -733,27 +733,6 @@ var exports = {
         Reset();
         return 0;
     },
-    GetConfiguration: function (callback) {
-        db.getConfiguration(function (err, config) {
-
-            if (config != null) {
-
-                if (config.DeviceName != null)
-                    deviceName = config.DeviceName;
-
-                for (index = 0; index < config.length; ++index) {
-                    config[index].HardwareVersion = HardwareVersion;
-                    config[index].Probes = probes;
-                }
-
-                callback(err, config);
-            } else {
-                callback(err);
-            }
-
-
-        });
-    },
     ReplaceConfiguration: function (callback, config) {
         db.updateCircuits(config, function (err) {
             loadConfiguration();
@@ -778,7 +757,6 @@ var exports = {
         for (var name in config) {
             array.push({ name: name, value: config[name] });
         }
-
 
         var setVal = function (index) {
             if (index < array.length) {

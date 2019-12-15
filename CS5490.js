@@ -1,12 +1,14 @@
 var cs5490 = null;
 // comment below line for WebMatrix testing
 var cs5490 = require("CS5490");
+var common = require("./common");
 
 var HardwareVersion = 0;
 var samples = 500;   // number of instantaneous voltage and current samples to collect for each measurement
 var bytesPerSample = 10;
 var sampleBuffer = Buffer.alloc(samples * bytesPerSample);
 var _DeviceOpen = false;
+var Configuration = null;
 
 var Registers = {
     Config0: [0, 0],
@@ -87,6 +89,33 @@ var InputPins = {
     version3: 7
 };
 
+var GetSampleCount = function() {
+    if (Configuration == null)
+        return 4000; // default to 4000 (1sec)
+
+    var tmp = Configuration.SampleTime * 4000;
+    if (tmp < 100)
+        return 100; // CS5490 docs say not to use < 100
+    if (tmp > 4000*60*5)
+        return 4000*60*5; // 5 min seems long enough
+    return tmp;
+}
+
+
+var RegisterValues = [
+
+    // A = 1010  => High-Pass filters enabled on both current and voltage channels and AFC enabled
+    { Name: "Config2", Key: Registers.Config2, Compare: function (val) { return !(val & 0x20A)}, Reset: function() { return 0x20A} }, 
+
+    // Check status of:
+    //   POR, IOR, VOR, IOC, IC
+    //   High-pass filters enabled
+    { Name: "Status0", Key: Registers.Status0, Compare: function(val) { return val & 0x5508}, Reset: function() { return 0xE5557D} },
+
+    // set sample count based on sample time
+    { Name: "SampleCount", Key: Registers.SampleCount, Compare: function(val) { return val != GetSampleCount()}, Reset: function() { return GetSampleCount() }}, 
+]
+
 var sleep = function (delayMs) {
     var s = new Date().getTime();
     while ((new Date().getTime() - s) < delayMs) {
@@ -102,6 +131,7 @@ var Pad16 = function(n)
 
 var write = function (register, val, desc) {
     if (_DeviceOpen) {
+        val = parseInt(val)
         cs5490.WriteRegister(register[0], register[1], val)
         if (desc != null)
             console.log('wrote: [' + register[0] + ', ' + register[1] + '] -> ' + Pad16(val.toString(16)) + ' ' + desc);
@@ -164,22 +194,43 @@ var convert = function (buffer, binPt, neg) {
 
 var ResetIfNeeded = function () {
 
-    var config = read(Registers.Config2);
-    var status = read(Registers.Status0);
+    RegisterValues.forEach(element => {
+        var existing = read(element.Key);
+        if (element.Compare(existing)) {
+            console.log('Resetting due to incorrect ' + element.Name + ' -> ' + existing.toString(16));
+            Reset();
+            return;
+        }
+    });
+
+    /*
+
+    var config2 = read(Registers.Config2);
+    var status0 = read(Registers.Status0);
+    var sampleCount = Configuration.SampleTime * 4000;
+    
+    if (sampleCount >= 100 && read(Registers.SampleCount) != sampleCount) {
+        console.log('Resetting due to SampleCount: ' + sampleCount)
+        Reset();
+    }
 
     // Check status of:
     //   POR, IOR, VOR, IOC, IC
     //   High-pass filters enabled
-    if (status & 0x5508) {
-        console.log('Resetting due to incorrect status: ' + status.toString(16));
-        console.error('Resetting due to incorrect status: ' + status.toString(16));
+    if (status0 & 0x5508) {
+        if (status0==null)
+            status0 = 0;
+        console.log('Resetting due to incorrect status: ' + status0.toString(16));
+        console.error('Resetting due to incorrect status: ' + status0.toString(16));
         Reset();
     }
-    else if (!(config & 0xA)) {
-        console.log('Resetting due to incorrect Config: ' + config.toString(16));
-        console.error('Resetting due to incorrect Config: ' + config.toString(16));
+    else if (!(config2 & config2)) {
+        if (config2==null)
+            config2 = 0;
+        console.log('Resetting due to incorrect Config: ' + config2.toString(16));
+        console.error('Resetting due to incorrect Config: ' + config2.toString(16));
         Reset();
-    } 
+    } */
 }
 
 var DumpRegisters = function () {
@@ -215,12 +266,25 @@ var Reset = function () {
 
     //cs5490.Instruction(0x01); // software Reset
 
+    RegisterValues.forEach(element => {
+        write(element.Key, element.Reset(), element.Name)
+    });
+
+    // set ZXnum based on SampleTime
+    var zxnum = Math.max(1, parseInt(90.0*GetSampleCount()/4000.0));
+    write(Registers.ZXNum, zxnum, "ZXnum");
+
+    /*
     write(Registers.Status0, 0xE5557D, "clear status");
 
     var config2 = read(Registers.Config2, 'read Config2 register');
     // A = 1010  => High-Pass filters enabled on both current and voltage channels
     write(Registers.Config2, config2 | 0xA)
-
+    
+    var sampleCount = Configuration.SampleTime * 4000;
+    if (sampleCount >= 100)
+        write(Registers.SampleCount, sampleCount);
+*/
     console.log('initialized');
 }
 
@@ -363,7 +427,10 @@ var exports = {
     },
     Frequency: function () {
         var epsilon = read(Registers.Epsilon);
-        return 4000.0 * convertInt(epsilon, 0, true) + " Hz";
+        return (4000.0 * convertInt(epsilon, 0, true)).round(2) + " Hz";
+    },
+    SetConfig: function (configuration) {
+        Configuration = configuration;
     },
     Close: function () {
         _DeviceOpen = false;
@@ -371,8 +438,7 @@ var exports = {
             cs5490.Close();
     },
     Open: function (data) {
-        Mode = data.Mode;
-        Config = data.Config;
+        Configuration = data.Configuration;
        
         if (cs5490 != null) {
 
@@ -387,7 +453,7 @@ var exports = {
             var ver2 = cs5490.DigitalRead(InputPins.version2);
             var ver3 = cs5490.DigitalRead(InputPins.version3);
 
-            HardwareVersion = ver1 + ver2<<1 + ver2<<2 + ver3<<3;
+            HardwareVersion = ver3.toString() + ver2.toString() + ver1.toString() + ver0.toString();
 
             // enable output gpio pins
             for (var pin in OutputPins) {
@@ -396,6 +462,8 @@ var exports = {
 
             Reset();
             console.log("Device opened: Hardware version: " + HardwareVersion);
+
+            return { "DriverVersion": cs5490.DriverVersion(), "HardwareVersion": HardwareVersion};
         }
     }
 };
