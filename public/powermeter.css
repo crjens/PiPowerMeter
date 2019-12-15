@@ -41,7 +41,9 @@ input[type=checkbox] {
 	padding: 7px;
 }
 
-
+.daterangepicker.openscenter .drp-calendar {
+    max-width: none; 
+}
 
 h2 {
 	padding: 10px;
