@@ -1,269 +1,195 @@
-﻿
-<!DOCTYPE html> 
-<html lang="en"> 
-    <head> 
-        <meta charset="utf-8" /> 
-        <title>Power Meter</title> 
-        <link rel="stylesheet" href="powermeter.css">
-        
-        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.css">
+﻿<!DOCTYPE html>
+<html lang="en">
 
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+<head>
+    <meta charset="utf-8" />
+    <title>Power Meter</title>
+    <link rel="stylesheet" href="powermeter.css">
 
-        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-timepicker-addon.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.4.5/jquery-ui-sliderAccess.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.selection.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.time.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.resize.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.crosshair.min.js"></script>
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
 
-        <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/globalize.min.js"></script>
-        <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/cultures/globalize.cultures.js"></script>
-        
-        <script src="circuit.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
 
-        <script type="text/javascript">
-            var GetTimespanDate = function (timespan) {
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.selection.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.time.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.resize.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.crosshair.min.js"></script>
 
-                var start, end = new Date();
-                if (timespan == 'Hour')
-                    start = new Date(end.getTime() - 1000 * 60 * 60);
-                else if (timespan == 'Day')
-                    start = new Date(end.getTime() - 1000 * 60 * 60 * 24);
-                else if (timespan == 'Week')
-                    start = new Date(end.getTime() - 1000 * 60 * 60 * 24 * 7);
-                else if (timespan == 'Month') {
-                    if (end.getMonth() == 0)
-                        start = new Date(end.getFullYear() - 1, 11, end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
-                    else
-                        start = new Date(end.getFullYear(), end.getMonth() - 1, end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
-                }
-                else if (timespan == 'Year') {
-                    start = new Date(end.getFullYear() - 1, end.getMonth(), end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
-                }
-                else if (timespan == 'Custom') {
-                    // custom
-                    start = $("#start").datetimepicker('getDate');
-                    end = $("#end").datetimepicker('getDate');
-                }
-		else {
-		    start = end = null;
-                }
+    <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/globalize.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/globalize/0.1.1/cultures/globalize.cultures.js"></script>
 
-                if (timespan != 'Custom') {
-                    if (start != null)
-                        $("#start").addClass('dontSelectCustom').datetimepicker('setDate', start).removeClass('dontSelectCustom');
-                    else
-                        $("#start").val('');
+    <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
-                    if (end != null)
-                        $("#end").addClass('dontSelectCustom').datetimepicker('setDate', end).removeClass('dontSelectCustom');
-                    else
-                        $("#end").val('');
-                }
+    <script src="circuit.js"></script>
+    <script src="timepicker.js"></script>
 
-                return { Start: start, End: end };
+    <script type="text/javascript">
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&#]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search == "" ? location.hash : location.search);
+            return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        var ResizeContent = function (redraw) {
+            var windowHeight = $(window).height();
+            var headerHeight = $('.header').outerHeight(true);
+            var footerHeight = $('.footer').outerHeight(true);
+
+            $(".content").css({ maxHeight: (windowHeight - (headerHeight + footerHeight)) + 'px' });
+
+            if (redraw)
+                ResizeGraphs();
+        }
+
+
+        var refresh = function (callback) {
+            dateTime = GetDateTime()
+
+            updateGroupBy(dateTime);
+
+            var groupby = $('#groupby option:selected').val();
+            var circuit = $('#circuits option:selected').val();
+            var circuitName = $('#circuits option:selected').text();
+
+            var hash = "channel=" + circuitName + "&timespan=" + dateTime.timespan;
+            if (dateTime.timespan == "Custom") {
+                hash += "&start=" + dateTime.Start.toISOString() + "&end=" + dateTime.End.toISOString();
             }
 
-            function getParameterByName(name) {
-                name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-                var regex = new RegExp("[\\?&#]" + name + "=([^&#]*)"),
-                    results = regex.exec(location.search == "" ? location.hash : location.search);
-                return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-            }
+            location.hash = hash;
 
-            var ResizeContent = function (redraw) {
-                var windowHeight = $(window).height();
-                var headerHeight = $('.header').outerHeight(true);
-                var footerHeight = $('.footer').outerHeight(true);
+            RefreshGraph(circuit, dateTime, groupby, callback);
+        }
 
-                $(".content").css({ maxHeight: (windowHeight - (headerHeight + footerHeight)) + 'px' });
+        $(function () {
 
-                if (redraw)
-                    ResizeGraphs();
-            }
-
-            var refresh = function (callback) {
-                var groupby = $('#groupby option:selected').val();
-                var timespan = $('#Timespan option:selected').val();
-                var timespanDate = GetTimespanDate(timespan);
-                var circuit = $('#circuits option:selected').val();
-                var circuitName = $('#circuits option:selected').text();
-                timespanDate.timespan = timespan;
-
-                var hash = "channel=" + circuitName + "&timespan=" + timespan;
-                if (timespan == "Custom") {
-                    hash += "&start=" + timespanDate.Start.toISOString() + "&end=" + timespanDate.End.toISOString();
-                }
-
-                location.hash = hash;
-
-                RefreshGraph(circuit, timespanDate, groupby, callback);
-            }
-
-            $(function () {
-
-                //alert('ready');
-                $('#refresh1').click(function () {
-                    refresh();
-                });
-
-                $('#reset').click(function () {
-                    ResetGraph();
-                });
-
-                $('.header').click(function () {
-                    window.location.href = "/usage.html";
-                });
-
-                $(window).resize(function () {
-                    ResizeContent(true);
-                });
-
-		var startDateTextBox = $('#start');
-		var endDateTextBox = $('#end');
-
-		$.timepicker.datetimeRange(
-			startDateTextBox,
-			endDateTextBox,
-			{
-				minInterval: (1000*60*60), // 1hr
-				dateFormat: 'm/d/yy', 
-				timeFormat: 'h:mm tt',
-				start: {}, // start picker options
-				end: {} // end picker options					
-			}
-		);
-
-                $("#start").change(function () {
-		    if ($(this).hasClass('dontSelectCustom') == false)
-                       selectTimespanOption("Custom");
-                });
-
-                $("#end").change(function () {
-		    if ($(this).hasClass('dontSelectCustom') == false)
-                       selectTimespanOption("Custom");
-                });
-
-                // load intial config
-                ResizeContent(false);
-
-                var channel = getParameterByName('channel');
-                var timespan = getParameterByName('timespan');
-                var start = getParameterByName('start');
-                var end = getParameterByName('end');
-		updateGroupBy();
-
-                InitializeGraph(channel, timespan, start, end, function () {
-                    refresh(function () {
-                        ResizeContent(false);
-                    });
-                });
+            //alert('ready');
+            $('#refresh1').click(function () {
+                refresh();
             });
 
-            var circuitChanged = function () {
-                $('#refresh1').click();
+            $('#reset').click(function () {
+                ResetGraph();
+            });
+
+            $('.header').click(function () {
+                window.location.href = "/usage.html";
+            });
+
+            $(window).resize(function () {
+                ResizeContent(true);
+            });
+
+            // load intial config
+            ResizeContent(false);
+
+            var channel = getParameterByName('channel');
+            var timespan = getParameterByName('timespan');
+            var start = getParameterByName('start');
+            var end = getParameterByName('end');
+
+            InitializeDateTime(start, end, timespan)
+
+            InitializeGraph(channel, timespan, start, end, function () {
+                refresh(function () {
+                    ResizeContent(false);
+                });
+            });
+        });
+
+        var circuitChanged = function () {
+            //$('#refresh1').click();
+            refresh()
+        }
+
+        var groupbyChanged = function () {
+            refresh()
+            //setTimeout(function () {
+            //    refresh()
+            //}, 100);
+        }
+
+        var previousTimespan = "";
+        var updateGroupBy = function (dateTime) {
+
+            timespan = dateTime.timespan
+
+            if (timespan == "Custom") {
+                diff = moment(dateTime.End).diff(moment(dateTime.Start))
+minutes = diff / 60000
+                if (diff <= 1000 * 60 * 60) // 1 hour
+                    timespan = "Hour"
+                else if (diff <= 1000 * 60 * 60 * 24)
+                    timespan = "Day"
+                else if (diff <= 1000 * 60 * 60 * 24 * 7)
+                    timespan = "Week"
+                else if (diff <= 1000 * 60 * 60 * 24 * 30)
+                    timespan = "Month"
+                else
+                    timespan = "Year"
             }
 
-            var timespanChanged = function () {
+            if (previousTimespan != timespan) {
+                previousTimespan = timespan
 
-      		updateGroupBy();
-                var timespan = $('#Timespan option:selected').val();
+                $('#groupby').empty();
 
-                if (timespan != 'Custom') {
-
-                    setTimeout(function () {
-                        $('#refresh1').click();
-                    }, 100);
-                }
+                if (timespan == 'Instant' || timespan == 'Hour')
+                    $('#groupby').hide();
+                else if (timespan == 'Day')
+                    $('#groupby')
+                        .show()
+                        .append('<option selected="selected" value="None">None</option>')
+                        .append('<option value="Hour">Hour</option>');
+                else if (timespan == 'Week')
+                    $('#groupby')
+                        .show()
+                        .append('<option value="None">None</option>')
+                        .append('<option selected="selected" value="Hour">Hour</option>')
+                        .append('<option value="Day">Day</option>');
+                else if (timespan == 'Month')
+                    $('#groupby')
+                        .show()
+                        .append('<option selected="selected" value="Hour">Hour</option>')
+                        .append('<option value="Day">Day</option>');
+                else
+                    $('#groupby')
+                        .show()
+                        .append('<option selected="selected" value="Hour">Hour</option>')
+                        .append('<option value="Day">Day</option>')
+                        .append('<option value="Month">Month</option>');
             }
+        }
 
-	    var groupbyChanged = function () {
-                setTimeout(function () {
-                    $('#refresh1').click();
-                }, 100);
-            }
+    </script>
 
-            var updateGroupBy = function () {
-                var timespan = $('#Timespan option:selected').val();
-		
-		$('#groupby').empty();
+</head>
 
-		if (timespan == 'Instant' || timespan == 'Hour') 
-			$('#groupby').hide();
-		else if (timespan == 'Day') 
-			$('#groupby')
-				.show()
-				.append('<option selected="selected" value="None">None</option>')
-				.append('<option value="Hour">Hour</option>');
-		else if (timespan == 'Week') 
-			$('#groupby')
-				.show()
-				.append('<option value="None">None</option>')
-				.append('<option selected="selected" value="Hour">Hour</option>')
-				.append('<option value="Day">Day</option>');
-		else if (timespan == 'Month') 
-			$('#groupby')
-				.show()
-				.append('<option selected="selected" value="Hour">Hour</option>')
-				.append('<option value="Day">Day</option>');
-		else
-			$('#groupby')
-				.show()
-				.append('<option selected="selected" value="Hour">Hour</option>')
-				.append('<option value="Day">Day</option>')
-				.append('<option value="Month">Month</option>');
-            }
+<body>
 
-	    var groupbyChanged = function () {
-                setTimeout(function () {
-                    $('#refresh1').click();
-                }, 100);
-            }
-
-	</script>
-
-    </head> 
-    <body> 
-<!-- Google Tag Manager -->
-<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-57V732"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-57V732');</script>
-<!-- End Google Tag Manager -->
-        <div class='header'></div>
-		<div class="demo-container content">
-			<div id="placeholder" class="placeholder100"></div>
-		</div>
-        <div class="footer">
-            <div id="table" class='demo-table'></div>
-            <div id='buttons'>
-                <button id='refresh1'>Refresh</button>
-                <select id="Timespan" onchange='timespanChanged()'>
-                    <option value='Instant'>Instant</option>
-                    <option value='Hour'>Hour</option>
-                    <option value='Day'>Day</option>
-                    <option value='Week'>Week</option>
-                    <option value='Month'>Month</option>
-                    <option value='Year'>Year</option>
-                    <option value='Custom'>Custom</option>
-                </select>
-                <select id="circuits" onchange='circuitChanged()'></select>
-		<select id="groupby" onchange='groupbyChanged()'></select>
-                <div id='customtimespan'>
-                    Start:<input type="text" name="start" id='start' size="25" value="" />
-                    End:<input type="text" name="end" id='end' size="25" value="" />
-                </div>
+    <div class='header'></div>
+    <div class="demo-container content">
+        <div id="placeholder" class="placeholder100"></div>
+    </div>
+    <div class="footer">
+        <div id="table" class='demo-table'></div>
+        <div id='buttons'>
+            <button id='refresh1'>Refresh</button>
+            <select id="circuits" onchange='circuitChanged()'></select>
+            <select id="groupby" onchange='groupbyChanged()'></select>
+            <div id="reportrange">
+                <i class="fa fa-calendar"></i>
+                <span></span>
+                <i class="fa fa-caret-down"></i>
             </div>
         </div>
+    </div>
+</body>
 
-    	
-    </body> 
-  
 </html>

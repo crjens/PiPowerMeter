@@ -1,6 +1,5 @@
 
-var toCurrency = function(amount)
-{
+var toCurrency = function (amount) {
     return Globalize().format(amount, "c", Region);
 }
 
@@ -8,61 +7,17 @@ var toFloat = function (amount, fixed) {
     return Globalize().format(amount, 'n' + fixed, Region);
 }
 
-
-var GetTimespanDate = function (timespan) {
-
-    var start, end = new Date();
-    if (timespan == 'Hour')
-        start = new Date(end.getTime() - 1000 * 60 * 60);
-    else if (timespan == 'Day')
-        start = new Date(end.getTime() - 1000 * 60 * 60 * 24);
-    else if (timespan == 'Week')
-        start = new Date(end.getTime() - 1000 * 60 * 60 * 24 * 7);
-    else if (timespan == 'Month') {
-        if (end.getMonth() == 0)
-            start = new Date(end.getFullYear() - 1, 11, end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
-        else
-            start = new Date(end.getFullYear(), end.getMonth() - 1, end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
-    }
-    else if (timespan == 'Year') {
-        start = new Date(end.getFullYear() - 1, end.getMonth(), end.getDate(), end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
-    }
-    else if (timespan == 'Custom') {
-        start = $("#start").datetimepicker('getDate');
-        end = $("#end").datetimepicker('getDate');
-    }
-    else {
-        start = end = null;
-    }
-
-
-    if (timespan != 'Custom') {
-        if (start != null)
-            $("#start").addClass('dontSelectCustom').datetimepicker('setDate', start).removeClass('dontSelectCustom');
-        else
-            $("#start").val('');
-
-        if (end != null)
-            $("#end").addClass('dontSelectCustom').datetimepicker('setDate', end).removeClass('dontSelectCustom');
-        else
-            $("#end").val('');
-    }
-
-    return { Start: start, End: end };
-}
-
-
 function labelFormatter(label, series) {
     var cost = "";
-    
+
     if (_start != null && _end != null) {
         var kw = parseFloat(series.data[0][1]) / 1000.0;
         var timespanMs = _end.getTime() - _start.getTime();
         var hours = timespanMs / (1000 * 60 * 60);
         cost = "    (" + toCurrency(kw * dollarsPerKWh * hours) + ")";
     }
-        
-    return "<div style='font-size:12pt; text-align:center; padding:2px; color: black;'>" +  label + "<br/>" + toFloat(series.percent, 0) + "%" + cost + "</div>";
+
+    return "<div style='font-size:12pt; text-align:center; padding:2px; color: black;'>" + label + "<br/>" + toFloat(series.percent, 0) + "%" + cost + "</div>";
 }
 
 function labelFormatter2(label, series) {
@@ -70,25 +25,25 @@ function labelFormatter2(label, series) {
 }
 
 var options = {
-	series: {
-	    pie: {
-	        show: true,
-	        radius: 1,
-	        label: {
-	            show: true,
-	            radius: 4 / 5,
-	            threshold: 0.02,
-	            formatter: labelFormatter,
-	            background: {
-	                //opacity: 0.5
-	            }
-	        }
-	    }
-	},
-	legend: {
-	    show: false
-	},
-	grid: { hoverable: true, clickable: true }
+    series: {
+        pie: {
+            show: true,
+            radius: 1,
+            label: {
+                show: true,
+                radius: 4 / 5,
+                threshold: 0.02,
+                formatter: labelFormatter,
+                background: {
+                    //opacity: 0.5
+                }
+            }
+        }
+    },
+    legend: {
+        show: false
+    },
+    grid: { hoverable: true, clickable: true }
 };
 
 var data = [], dollarsPerKWh = 0.0, _start, _end, results = null;
@@ -113,13 +68,12 @@ var RefreshComparisonGraph = function (start, end, callback) {
 
     placeholder.bind("plotclick", function (event, pos, item) {
         if (item) {
-            var timespan = $('#Timespan option:selected').val();
-            var timespanDate = GetTimespanDate(timespan);
-            
-            var url = "/circuit.html#channel=" + item.series.label + "&timespan=" + timespan;
+            var dateTime = GetDateTime();
+
+            var url = "/circuit.html#channel=" + item.series.label + "&timespan=" + dateTime.timespan;
 
             if (timespan == "Custom")
-                url += "&start=" + timespanDate.Start.toISOString() + "&end=" + timespanDate.End.toISOString();
+                url += "&start=" + dateTime.Start.toISOString() + "&end=" + dateTime.End.toISOString();
 
             window.location.href = url;
             //alert("" + item.series.label + ": " + percent + "%");
@@ -141,7 +95,7 @@ var RefreshComparisonGraph = function (start, end, callback) {
             var costPerDay = toCurrency(kwh * dollarsPerKWh * 24);
             var costPerMonth = toCurrency(kwh * dollarsPerKWh * 24 * 30);
             var costPerYear = toCurrency(kwh * dollarsPerKWh * 24 * 365);
-            
+
             var min = 0, max = 0, avg = 0;
 
             // find min/max in data array
@@ -158,7 +112,7 @@ var RefreshComparisonGraph = function (start, end, callback) {
             $("#tooltip")
                 .html("<span style='font-weight:bold; color:black;'>" + obj.series.label + "</span><span style='color:black;'><br/>Usage: " + usage + "<br/>Cost: " + costPerHour + " / " + costPerDay + " / " + costPerMonth + " / " + costPerYear + " (hr/day/month/year)</span>")
                 .css({ top: pos.pageY + 5, left: pos.pageX + 5 })
-		    	.fadeIn(200);
+                .fadeIn(200);
         }
 
     });
@@ -175,9 +129,9 @@ var RefreshComparisonGraph = function (start, end, callback) {
     }
 
     var url = '/cumulative';
-    if (start != null && end != null)
+    if (start != null && end != null && start.getTime() != end.getTime())
         url += '?start=' + start.getTime() + '&end=' + end.getTime();
-    
+
     $.ajax({
         url: url,
         type: 'get',
@@ -242,11 +196,6 @@ var draw = function (callback) {
                 options.series.pie.label.formatter = labelFormatter2;
 
             var plot = $.plot(placeholder, data, options);
-            maxWatts = results.MaxWatts;
-            avgWatts = results.AvgWatts;
-            minWatts = results.MinWatts;
-            currentWatts = toFloat(totalWatts, 0);
-            resizeGage(true);
         }
     }
 
@@ -254,50 +203,9 @@ var draw = function (callback) {
         callback();
 }
 
-var lastWidth = 0, lastHeight = 0, currentWatts = 0, maxWatts = 0, avgWatts = 0, minWatts = 0, gage = null;
-
-var resizeGage = function (force) {
-    var width = $(window).width();
-    var height = $(window).height();
-
-    if (force || ((width != lastWidth || height != lastHeight) && currentWatts > 0)) {
-        lastHeight = height;
-        lastWidth = width;
-
-        var w = width / 5;
-        if (w < 60)
-            w = 60;
-
-        var h = .8 * w;
-
-        if ($("#gauge").length == 0) {
-            $("<div id='gauge'></div>").css({
-                position: "absolute",
-                "background-color": "white",
-                opacity: 0.90
-            }).appendTo("body");
-        }
-
-        $("#gauge")
-            .empty()
-            .css({ width: w, height: h, top: $(window).height() - $('.footer').outerHeight() - h, left: $(window).width() - w });
-
-        gage = new JustGage({
-            id: "gauge",
-            //value: currentWatts,
-            value: avgWatts,
-            min: minWatts,
-            max: maxWatts,
-            title: "Watts"
-        });
-    }
-}
-
 var RedrawComparisonGraph = function () {
     var placeholder = $("#placeholder3");
     var plot = $.plot(placeholder, data, options);
-
-    resizeGage(false);
 }
 
-   
+

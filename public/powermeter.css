@@ -176,6 +176,11 @@ text-align:left;
     width:  400px;
 }
 
+input.error {
+    outline: 2px solid red;
+    background: rgb(255,240,240);
+}
+
 .size18x18 {
     
     width:  18px;
@@ -235,6 +240,14 @@ text-align:left;
     width: 100px;
 }
 
+#reportrange {
+    background: #fff; 
+    padding: 5px 10px; 
+    border: 1px solid #ccc; 
+    width: 200px; 
+    margin-left: auto; 
+    margin-right: auto
+}
 
 #configJson
 {
