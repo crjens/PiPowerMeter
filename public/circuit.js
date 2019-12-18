@@ -1,11 +1,11 @@
 var ResetGraph = function () {
-     $.ajax({ 
+    $.ajax({
         url: '/reset',
         type: 'get',
         dataType: 'json',
         cache: false,
         success: function (data) { }
-     });
+    });
 }
 
 var toCurrency = function (amount) {
@@ -18,19 +18,9 @@ var toFloat = function (amount, fixed) {
 
 var html = "";
 
-var selectTimespanOption = function (timespan) {
-    if (timespan != null) {
-        $('#Timespan option')
-            .filter(function (index) { return $(this).text() === timespan; })
-            .prop('selected', true);
-    }
-
-    updateGroupBy();
-}
-
 var InitializeGraph = function (channel, timespan, start, end, callback) {
 
-    $.ajax({ 
+    $.ajax({
         url: '/config',
         type: 'get',
         dataType: 'json',
@@ -39,7 +29,7 @@ var InitializeGraph = function (channel, timespan, start, end, callback) {
             Region = data.Configuration.Region;
             if (Region == null || Region == "")
                 Region = "en-US";
-	        data = data.Circuits;
+            data = data.Circuits;
             var select = $("#circuits");
             for (var i = 0; i < data.length; i++) {
                 select.append("<option value='" + data[i].id + "'>" + data[i].Name + "</option>");
@@ -51,67 +41,39 @@ var InitializeGraph = function (channel, timespan, start, end, callback) {
                     .prop('selected', true);
             }
 
-            selectTimespanOption(timespan);
-
-            if (timespan == "Custom") {
-                if (start != null && end != null && start != "" && end != "") {
-                    // set start and end time
-                    $("#start").addClass('dontSelectCustom').datetimepicker('setDate', new Date(start)).removeClass('dontSelectCustom');
-                    $("#end").addClass('dontSelectCustom').datetimepicker('setDate', new Date(end)).removeClass('dontSelectCustom');
-                } else {
-                    $('#Timespan option')
-                        .filter(function (index) { return $(this).text() === "Hour"; })
-                        .prop('selected', true);
-                }
-            }
-
             if ($.isFunction(callback))
                 callback();
         }
     });
 
     $("<div id='tooltip'></div>").css({
-			position: "absolute",
-			display: "none",
-			border: "1px solid #fdd",
-			padding: "2px",
-			"background-color": "#fee",
-			opacity: 0.80
-		}).appendTo("body");
+        position: "absolute",
+        display: "none",
+        border: "1px solid #fdd",
+        padding: "2px",
+        "background-color": "#fee",
+        opacity: 0.80
+    }).appendTo("body");
 }
 
-var data, options, placeholder, lastTimespan="";
+var data, options, placeholder, lastTimespan = "";
 
 var RefreshGraph = function (circuitId, timespanDate, groupBy, callback) {
-    //CurrentScale = currentScale;
     placeholder = $("#placeholder");
     placeholder.empty();
     $("#table").empty();
 
-    var elapsed = timespanDate.End - timespanDate.Start;
-
-    if (elapsed == 0) {
+    if (timespanDate.timespan == "Instant") {
         RefreshWaveformGraph(circuitId, callback);
-    } else  {
+    } else {
         if (lastTimespan == "Instant") {
             $(window).trigger('resize');
             console.log('resize');
         }
         lastTimespan = timespanDate.timespan;
 
-        //var groupBy;
-        //if (elapsed <= 1000*60*60*24)  // one day
-        //    groupBy = null;
-        //else if (elapsed <= 1000*60*60*24*7)  // one week
-        //    groupBy = 'hour';
-        //else if (elapsed <= 1000*60*60*24*31)  // one month
-        //    groupBy = 'day';
-        //else
-            //groupBy = 'day';
-        //    groupBy = 'month';
-        
         RefreshPowerGraph(circuitId, timespanDate.Start, timespanDate.End, groupBy, callback);
-    } 
+    }
 }
 
 var GetBarGraphOptions = function (timeFormat, barWidth, minTickSize) {
@@ -134,7 +96,7 @@ var GetBarGraphOptions = function (timeFormat, barWidth, minTickSize) {
             axisLabelPadding: 10,
             //ticks: ticks'
             //mode: 'time', /*timezone: 'browser',*/timeformat: timeFormat, timeZoneOffset: (new Date()).getTimezoneOffset()
-            mode: 'time', timezone: 'browser',timeformat: timeFormat
+            mode: 'time', timezone: 'browser', timeformat: timeFormat
         },
         yaxis: {
             axisLabel: "Average Power",
@@ -169,7 +131,7 @@ var GetLineGraphOptions = function (timeFormat) {
     return {
         series: {
             lines: { show: true },
-            points: { show: true, radius: 2},
+            points: { show: true, radius: 2 },
             shadowSize: 0
         },
         xaxis: { mode: 'time', timezone: 'browser', timeformat: timeFormat },
@@ -178,7 +140,7 @@ var GetLineGraphOptions = function (timeFormat) {
         selection: { mode: "x" },
         crosshair: { mode: "x" },
         grid: { hoverable: true, autoHighlight: false }
-        
+
         //zoom: { interactive: true }
     };
 }
@@ -223,37 +185,37 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
         cache: false,
         success: function (result) {
 
-        $('.header').text(result.DeviceName + " Power Meter");
+            $('.header').text(result.DeviceName + " Power Meter");
 
-        var min = 0, max = 0;
-        if (result.ts.length > 0) {
-            min = max = result.P[0];
-            for (var i = 0; i < result.ts.length; i++) {
-                p.push([result.ts[i] * 1000, result.P[i]]);
-                if (result.P[i] > max)
-                    max = result.P[i];
-                if (result.P[i] < min)
-                    min = result.P[i];
+            var min = 0, max = 0;
+            if (result.ts.length > 0) {
+                min = max = result.P[0];
+                for (var i = 0; i < result.ts.length; i++) {
+                    p.push([result.ts[i] * 1000, result.P[i]]);
+                    if (result.P[i] > max)
+                        max = result.P[i];
+                    if (result.P[i] < min)
+                        min = result.P[i];
+                }
             }
-        }
-        if (isLineGraph) {
-            if (min > 0)
-                options.yaxes[0].min = 0.0;
-            if (max < 0)
-                options.yaxes[0].max = 0.0;
-        }
-            
+            if (isLineGraph) {
+                if (min > 0)
+                    options.yaxes[0].min = 0.0;
+                if (max < 0)
+                    options.yaxes[0].max = 0.0;
+            }
+
             var Kwh = (result.avg / 1000) * ((end.getTime() - start.getTime()) / (1000 * 60 * 60));
             var cost = toCurrency(result.Cost * Kwh);
 
             html = "<tr><td>Min</td><td>" + result.min + " watts</td></tr>" +
-                        "<tr><td>Avg</td><td>" + result.avg + " watts</td></tr>" +
-                        "<tr><td>Max</td><td>" + result.max + " watts</td></tr>" +
-                        "<tr><td>KWh</td><td>" + toFloat(Kwh,2) + "</td></tr>" + 
-                        "<td>Cost</td><td>" + cost + "</td></tr>";
+                "<tr><td>Avg</td><td>" + result.avg + " watts</td></tr>" +
+                "<tr><td>Max</td><td>" + result.max + " watts</td></tr>" +
+                "<tr><td>KWh</td><td>" + toFloat(Kwh, 2) + "</td></tr>" +
+                "<td>Cost</td><td>" + cost + "</td></tr>";
 
 
-            data = [{ data: p, label: "Watts = -0000.00", color: "#5482FF"}];
+            data = [{ data: p, label: "Watts = -0000.00", color: "#5482FF" }];
 
             placeholder.bind("plothover", function (event, pos, item) {
                 latestPosition = pos;
@@ -266,12 +228,12 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
                 options2.xaxis.min = null;
                 options2.xaxis.max = null;
                 plot = $.plot(placeholder, data, options);
-		$('.legend table tbody').append(html);
+                $('.legend table tbody').append(html);
             });
 
             placeholder.bind("plotselected", function (event, ranges) {
 
-                $("#selection").text(toFloat(ranges.xaxis.from,1) + " to " + toFloat(ranges.xaxis.to,1));
+                $("#selection").text(toFloat(ranges.xaxis.from, 1) + " to " + toFloat(ranges.xaxis.to, 1));
 
                 plot = $.plot(placeholder, data, $.extend(true, {}, options, {
                     xaxis: {
@@ -279,7 +241,7 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
                         max: ranges.xaxis.to
                     }
                 }));
-		$('.legend table tbody').append(html);
+                $('.legend table tbody').append(html);
             });
 
             placeholder.bind("plotunselected", function (event) {
@@ -292,16 +254,16 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
                 callback();
 
             //var axes = plot.getAxes();
-	    //var o = plot.pointOffset({ x: (axes.xaxis.max+axes.xaxis.min)/2, y: (axes.yaxis.max+axes.yaxis.min)/2 });
+            //var o = plot.pointOffset({ x: (axes.xaxis.max+axes.xaxis.min)/2, y: (axes.yaxis.max+axes.yaxis.min)/2 });
             // Append it to the placeholder that Flot already uses for positioning
-	    $('.legend table tbody').append(html);
+            $('.legend table tbody').append(html);
 
-	    placeholder.resize(function () {
-		if (html != "")
-			$('.legend table tbody').append(html);
-             });
+            placeholder.resize(function () {
+                if (html != "")
+                    $('.legend table tbody').append(html);
+            });
 
-//            placeholder.append("<div style='position:absolute;left:" + (o.left + 4) + "px;top:" + o.top + "px;color:#666;font-size:smaller'>" + html + "</div>");
+            //            placeholder.append("<div style='position:absolute;left:" + (o.left + 4) + "px;top:" + o.top + "px;color:#666;font-size:smaller'>" + html + "</div>");
 
 
             var legends = placeholder.find(".legendLabel");
@@ -322,7 +284,7 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
 
                 var axes = plot.getAxes();
                 if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max ||
-				    pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
+                    pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
                     return;
                 }
 
@@ -342,8 +304,8 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
                     if (series.data.length > 0) {
                         // Now Interpolate
                         var y,
-					    p1 = series.data[j - 1],
-					    p2 = series.data[j];
+                            p1 = series.data[j - 1],
+                            p2 = series.data[j];
 
                         if (p1 == null) {
                             y = p2[1];
@@ -357,7 +319,7 @@ var RefreshPowerGraph = function (circuitId, start, end, groupBy, callback) {
                                 y = p2[1];
                         }
 
-                        legends.eq(i).text(series.label.replace(/=.*/, "= " + toFloat(y,2)));
+                        legends.eq(i).text(series.label.replace(/=.*/, "= " + toFloat(y, 2)));
                     }
                 }
 
@@ -378,7 +340,7 @@ var RefreshWaveformGraph = function (circuitId, callback) {
         },
         xaxis: { min: 0, tickFormatter: function (val, axis) { return val + " ms"; } },
         yaxes: [{ /*min: -200, max: 200,*/tickFormatter: function (val, axis) { return val + " V"; } },
-                    { position: 0, min: -40, max: 40, tickFormatter: function (val, axis) { return val + " A"; } }],
+        { position: 0, min: -40, max: 40, tickFormatter: function (val, axis) { return val + " A"; } }],
         //yaxis: { min: -200, max: 200 }, //, zoomRange: [400, 400] },
         selection: { mode: "x" },
         crosshair: { mode: "x" },
@@ -399,11 +361,11 @@ var RefreshWaveformGraph = function (circuitId, callback) {
                 $('.header').text(result.DeviceName + " Power Meter");
             else
                 $('.header').text("Power Meter");
-          
+
             data = [];
             if (result != null && result.Samples != null && result.Samples.length > 0) {
-		    
-   	        currentScale = Math.max(result.Probes[0].Breaker, Math.abs(result.Samples[0].iPeak));
+
+                currentScale = Math.max(result.Probes[0].Breaker, Math.abs(result.Samples[0].iPeak));
                 options.yaxes[1].min = -currentScale;
                 options.yaxes[1].max = currentScale;
 
@@ -432,7 +394,7 @@ var RefreshWaveformGraph = function (circuitId, callback) {
                             break;
                         }
                     }
-                        
+
                     for (var i = start; i < sample.tsInst.length; i++) {
                         var now = sample.tsInst[i] - sample.tsInst[start];
                         if (sample.vInst.length >= i)
@@ -447,8 +409,8 @@ var RefreshWaveformGraph = function (circuitId, callback) {
 
                     for (var i = 0; i < sample.tsZC.length; i++) {
                         var now = sample.tsZC[i] - sample.tsInst[start];
-			if (now >= 0.0)
-                             zc.push([now, 0.0]);
+                        if (now >= 0.0)
+                            zc.push([now, 0.0]);
                     }
 
                     //var channel = { v: v, c: c };
@@ -470,7 +432,7 @@ var RefreshWaveformGraph = function (circuitId, callback) {
                     }
 
                     data[index].data = data[index].data.slice(0, i);
-                        
+
                 });
 
 
@@ -491,14 +453,14 @@ var RefreshWaveformGraph = function (circuitId, callback) {
                 }
 
                 var html = "<table><td><table><tr><td>Rms Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vRms", false, 1) +
-                            "</td></tr><tr><td>Rms Current (amps)</td><td>" + getProbeValues(result.Samples, "iRms", false, 1) +
-                            "</td></tr><tr><td>Peak Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vPeak", false, 1) +
-                            "</td></tr><tr><td>Peak Current (amps)</td><td>" + getProbeValues(result.Samples, "iPeak", false, 1) +
-                            "</td></tr></table></td><td><table><tr><td>Average real power (watts) </td><td>" + getProbeValues(result.Samples, "pAve", true, 1) +
-                            "</td></tr><tr><td>Average reactive power (vars)</td><td>" + getProbeValues(result.Samples, "qAve", true, 1) +
-                            "</td></tr><tr><td>Power factor</td><td>" + getProbeValues(result.Samples, "pf", false, 6) +
-                            "</td></tr><tr><td>Timestamp</td><td>" + (new Date(result.Samples[0].ts)).toLocaleString() +
-                            "</td></tr></table></td></table>";
+                    "</td></tr><tr><td>Rms Current (amps)</td><td>" + getProbeValues(result.Samples, "iRms", false, 1) +
+                    "</td></tr><tr><td>Peak Voltage (volts)</td><td>" + getProbeValues(result.Samples, "vPeak", false, 1) +
+                    "</td></tr><tr><td>Peak Current (amps)</td><td>" + getProbeValues(result.Samples, "iPeak", false, 1) +
+                    "</td></tr></table></td><td><table><tr><td>Average real power (watts) </td><td>" + getProbeValues(result.Samples, "pAve", true, 1) +
+                    "</td></tr><tr><td>Average reactive power (vars)</td><td>" + getProbeValues(result.Samples, "qAve", true, 1) +
+                    "</td></tr><tr><td>Power factor</td><td>" + getProbeValues(result.Samples, "pf", false, 6) +
+                    "</td></tr><tr><td>Timestamp</td><td>" + (new Date(result.Samples[0].ts)).toLocaleString() +
+                    "</td></tr></table></td></table>";
 
                 //var html =  "<table><td><table><tr><td>Rms Voltage</td><td>" + result.Samples[0].vRms.toFixed(1) + " volts" +
                 //            "</td></tr><tr><td>Rms Current</td><td>" + result.Samples[0].iRms.toFixed(1) + " amps" +
@@ -528,7 +490,7 @@ var RefreshWaveformGraph = function (circuitId, callback) {
 
 
 
-               
+
 
 
             placeholder.bind("plothover", function (event, pos, item) {
@@ -542,7 +504,7 @@ var RefreshWaveformGraph = function (circuitId, callback) {
                 options.xaxis.min = null;
                 options.xaxis.max = null;
                 plot = $.plot(placeholder, data, options);
-		    
+
             });
 
             placeholder.bind("plotselected", function (event, ranges) {
@@ -555,7 +517,7 @@ var RefreshWaveformGraph = function (circuitId, callback) {
                         max: ranges.xaxis.to
                     }
                 }));
-		    
+
             });
 
             placeholder.bind("plotunselected", function (event) {
@@ -619,7 +581,7 @@ var RefreshWaveformGraph = function (circuitId, callback) {
                     }
                 }
             }
-            
+
         }
     });
 }
@@ -628,6 +590,6 @@ var ResizeGraphs = function () {
     if (data != null) {
         var plot = $.plot($("#placeholder"), data, options);
         if (html != "")
-		$('.legend table tbody').append(html);
+            $('.legend table tbody').append(html);
     }
 }

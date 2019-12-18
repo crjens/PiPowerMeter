@@ -122,11 +122,11 @@ var loadConfiguration = function (callback) {
             var port = data.Configuration.Port;
             netUtils.InitializeTwilio(data.Configuration.Text, data.Configuration.Twilio, data.Configuration.TwilioSID, data.Configuration.TwilioAuthToken, deviceName, port);
 
-            console.log('mqtt: ' + data.Configuration.MqttServer);
-            if (data.MqttServer != null) {
+            if (data.Configuration.MqttServer != null) {
                 try {
                     mqtt = require('mqtt');
                     mqttClient = mqtt.connect(data.Configuration.MqttServer);
+                    console.log('Connected to mqtt: ' + data.Configuration.MqttServer);
                 }
                 catch (err) {
                     mqttClient = null;
@@ -134,6 +134,7 @@ var loadConfiguration = function (callback) {
                 }
             } else {
                 mqttClient = null;
+                console.log('mqtt no configured');
             }
 
             // update config in reader
@@ -207,7 +208,7 @@ function getFilesizeInBytes(filename) {
 }
 
 // schedule rollup message
-scheduleNextRollupMessage();
+//scheduleNextRollupMessage();
 
 
 var NextCircuit = function () {
@@ -402,11 +403,11 @@ reader.on('message', function (msg) {
 
         // keep 24hr avg up to date
         updateState();
-    } 
+    }
 
     if (msg.Version != null) {
-        db.setConfig("HardwareVersion", msg.Version.HardwareVersion.toString(), function(err) {
-          db.setConfig("DriverVersion", msg.Version.DriverVersion.toString());
+        db.setConfig("HardwareVersion", msg.Version.HardwareVersion.toString(), function (err) {
+            db.setConfig("DriverVersion", msg.Version.DriverVersion.toString());
         });
     }
 });
