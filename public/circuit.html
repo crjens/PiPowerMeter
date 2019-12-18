@@ -103,18 +103,6 @@
             });
         });
 
-        var circuitChanged = function () {
-            //$('#refresh1').click();
-            refresh()
-        }
-
-        var groupbyChanged = function () {
-            refresh()
-            //setTimeout(function () {
-            //    refresh()
-            //}, 100);
-        }
-
         var previousTimespan = "";
         var updateGroupBy = function (dateTime) {
 
@@ -122,7 +110,6 @@
 
             if (timespan == "Custom") {
                 diff = moment(dateTime.End).diff(moment(dateTime.Start))
-minutes = diff / 60000
                 if (diff <= 1000 * 60 * 60) // 1 hour
                     timespan = "Hour"
                 else if (diff <= 1000 * 60 * 60 * 24)
@@ -181,8 +168,8 @@ minutes = diff / 60000
         <div id="table" class='demo-table'></div>
         <div id='buttons'>
             <button id='refresh1'>Refresh</button>
-            <select id="circuits" onchange='circuitChanged()'></select>
-            <select id="groupby" onchange='groupbyChanged()'></select>
+            <select id="circuits" onchange='refresh()'></select>
+            <select id="groupby" onchange='refresh()'></select>
             <div id="reportrange">
                 <i class="fa fa-calendar"></i>
                 <span></span>

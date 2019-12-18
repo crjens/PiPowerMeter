@@ -38,11 +38,10 @@
             var footerHeight = $('.footer').outerHeight(true);
 
             $(".content").css({ maxHeight: (windowHeight - (headerHeight + footerHeight)) + 'px' });
-            //                $('.header').text(windowHeight + " : " + headerHeight + " : " + footerHeight + " :: " + (windowHeight - (headerHeight + footerHeight)));
             RedrawComparisonGraph();
         }
 
-        var refresh = function () {
+        var refresh = function (callback) {
 
             var dateTime = GetDateTime();
             var order = $('input[name=order]:checked').val();
@@ -53,7 +52,7 @@
 
             location.hash = hash;
 
-            RefreshComparisonGraph(dateTime.Start, dateTime.End);
+            RefreshComparisonGraph(dateTime.Start, dateTime.End, callback);
         }
 
         $(function () {
@@ -75,9 +74,9 @@
             var order = getParameterByName('order', null);
             var timespan = getParameterByName('timespan', 'Instant');
             var start = getParameterByName('start', '');
-            var end = getParameterByName('end','');
+            var end = getParameterByName('end', '');
 
-            InitializeDateTime(start, end, timespan)
+            InitializeDateTime(start, end, timespan, ResizeContent)
 
             if (order != null) {
                 $('input[name=order]')
@@ -109,7 +108,7 @@
             <input type="radio" name="order" value="Max">Hogs
             <div id="reportrange">
                 <i class="fa fa-calendar"></i>&nbsp;
-                <span></span> 
+                <span></span>
                 <i class="fa fa-caret-down"></i>
             </div>
         </div>

@@ -35,7 +35,7 @@ $(document).ready(function () {
       });
 });
 
-function InitializeDateTime(start, end, label) {
+function InitializeDateTime(start, end, label, callback) {
     e = s = moment()
     if (label == "Hour")
         s = moment().subtract(1, 'hours')
@@ -58,10 +58,10 @@ function InitializeDateTime(start, end, label) {
     picker.setStartDate(s);
     picker.setEndDate(e);
 
-    UpdateDateTime(s,e,label)
+    UpdateDateTime(s,e,label, callback)
 }
 
-function UpdateDateTime(start, end, label) {
+function UpdateDateTime(start, end, label, callback) {
     _label = label
     if (_label.includes("Custom")) {
         _label = "Custom";
@@ -69,5 +69,5 @@ function UpdateDateTime(start, end, label) {
     } else {
         $('#reportrange span').html(_label);
     }
-    refresh();
+    refresh(callback);
 }
