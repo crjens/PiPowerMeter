@@ -9,7 +9,7 @@ var db = require('./database');
 var netUtils = require('./utils.js');
 var fs = require("fs");
 var common = require("./common");
-var mqtt = null, mqttClient = null;
+var mqtt = null, mqttClient = null, mqttConnected = false;
 
 // load currently installed software version and check for updates every hour
 var exec = require('child_process').exec, softwareVersion = null;
@@ -121,22 +121,51 @@ var loadConfiguration = function (callback) {
 
             var port = data.Configuration.Port;
             netUtils.InitializeTwilio(data.Configuration.Text, data.Configuration.Twilio, data.Configuration.TwilioSID, data.Configuration.TwilioAuthToken, deviceName, port);
-
-            if (data.Configuration.MqttServer != null) {
+            
+            if (mqttClient != null) {
+                mqttClient.end();
+            }
+            mqttConnected = false;
+            mqttClient = null;
+            
+            if (data.Configuration.MqttServer != null && data.Configuration.MqttServer != "") {
+                var mqttOptions = null;
                 try {
                     mqtt = require('mqtt');
-                    mqttClient = mqtt.connect(data.Configuration.MqttServer);
-                    console.log('Connected to mqtt: ' + data.Configuration.MqttServer);
+                    try {
+                        mqttOptions = JSON.parse(data.Configuration.MqttOptions);
+                    } catch (err) {
+                        console.log("Failed to parse MqttOptions: " + data.Configuration.MqttOptions + " - " + err);
+                        mqttOptions = {};
+                    }
+                   
+                    console.log('Connecting to mqtt: ' + data.Configuration.MqttServer + " : " + JSON.stringify(mqttOptions));
+                    mqttClient = mqtt.connect(data.Configuration.MqttServer, mqttOptions);
+
+                    mqttClient.on('connect', function (o) {
+                         console.log('Connected to mqtt: ' + data.Configuration.MqttServer + " : " + JSON.stringify(mqttOptions) + " - " + JSON.stringify(o));
+                         mqttConnected = true;
+                    });
+
+                    mqttClient.on('error', function (error) {
+                         console.log('Failed to connect to mqtt: ' + data.Configuration.MqttServer + " : " +JSON.stringify(mqttOptions) + " - " + error);
+//                         mqttClient.end();
+                         mqttConnected = false;
+                    });
+
+                    mqttClient.on('close', function () {
+                         console.log('Closed mqtt');
+                         mqttConnected = false;
+                    });
                 }
                 catch (err) {
-                    mqttClient = null;
+                    mqttConnected = false;
                     console.error("Error initializing MQTT server: " + data.Configuration.MqttServer + ".  Error: " + err);
                 }
             } else {
-                mqttClient = null;
-                console.log('mqtt no configured');
+                mqttConnected = false;
+                console.log('mqtt not configured');
             }
-
             // update config in reader
             reader.send({ Action: "SetConfig", Config: data.Configuration });
         }
@@ -376,7 +405,7 @@ reader.on('message', function (msg) {
                 db.insert(circuit.id, circuit.Samples[0].iRms, circuit.Samples[0].vRms, pTotal, qTotal, circuit.Samples[0].pf, new Date(circuit.Samples[0].ts), circuit.Samples[0].CalculatedFrequency);
                 console.log(circuit.Name + ' : V= ' + circuit.Samples[0].vRms.round(1) + '  I= ' + circuit.Samples[0].iRms.round(1) + '  P= ' + pTotal.round(1) + '  Q= ' + qTotal.round(1) + '  PF= ' + circuit.Samples[0].pf.round(4) + '  F= ' + circuit.Samples[0].CalculatedFrequency.round(3) + '  F2= ' + circuit.Samples[0].freq.round(3) + ' (' + circuit.Samples[0].tsInst.length + ' samples in ' + circuit.Samples[0].tsInst[circuit.Samples[0].tsInst.length - 1] + 'ms)');
 
-                if (mqttClient != null) {
+                if (mqttClient != null && mqttConnected == true) {
                     try {
                         mqttClient.publish('PiPowerMeter/' + circuit.id + '/Name', circuit.Name);
                         mqttClient.publish('PiPowerMeter/' + circuit.id + '/Voltage', circuit.Samples[0].vRms.round(1));
