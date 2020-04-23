@@ -64,7 +64,7 @@ Software Installation
 ---------------------
 1. Any of the full size Raspberry Pi models with the 40 pin header are supported including: V1 A+, V1 B+, V2, V3 B, V3 B+ and V4 B.  The additional memory and computing power of the V2/V3/V4 models is recommended.
 2. Start with latest Raspbian image from http://downloads.raspberrypi.org/raspbian_lite_latest
-	1. (verified with Raspbian Buster 2019-09-26)
+	1. (verified with Raspbian Buster 2020-02-13)
 	2. It's recommended that you use the Lite version because it's smaller and installs faster but you can use either.
 3. login to Pi with Putty or other ssh client
 	1. the latest versions of Raspbian have ssh disabled.  You can enable ssh via raspi-config or just create an empty file named 'ssh' in the boot partition of the sd card.
