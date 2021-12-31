@@ -17,7 +17,7 @@ case "$1" in
     echo "* starting node-server * "
     echo "* starting node-server * [`date`]" >> /var/log/node-server.log
     cd /home/$USER/app
-    sudo forever start --workingDir /home/$USER/app -a -o /dev/null -e /home/$USER/nodejs.err.log --killSignal=SIGTERM /home/$USER/app/server.js
+    sudo forever start --workingDir /home/$USER/app -a -l /dev/null -o /dev/null -e /home/$USER/nodejs.err.log --killSignal=SIGTERM /home/$USER/app/server.js
     ;;
   stop)
     echo "* stopping node-server * "
